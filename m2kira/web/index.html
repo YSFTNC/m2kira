@@ -852,7 +852,7 @@ function card(it) {
   const priceBar = `<div class="mprice"><span class="p">${esc(TL(it.p))}</span>${it.pp ? `<s>${esc(TL(it.pp))}</s>` : ""}${tier}</div>`;
   const media = it.img
     ? `<div class="media"><img src="${esc(it.img)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('noimg');this.remove()">`
-    : `<div class="media noimg"><div class="ph"><b>${esc((it.r || "").replace("1+0", "Stüdyo") || "—")}</b>fotoğraf yok</div>`;
+    : `<div class="media noimg"><div class="ph"><b>${esc((it.r || "").replace("1+0", "Stüdyo") || "—")}</b>${it.src === "emlakjet" ? "fotoğraflar emlakjet'te" : "fotoğraf yok"}</div>`;
   const specs = [it.r === "1+0" ? "Stüdyo" : it.r, it.m2 ? `${it.m2} m²` : null, it.fl, it.age && it.age !== "0" ? `bina ${it.age}` : null, it.aid ? `aidat ${kTL(it.aid)}` : null]
     .filter(Boolean).map((s) => `<span class="spec">${esc(s)}</span>`).join("");
   const walk = it.v && it.wm != null ? `<span class="walk">🚶 ${it.wm} dk</span>` : `<span class="walk unv" title="İlanda konum yok; mahallenin durağı varsayıldı">konum yok</span>`;

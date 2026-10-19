@@ -57,6 +57,11 @@ def commute_minutes(station: Optional[str], walk_min: Optional[int], verified: b
     return out
 
 
+# emlakjet'in görsel sunucusu (Cloudflare) tarayıcının başka siteden gelen görsel isteklerini
+# (Sec-Fetch-Site: cross-site) 403 ile reddediyor; kart fotoğrafı yerine "fotoğraflar emlakjet'te" gösterilir.
+NO_HOTLINK_SOURCES = {"emlakjet"}
+
+
 def build_payload(cfg: Config, db: DB, budget: Optional[int] = None) -> dict[str, Any]:
     budget = int(budget or db.get_setting("budget", cfg.budget))
     tol = float(cfg.budget_tolerance_pct)
@@ -116,7 +121,8 @@ def build_payload(cfg: Config, db: DB, budget: Optional[int] = None) -> dict[str
             "tier": r.get("match_tier"),
             "hid": bool(r.get("hidden")),
             "aid": extras.get("aidat"),
-            "img": extras.get("img") if str(extras.get("img") or "").startswith("https://") else None,
+            "img": (extras.get("img") if str(extras.get("img") or "").startswith("https://")
+                    and r["source"] not in NO_HOTLINK_SOURCES else None),
             "ph": h if len(h) > 1 else None,
             "desc": desc[:DESC_SNIPPET],
             "cm": commute_minutes(r.get("nearest_station"), r.get("walk_minutes_est"),

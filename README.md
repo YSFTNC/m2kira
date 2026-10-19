@@ -16,7 +16,8 @@ Her çalıştırmadan sonra yeniden üretilen, telefonda da çalışan yönetim 
   rotası · İki hedefe de yakın · En ucuz 1+1 · Yürüme ≤ 8 dk · Faturalar dahil · Pazarlıkla · Favoriler · Tümü.
 - Filtreler: fiyat, m², oda, eşya, durağa yürüme, işe ulaşım süresi, kaynak, uyarılı ilanları gizleme,
   faturalar dahil, fiyatı düşen, yeni, metin arama. Sıralama: fiyat, yeni, yürüme, hedeflere süre, m², TL/m².
-- Fotoğraflı kartlar (hepsiemlak, emlakjet, sahibinden), üstte gösterge kutuları (ilan sayısı, son 24 saatte
+- Fotoğraflı kartlar (hepsiemlak, sahibinden; emlakjet görsellerini başka sitelerde göstermeyi engellediği
+  için emlakjet kartında "fotoğraflar emlakjet'te" yazar), üstte gösterge kutuları (ilan sayısı, son 24 saatte
   yeni, en ucuz, medyan, kaynaklara göre dağılım) — hepsi seçili filtrelere göre; durak gruplarının başında
   fiyatların nokta şeridi ve bütçe çizgisi. Filtreler yandan açılan panelde; aktif filtreler × ile kaldırılan
   etiketler olarak görünür. Açık/koyu tema düğmesi; telefonda alt sekme çubuğu (İlanlar · Harita · Ayarlar · Durum).

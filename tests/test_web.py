@@ -73,3 +73,22 @@ def test_links_and_overview(cfg, tmp_path):
     assert "Kızılay" in ov and "<b>2</b> ilan" in ov and "Filtre sayfası" in ov
     p.send_daily_summary()
     assert "Filtre sayfası" in p.notifier.messages[-1]
+
+
+def test_payload_photos_skip_emlakjet(cfg, tmp_path):
+    """emlakjet görselleri başka siteden yüklenemiyor (403); sahibinden/hepsiemlak görselleri kalır."""
+    db = DB(tmp_path / "img.sqlite")
+    p = Pipeline(cfg, db, Cap(), sources=[])
+    nb = cfg.neighborhood_by_key("kizilay")
+    for src, img in [("emlakjet", "https://imaj.emlakjet.com/resize/480/0/listing/1/a.jpg"),
+                     ("sahibinden", "https://i0.shbdn.com/photos/1/x5_a.jpg"),
+                     ("hepsiemlak", "http://insecure.example/a.jpg")]:
+        l = Listing(source=src, source_id="1", url=f"https://x/{src}", title="Eşyalı 1+1", price=30000, rooms="1+1",
+                    lat=39.9231, lon=32.8542, district="Kızılay", neighborhood_key="kizilay", extras={"img": img})
+        p.enrich(l, nb)
+        p.evaluate(l, cfg.budget)
+        db.upsert(l)
+    items = {i["src"]: i for i in build_payload(cfg, db)["items"]}
+    assert items["emlakjet"]["img"] is None
+    assert items["sahibinden"]["img"] == "https://i0.shbdn.com/photos/1/x5_a.jpg"
+    assert items["hepsiemlak"]["img"] is None           # yalnız https
