@@ -163,3 +163,42 @@ def test_collect_sahibinden_keeps_list_on_detail_wall(cfg, tmp_path, monkeypatch
     assert len(with_coords) == 2                                       # duvara kadar alınan 2 detay
     cache = json.loads((tmp_path / "d" / "feed" / "sahibinden_details.json").read_text(encoding="utf-8"))
     assert sum(1 for v in cache.values() if v.get("lat")) == 2 and sum(1 for v in cache.values() if v.get("attempts")) == 1
+
+
+def _patch_feed_push(cfg, monkeypatch, units_by_source):
+    """main.py feed-push'u ağ/tarayıcı olmadan çalıştırır; çağrı sırasını kaydeder."""
+    import main as mainmod
+    from m2kira import feed as feedmod
+    calls = []
+
+    def payload(src):
+        units = units_by_source[src]
+        return {"generated": "t", "source": src, "units": units, "errors": [] if units else ["oturum istiyor"],
+                "listings": sum(len(u["listings"]) for u in units)}
+
+    monkeypatch.setattr(mainmod, "load_config", lambda path=None: cfg)
+    monkeypatch.setattr(mainmod, "setup_logging", lambda *a, **k: None)
+    monkeypatch.setattr(feedmod, "sync_budget_from_web", lambda c, d: None)
+    monkeypatch.setattr(feedmod, "notify_login_needed", lambda c, d, e: calls.append(f"login-check:{len(e)}"))
+    monkeypatch.setattr(feedmod, "collect_sahibinden",
+                        lambda c, d, max_details=None: (calls.append("collect:sahibinden"), payload("sahibinden"))[1])
+    monkeypatch.setattr(feedmod, "collect_hepsiemlak", lambda c, d: (calls.append("collect:hepsiemlak"), payload("hepsiemlak"))[1])
+    monkeypatch.setattr(feedmod, "push", lambda c, p: (calls.append(f"push:{p['source']}"), "ok")[1])
+    monkeypatch.setattr(feedmod, "trigger", lambda c, s: (calls.append(f"trigger:{s}"), True)[1])
+    return mainmod, calls
+
+
+def test_feed_push_runs_sahibinden_first_and_triggers_per_source(cfg, monkeypatch):
+    unit = [{"unit": "u", "listings": [{}]}]
+    mainmod, calls = _patch_feed_push(cfg, monkeypatch, {"sahibinden": unit, "hepsiemlak": unit})
+    assert mainmod.main(["feed-push"]) == 0
+    assert calls == ["collect:sahibinden", "login-check:0", "push:sahibinden", "trigger:sahibinden_feed",
+                     "collect:hepsiemlak", "push:hepsiemlak", "trigger:hepsiemlak_feed"]
+
+
+def test_feed_push_skips_empty_source_but_continues(cfg, monkeypatch):
+    unit = [{"unit": "u", "listings": [{}]}]
+    mainmod, calls = _patch_feed_push(cfg, monkeypatch, {"sahibinden": [], "hepsiemlak": unit})
+    assert mainmod.main(["feed-push"]) == 1          # sahibinden taranamadı -> görev hata koduyla biter
+    assert "push:sahibinden" not in calls and "trigger:sahibinden_feed" not in calls
+    assert calls[-2:] == ["push:hepsiemlak", "trigger:hepsiemlak_feed"]

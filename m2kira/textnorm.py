@@ -114,7 +114,10 @@ _FLAG_PATTERNS: list[tuple[str, re.Pattern]] = [
         r"|kadinlara|bayanlara|kizlara|erkeklere|ogrencilere|ogrenciye(?!\s*(?:uygun|de\b|da\b))"
         r"|sadece\s*(?:kiz|bayan|kadin|erkek|ogrenci|aile|memur)"
     )),
-    ("oda", re.compile(r"oda\s*olarak|tek\s*oda\s*kiralik|\boda\s*kiralik|ortak\s*kullanim|ev\s*arkadasi|paylasimli|flatmate")),
+    # oda / yatak kiralama ve yurtlar ("yurt dışı" ya da "yurda yakın" gibi ifadeler değil)
+    ("oda", re.compile(r"oda\s*olarak|tek\s*oda\s*kiralik|\boda\s*kiralik|kiralik\s*odalar?\b|oda\s*seklinde|yatak\s*basi"
+                       r"|ortak\s*kullanim|ev\s*arkadasi|paylasimli|flatmate"
+                       r"|\byurt\s*(?:dairesi|odasi|odalari)\b|\byurdunda\b|\bapart\s*yurt")),
     ("ankaray_uyari", re.compile(r"ankaray|emek\s*metro|bahcelievler\s*metro|besevler\s*metro|\basti\b|a\.s\.t\.i|maltepe\s*metro"
                                  r"|demirtepe\s*(?:metro|istasyon|durag)")),
     ("kot_bodrum", re.compile(r"\bkot\s*-?\s*[1-3]\b|\bkot\s*kat|yari\s*bodrum|yuksek\s*bodrum|bodrum\s*kat|\bbodrum\b")),

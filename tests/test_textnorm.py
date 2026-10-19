@@ -37,6 +37,14 @@ def test_flags():
     assert "kisit" in f
     assert "kisit" in detect_flags("KADINLARA ÖZEL│KİRAYA TÜM FATURALAR DAHİL")
     assert "oda" in detect_flags("(ODA OLARAK) FATURALAR DAHİL EŞYALI KİRALIK")
+    # sahibinden'den gelen yurt / oda ilanları (canlı veriden)
+    assert "oda" in detect_flags("ANKARA'NIN MERKEZİ KIZILAY'DA KİRALIK YURT DAİRESİ Loft Dairelerde ÇİFT KİŞİLİK ODALARDA")
+    assert "oda" in detect_flags("Balgat'da eşyalı kiralık odalar")
+    assert "oda" in detect_flags("Erkek öğrenci yurdunda, üniversite öğrencisine")
+    assert "oda" in detect_flags("1+0 ODA ŞEKLİNDE KİRAYA VERİLMEKTE OLUP")
+    for ok_text in ("Ev sahibi yurt dışında olduğu için eşyalı kiralık 1+1", "KYK yurduna yakın eşyalı 2+1",
+                    "2 odalı kiralık daire", "çift kişilik yatak odası, gardırop", "FULL EŞYALI APART DAİRE"):
+        assert "oda" not in detect_flags(ok_text), ok_text
     assert "gunluk" in detect_flags("Merkezi Konumda Günlük Kiralık Lüks Apart")
     assert "acil" in detect_flags("ACİL KİRALIK 2+1")
     assert "depozitosuz" in detect_flags("Depozitosuz eşyalı")
