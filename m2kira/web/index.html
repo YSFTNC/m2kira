@@ -154,10 +154,10 @@ select.sel { height: 42px; border: 1px solid var(--border); background: var(--su
 .ghead { display: grid; grid-template-columns: minmax(0, 1fr) minmax(200px, 420px); gap: 8px 20px; align-items: end; padding-bottom: 10px; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
 .ghead h2 { margin: 0; font-size: 20px; letter-spacing: -.015em; }
 .ghead .gstat { font-size: 13px; color: var(--fg-2); margin-top: 2px; }
-.strip { position: relative; }
+.strip { position: relative; padding-top: 15px; }
 .strip svg { display: block; width: 100%; height: auto; overflow: visible; }
-.strip .axis { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 2px; position: relative; }
-.strip .bud { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; }
+.strip .axis { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 2px; }
+.strip .bud { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; font-size: 11px; color: var(--muted); }
 .tip { position: fixed; z-index: 60; pointer-events: none; background: var(--fg); color: var(--bg); border-radius: 10px; padding: 7px 10px; font-size: 12.5px; max-width: 260px; box-shadow: var(--shadow-2); }
 .tip b { display: block; font-size: 14px; }
 
@@ -770,12 +770,13 @@ function stripSvg(arr, groupName) {
   const dots = pts.map((i) => `<circle cx="${x(i.p).toFixed(1)}" cy="${y}" r="5" fill="var(--dot)" stroke="var(--surface)" stroke-width="2" fill-opacity=".85"/>`).join("");
   const budgetPct = bx != null ? (bx / W * 100).toFixed(2) : null;
   return `<div class="strip" data-strip="${esc(groupName)}">
+    ${budgetPct != null ? `<span class="bud" style="left:${budgetPct}%">bütçe ${esc(kTL(D.budget))}</span>` : ""}
     <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(groupName)} fiyat dağılımı: ${pts.length} ilan, ${esc(TL(pts[0] ? pts[0].p : null))} – ${esc(TL(pts.length ? pts[pts.length - 1].p : null))}" tabindex="0">
       <line x1="${padX}" x2="${W - padX}" y1="${y}" y2="${y}" stroke="var(--grid)" stroke-width="1"/>
       ${bx != null ? `<line x1="${bx.toFixed(1)}" x2="${bx.toFixed(1)}" y1="2" y2="${H - 2}" stroke="var(--axis)" stroke-width="1"/>` : ""}
       ${dots}
     </svg>
-    <div class="axis"><span>${esc(kTL(sc.min))}</span>${budgetPct != null ? `<span class="bud" style="left:${budgetPct}%">bütçe</span>` : ""}<span>${esc(kTL(sc.max))}</span></div>
+    <div class="axis"><span>${esc(kTL(sc.min))}</span><span>${esc(kTL(sc.max))}</span></div>
   </div>`;
 }
 function bindStrips(groups) {
