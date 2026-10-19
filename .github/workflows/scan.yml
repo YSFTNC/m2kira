@@ -43,6 +43,7 @@ jobs:
       M2KIRA_SOURCES: hepsiemlak,emlakjet,sahibinden_mail
       M2KIRA_BROWSER_CHANNEL: chrome   # runner'da hazır kurulu Google Chrome
       M2KIRA_HEADLESS: "0"             # görünür Chrome (xvfb sanal ekranında); headless Cloudflare'a takıldı
+      M2KIRA_BLOCK_COOLDOWN_MIN: "0"   # her çalıştırma farklı IP: önceki engel yüzünden kaynağı atlama
     steps:
       - uses: actions/checkout@v4
 

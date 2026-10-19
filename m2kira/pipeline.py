@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import statistics
 import threading
 from datetime import datetime, timezone
@@ -184,6 +185,8 @@ class Pipeline:
             s_stats = {"neighborhoods": 0, "items": 0, "pages": 0, "errors": 0, "blocked": False}
             summary["sources"][src.name] = s_stats
             blocked_until = self.db.get_setting(f"blocked_until:{src.name}")
+            if os.environ.get("M2KIRA_BLOCK_COOLDOWN_MIN", "").strip() == "0":
+                blocked_until = None
             if blocked_until and blocked_until > started:
                 s_stats["blocked"] = True
                 summary["errors"].append(f"{src.name}: kısa süre önce engellendi, {blocked_until} UTC'ye kadar atlanıyor")
@@ -350,7 +353,12 @@ class Pipeline:
             raise access_error
 
     def _mark_blocked(self, src: Source) -> None:
-        mins = float(self.cfg.get("block_cooldown_min", default=45))
+        # GitHub Actions'ta her çalıştırma farklı IP'den gelir; bekleme orada M2KIRA_BLOCK_COOLDOWN_MIN=0 ile kapatılır
+        env = os.environ.get("M2KIRA_BLOCK_COOLDOWN_MIN")
+        mins = float(env) if env not in (None, "") else float(self.cfg.get("block_cooldown_min", default=45))
+        if mins <= 0:
+            self.db.set_setting(f"blocked_until:{src.name}", None)
+            return
         until = datetime.fromtimestamp(datetime.now(timezone.utc).timestamp() + mins * 60, tz=timezone.utc)
         self.db.set_setting(f"blocked_until:{src.name}", until.strftime("%Y-%m-%dT%H:%M:%SZ"))
 
