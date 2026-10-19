@@ -225,20 +225,50 @@ def collect_sahibinden(cfg: Config, db: DB, max_details: Optional[int] = None) -
     return _payload("sahibinden", units, errors)
 
 
-def notify_login_needed(cfg: Config, db: DB, errors: list[str]) -> None:
-    """sahibinden oturumu düştüyse PC'den Telegram'a günde en fazla bir uyarı."""
-    if not any("oturum" in e.lower() or "giriş" in e.lower() or "giris" in e.lower() for e in errors):
-        return
-    if not db.notice_due("sahibinden-login", 24):
-        return
+def _is_login_error(errors: list[str]) -> bool:
+    return any("oturum" in e.lower() or "giriş" in e.lower() or "giris" in e.lower() for e in errors)
+
+
+def _send_pc_notice(cfg: Config, text: str, subject: str) -> None:
     try:
         from .notify import build_notifier
-        build_notifier(cfg).send(
-            "🔑 <b>sahibinden oturumu düştü</b>\nPC'de proje klasöründe şunu çalıştırıp açılan Chrome'da giriş yap:\n"
-            "<code>python main.py sahibinden-chrome</code>\nGiriş yapınca pencereyi kapatabilirsin; sonraki taramada "
-            "sahibinden ilanları siteye yine gelir.", subject="m2kira sahibinden")
+        build_notifier(cfg).send(text, subject=subject)
     except Exception as exc:  # noqa: BLE001
         log.warning("uyarı gönderilemedi: %s", exc)
+
+
+FEED_HINTS = {
+    "sahibinden": ("Bilgisayarda proje klasöründe <code>python main.py sahibinden-chrome</code> çalıştır; açılan Chrome'da "
+                   "sahibinden'i aç, doğrulama ya da giriş isterse geç, sonra pencereyi kapat."),
+    "hepsiemlak": ("Genelde hepsiemlak'ın hız sınırı ya da Cloudflare doğrulamasıdır ve birkaç saat içinde kendiliğinden "
+                   "düzelir. Sürerse bilgisayarın internet bağlantısına bak."),
+}
+
+
+def notify_feed_problem(cfg: Config, db: DB, source: str, payload: dict[str, Any]) -> None:
+    """PC'de bir kaynak hiç taranamadıysa Telegram'a haber verir: sahibinden oturumu düştüyse hemen, diğer
+    hatalarda üst üste 2 başarısız çalıştırmadan sonra. Her uyarı en fazla günde bir; başarılı taramada sayaç sıfırlanır."""
+    key = f"feed_fail_streak:{source}"
+    if payload.get("units"):
+        if db.get_setting(key, 0):
+            db.set_setting(key, 0)
+        return
+    streak = int(db.get_setting(key, 0) or 0) + 1
+    db.set_setting(key, streak)
+    errors = [str(e) for e in payload.get("errors") or []]
+    if source == "sahibinden" and _is_login_error(errors):
+        if db.notice_due("sahibinden-login", 24):
+            _send_pc_notice(cfg,
+                "🔑 <b>sahibinden oturumu düştü</b>\nPC'de proje klasöründe şunu çalıştırıp açılan Chrome'da giriş yap:\n"
+                "<code>python main.py sahibinden-chrome</code>\nGiriş yapınca pencereyi kapatabilirsin; sonraki taramada "
+                "sahibinden ilanları siteye yine gelir.", "m2kira sahibinden")
+        return
+    if streak < 2 or not db.notice_due(f"feed-fail:{source}", 24):
+        return
+    from .format import esc
+    detail = esc("; ".join(errors)[:300] or "bilinmeyen hata")
+    _send_pc_notice(cfg, f"⚠️ <b>{esc(source)} bilgisayardan taranamıyor</b> ({streak} çalıştırmadır)\n{detail}\n"
+                         f"{FEED_HINTS.get(source, '')}", f"m2kira {source}")
 
 
 # ------------------------------------------------------------------ GitHub

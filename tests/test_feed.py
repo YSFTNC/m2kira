@@ -179,7 +179,7 @@ def _patch_feed_push(cfg, monkeypatch, units_by_source):
     monkeypatch.setattr(mainmod, "load_config", lambda path=None: cfg)
     monkeypatch.setattr(mainmod, "setup_logging", lambda *a, **k: None)
     monkeypatch.setattr(feedmod, "sync_budget_from_web", lambda c, d: None)
-    monkeypatch.setattr(feedmod, "notify_login_needed", lambda c, d, e: calls.append(f"login-check:{len(e)}"))
+    monkeypatch.setattr(feedmod, "notify_feed_problem", lambda c, d, s, p: calls.append(f"check:{s}:{len(p['units'])}"))
     monkeypatch.setattr(feedmod, "collect_sahibinden",
                         lambda c, d, max_details=None: (calls.append("collect:sahibinden"), payload("sahibinden"))[1])
     monkeypatch.setattr(feedmod, "collect_hepsiemlak", lambda c, d: (calls.append("collect:hepsiemlak"), payload("hepsiemlak"))[1])
@@ -192,8 +192,8 @@ def test_feed_push_runs_sahibinden_first_and_triggers_per_source(cfg, monkeypatc
     unit = [{"unit": "u", "listings": [{}]}]
     mainmod, calls = _patch_feed_push(cfg, monkeypatch, {"sahibinden": unit, "hepsiemlak": unit})
     assert mainmod.main(["feed-push"]) == 0
-    assert calls == ["collect:sahibinden", "login-check:0", "push:sahibinden", "trigger:sahibinden_feed",
-                     "collect:hepsiemlak", "push:hepsiemlak", "trigger:hepsiemlak_feed"]
+    assert calls == ["collect:sahibinden", "check:sahibinden:1", "push:sahibinden", "trigger:sahibinden_feed",
+                     "collect:hepsiemlak", "check:hepsiemlak:1", "push:hepsiemlak", "trigger:hepsiemlak_feed"]
 
 
 def test_feed_push_skips_empty_source_but_continues(cfg, monkeypatch):
@@ -202,3 +202,29 @@ def test_feed_push_skips_empty_source_but_continues(cfg, monkeypatch):
     assert mainmod.main(["feed-push"]) == 1          # sahibinden taranamadı -> görev hata koduyla biter
     assert "push:sahibinden" not in calls and "trigger:sahibinden_feed" not in calls
     assert calls[-2:] == ["push:hepsiemlak", "trigger:hepsiemlak_feed"]
+
+
+def test_notify_feed_problem_streaks(cfg, tmp_path, monkeypatch):
+    from m2kira import feed as feedmod
+    import m2kira.notify as notifymod
+    sent = []
+
+    class N:
+        def send(self, text, subject="m2kira"):
+            sent.append(text)
+            return True
+
+    monkeypatch.setattr(notifymod, "build_notifier", lambda c: N())
+    db = DB(tmp_path / "n.sqlite")
+    ok = {"units": [{"unit": "u"}], "errors": []}
+    wall = {"units": [], "errors": ["sahibinden: doğrulama sayfası (Bir dakika lütfen)"]}
+    feedmod.notify_feed_problem(cfg, db, "sahibinden", wall)
+    assert sent == []                                   # tek başarısızlık: sessiz
+    feedmod.notify_feed_problem(cfg, db, "sahibinden", wall)
+    assert len(sent) == 1 and "2 çalıştırmadır" in sent[0] and "sahibinden-chrome" in sent[0]
+    feedmod.notify_feed_problem(cfg, db, "sahibinden", wall)
+    assert len(sent) == 1                               # günde en fazla bir
+    feedmod.notify_feed_problem(cfg, db, "sahibinden", ok)
+    assert db.get_setting("feed_fail_streak:sahibinden") == 0
+    feedmod.notify_feed_problem(cfg, db, "sahibinden", {"units": [], "errors": ["sahibinden oturum istiyor"]})
+    assert len(sent) == 2 and "oturumu düştü" in sent[1]   # oturum: hemen

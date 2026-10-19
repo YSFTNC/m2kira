@@ -107,7 +107,7 @@ def main(argv: list[str] | None = None) -> int:
                 payload = feed.collect_hepsiemlak(cfg, db)
             else:
                 payload = feed.collect_sahibinden(cfg, db, max_details=args.details)
-                feed.notify_login_needed(cfg, db, payload["errors"])
+            feed.notify_feed_problem(cfg, db, source, payload)
             out = cfg.data_dir / "feed" / f"{source}.json"
             out.parent.mkdir(parents=True, exist_ok=True)
             out.write_text(_json.dumps(payload, ensure_ascii=False), encoding="utf-8")

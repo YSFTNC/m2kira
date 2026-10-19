@@ -345,6 +345,7 @@ dialog li { margin: 4px 0; }
     </div>
   </div>
   <div class="wrap">
+    <div class="banner warn" id="fresh" hidden role="status"></div>
     <div class="active" id="active"></div>
     <div class="kpis" id="kpis"></div>
     <div class="reshead"><span class="count" id="count"></span><span class="small" id="countsub"></span></div>
@@ -1018,7 +1019,7 @@ function renderStatus() {
   const feedAge = (k) => (fg[k] ? ageHours(fg[k]) : null);
   const feedOk = (k) => feedAge(k) != null && feedAge(k) <= (D.feed_max_age_hours || 3);
   const ejLevel = st.emlakjet ? (ageHours(st.emlakjet.last) > 5 ? "warn" : "ok") : "bad";
-  const feedLine = (k) => `<div class="kv">Son PC gönderimi: <b>${esc(fg[k] ? fmtWhen(fg[k]) : "yok")}</b>${fg[k] ? " (" + esc(ago(fg[k])) + ")" : ""}</div>${feedOk(k) ? "" : `<div class="kv">PC kapalıyken güncellenmez; mevcut ilanlar sitede kalır.</div>`}`;
+  const feedLine = (k) => `<div class="kv">Son PC gönderimi: <b>${esc(fg[k] ? fmtWhen(fg[k]) : "yok")}</b>${fg[k] ? " (" + esc(ago(fg[k])) + ")" : ""}</div>${feedOk(k) ? "" : `<div class="kv">Bilgisayar kapalıyken güncellenmez; uyutup şarjda bırakırsan 2 saatte bir uyanıp tarar. Mevcut ilanlar sitede kalır.</div>`}`;
   const tg = D.telegram_bot ? `<a href="https://t.me/${esc(D.telegram_bot)}" target="_blank" rel="noopener noreferrer">@${esc(D.telegram_bot)}</a>` : "Telegram botu";
   box.innerHTML = `<h1>Durum</h1>
   <div class="panel"><div class="kv">Sayfa üretildi <b>${esc(fmtWhen(D.generated))}</b> (${esc(ago(D.generated))}) · her <b>${D.schedule ? D.schedule.every_hours : 2} saatte</b> bir tarama, her gün <b>${esc(D.schedule ? D.schedule.summary : "09:00")}</b> özet · bildirimler ${tg}</div>
@@ -1028,8 +1029,8 @@ function renderStatus() {
     <p class="small" id="d-msg">${connected() ? "" : "Tarama başlatmak için sağ üstten GitHub'a bağlan."}</p></div>
   <div class="scards">
     ${srcCard("emlakjet", "emlakjet", "GitHub'da, her 2 saatte bir (PC'den bağımsız)", st.emlakjet, "", ejLevel)}
-    ${srcCard("hepsiemlak", "hepsiemlak", "PC açıkken 2 saatte bir → GitHub (Cloudflare GitHub'ı engelliyor)", st.hepsiemlak, feedLine("hepsiemlak"), feedOk("hepsiemlak") ? "ok" : "warn")}
-    ${srcCard("sahibinden", "sahibinden", "PC açıkken, giriş yapılmış Chrome profilinle görünmez tarama → GitHub · ayrıca kayıtlı arama bildirimi uygulamada", st.sahibinden, feedLine("sahibinden") + `<div class="kv"><a href="https://banaozel.sahibinden.com/favori-aramalarim" target="_blank" rel="noopener noreferrer">Kayıtlı aramalarım ↗</a></div>`, feedOk("sahibinden") ? "ok" : (fg.sahibinden ? "warn" : "bad"))}
+    ${srcCard("hepsiemlak", "hepsiemlak", "Evdeki bilgisayardan, açıkken ya da uykudayken (şarjda) 2 saatte bir; bulut sunucularını Cloudflare engelliyor", st.hepsiemlak, feedLine("hepsiemlak"), feedOk("hepsiemlak") ? "ok" : "warn")}
+    ${srcCard("sahibinden", "sahibinden", "Evdeki bilgisayardan, açıkken ya da uykudayken (şarjda), giriş yapılmış Chrome profilinle görünmez tarama · bilgisayar kapalıyken sahibinden uygulamasının kayıtlı arama bildirimi", st.sahibinden, feedLine("sahibinden") + `<div class="kv"><a href="https://banaozel.sahibinden.com/favori-aramalarim" target="_blank" rel="noopener noreferrer">Kayıtlı aramalarım ↗</a></div>`, feedOk("sahibinden") ? "ok" : (fg.sahibinden ? "warn" : "bad"))}
   </div>
   <div class="panel"><h2>Son çalıştırmalar</h2><div class="runs-wrap" id="d-runs"><p class="small">Yükleniyor…</p></div></div>`;
   $("#d-scan").onclick = async () => { if (!connected()) { openConn(); return; } try { await GH.dispatch(""); $("#d-msg").textContent = "Tarama başlatıldı (~3-5 dk)."; startPending("Tarama sürüyor"); setTimeout(loadRuns, 4000); } catch (e) { $("#d-msg").textContent = "Başlatılamadı: " + e.message; } };
@@ -1071,13 +1072,24 @@ function renderTabs() {
   for (const b of document.querySelectorAll("[data-tab]")) b.setAttribute("aria-selected", String(b.dataset.tab === t || (b.dataset.tab === "ilan" && t === "harita" && b.closest(".nav"))));
   $("#tab-ilan").hidden = S.tab !== "ilan"; $("#tab-ayar").hidden = S.tab !== "ayar"; $("#tab-durum").hidden = S.tab !== "durum";
 }
+// PC'den gelen kaynaklar (hepsiemlak, sahibinden) eskidiyse ilanlar sayfasında kısa bir uyarı
+function renderFresh() {
+  const box = $("#fresh"), fg = D.feed_generated || {}, max = D.feed_max_age_hours || 3;
+  const stale = ["sahibinden", "hepsiemlak"].filter((k) => !fg[k] || ageHours(fg[k]) > max);
+  if (!stale.length) { box.hidden = true; return; }
+  const seen = stale.filter((k) => fg[k]).map((k) => fg[k]).sort();
+  const when = seen.length ? `en son ${ago(seen[0])} güncellendi` : "henüz gelmedi";
+  box.innerHTML = `<b>${esc(stale.join(" ve "))}</b> ${when}. Bu kaynaklar evdeki bilgisayardan taranır ve bilgisayar kapalıyken durur. ` +
+    `Kapatmak yerine uyutup şarjda bırakırsan 2 saatte bir kendiliğinden uyanıp tarar. Sitedeki ilanları kalır; emlakjet her zaman güncellenir.`;
+  box.hidden = false;
+}
 function renderAll(rebuildFilters = true, keepFocus = false) {
   saveState(); renderTabs(); renderConn();
   if (S.tab === "ayar") { renderSettings(); return; }
   if (S.tab === "durum") { renderStatus(); return; }
   const base = D.items.filter((it) => pass(it, S, true));
   const list = base.filter((it) => pass(it, S, false)).sort(sorter(S.sort));
-  renderLine(base); renderActive(); renderKpis(list);
+  renderFresh(); renderLine(base); renderActive(); renderKpis(list);
   if (!$("#drawer").hidden && !keepFocus) buildFilters();
   $("#dapply").textContent = `${NF.format(list.length)} ilanı göster`;
   $("#count").textContent = S.view === "map" ? "Harita" : `${NF.format(list.length)} ilan`;
