@@ -25,6 +25,7 @@ class FeedSource(Source):
     name = "hepsiemlak"
     select_key = "hepsiemlak_feed"
     supports_detail = False
+    site_scraper = False   # siteye gitmez; PC'nin gönderdiği dosyayı okur (her besleme bir kez işlenir)
     env_var = "M2KIRA_FEED_FILE"
 
     def __init__(self, cfg):

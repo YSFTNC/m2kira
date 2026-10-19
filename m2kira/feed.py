@@ -322,7 +322,8 @@ def push(cfg: Config, payload: dict[str, Any]) -> str:
     return f"{repo}@{branch}:{path}"
 
 
-def trigger(cfg: Config, sources: str = "hepsiemlak_feed,sahibinden_feed") -> bool:
+def trigger(cfg: Config, sources: str = "") -> bool:
+    """GitHub işini başlatır; boş `sources` = iş akışının varsayılan kaynakları."""
     fc = feed_cfg(cfg)
     r = _gh(["workflow", "run", "scan.yml", "--repo", fc["repo"], "-f", f"sources={sources}"])
     if r.returncode != 0:

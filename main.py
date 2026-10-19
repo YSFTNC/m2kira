@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 import sys
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
@@ -49,7 +50,8 @@ def main(argv: list[str] | None = None) -> int:
     p_scan.add_argument("--dry", action="store_true", help="bildirim gönderme, konsola yaz")
     p_scan.add_argument("--source", default=None, help="yalnızca bu kaynak (hepsiemlak|emlakjet|sahibinden)")
     p_scan.add_argument("--neighborhood", default=None, help="yalnızca bu mahalle")
-    sub.add_parser("summary")
+    p_sum = sub.add_parser("summary")
+    p_sum.add_argument("--force", action="store_true", help="bugün gönderilmiş olsa da yeniden gönder")
     p_list = sub.add_parser("list")
     p_list.add_argument("--all", action="store_true", help="bütçe üstü (pazarlıkla) dahil")
     sub.add_parser("status")
@@ -125,10 +127,11 @@ def main(argv: list[str] | None = None) -> int:
                 log.error("%s beslemesi gönderilemedi: %s", source, exc)
                 rc = 1
                 continue
-            # her kaynak kendi işini hemen tetikler: bildirimler sonraki kaynağın taramasını beklemez
-            # (GitHub tarafı aynı concurrency grubunda sıraya alır; her besleme bir kez işlenir)
-            if feed.trigger(cfg, f"{source}_feed"):
-                log.info("GitHub işi tetiklendi (%s_feed)", source)
+            # her kaynak gönderilir gönderilmez GitHub işini tetikler: bildirimler sonraki kaynağı beklemez.
+            # Varsayılan kaynaklarla tetiklenir: her çalıştırma taze ve işlenmemiş tüm beslemeleri, vakti gelmişse
+            # emlakjet'i ve kaçan günlük özeti de işler. Sıradaki bir çalıştırma iptal olsa da sonraki hepsini toplar.
+            if feed.trigger(cfg, ""):
+                log.info("GitHub işi tetiklendi (%s beslemesi gönderildi)", source)
         awake.__exit__(None, None, None)
         db.close()
         return rc
@@ -182,8 +185,13 @@ def main(argv: list[str] | None = None) -> int:
                 print("  !", e)
             for name, st in s.get("sources", {}).items():
                 print(f"  {name}: {st}")
+            if os.environ.get("M2KIRA_SUMMARY_FALLBACK") == "1" and p.daily_summary_if_due():
+                print("günlük özet gönderildi (zamanlanmış özet çalışmamıştı)")
         elif args.cmd == "summary":
-            p.send_daily_summary()
+            if args.force:
+                p.send_daily_summary()
+            elif not p.daily_summary_if_due(ignore_time=True):
+                print("bugünün özeti zaten gönderildi (yeniden göndermek için --force)")
         elif args.cmd == "bot-once":
             tg = notifier if isinstance(notifier, TelegramNotifier) else (
                 next((n for n in notifier.notifiers if isinstance(n, TelegramNotifier)), None) if isinstance(notifier, MultiNotifier) else None)

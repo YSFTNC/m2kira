@@ -263,3 +263,45 @@ def test_budget_and_neighborhood_settings(env):
     assert p.remove_neighborhood("Kızılay") and len(p.neighborhoods()) == n0 - 1
     p.add_neighborhood("Kızılay")
     assert len(p.neighborhoods()) == n0
+
+
+def test_min_interval_skips_recent_site_scan(env, monkeypatch):
+    """GitHub'da zamanlayıcı ve PC aynı saatlere denk gelirse site 90 dakikadan sık taranmaz; besleme kaynakları muaf."""
+    cfg, db, notifier = env
+
+    class Counting(FakeSource):
+        calls = 0
+
+        def scan_neighborhood(self, nb):
+            Counting.calls += 1
+            return super().scan_neighborhood(nb)
+
+    src = Counting(cfg, [mk("1", 30000, "Eşyalı 1+1")])
+    p = Pipeline(cfg, db, notifier, sources=[src])
+    monkeypatch.setenv("M2KIRA_MIN_INTERVAL_MIN", "90")
+    p.run_scan()
+    first = Counting.calls
+    assert first > 0 and db.get_setting("last_scan_ok:hepsiemlak")
+    s = p.run_scan()
+    assert Counting.calls == first and s["sources"]["hepsiemlak"].get("skipped")      # 90 dk dolmadı
+    src.site_scraper = False
+    p.run_scan()
+    assert Counting.calls > first                                                     # besleme gibi kaynaklar muaf
+    src.site_scraper = True
+    monkeypatch.setenv("M2KIRA_MIN_INTERVAL_MIN", "0")                                 # Şimdi tara (force)
+    before = Counting.calls
+    p.run_scan()
+    assert Counting.calls > before
+
+
+def test_daily_summary_once_per_day_and_catches_up(env):
+    from datetime import datetime
+    cfg, db, notifier = env
+    p = Pipeline(cfg, db, notifier, sources=[])
+    assert not p.daily_summary_if_due(now=datetime(2026, 10, 20, 8, 59))             # özet saatinden önce
+    assert p.daily_summary_if_due(now=datetime(2026, 10, 20, 11, 7))                 # 09:00 zamanlaması düştü
+    assert len(notifier.messages) == 1
+    assert not p.daily_summary_if_due(now=datetime(2026, 10, 20, 13, 7))             # günde bir
+    assert not p.daily_summary_if_due(ignore_time=True, now=datetime(2026, 10, 20, 9, 0))
+    assert p.daily_summary_if_due(ignore_time=True, now=datetime(2026, 10, 21, 9, 0))
+    assert len(notifier.messages) == 2

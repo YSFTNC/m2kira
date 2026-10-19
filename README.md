@@ -128,8 +128,12 @@ giriş yap, pencereyi kapat.
 Görev oturum açıkken 2 saatte bir ve oturum açılışında `python main.py feed-push` çalıştırır:
 önce sahibinden (birkaç dakika), sonra hepsiemlak (hızlı geçiş + günde bir tam geçiş) taranır. Her kaynağın
 sonucu bittiği anda reponun `feed` dalına (`feed/sahibinden.json`, `feed/hepsiemlak.json`) yazılır ve
-GitHub işi o kaynak için hemen tetiklenir (`sources=sahibinden_feed` / `hepsiemlak_feed`); yavaş bir
-hepsiemlak geçişi sahibinden bildirimlerini bekletmez. Tek kaynak: `python main.py feed-push --only sahibinden`.
+GitHub işi varsayılan kaynaklarla hemen tetiklenir; yavaş bir hepsiemlak geçişi sahibinden bildirimlerini
+bekletmez. Her GitHub çalıştırması taze ve işlenmemiş tüm beslemeleri, vakti gelmişse emlakjet'i ve kaçan
+günlük özeti işler; bu yüzden GitHub'ın zamanlayıcısı bir çalıştırmayı düşürse ya da sıradaki bir iş iptal
+olsa da veri kaybolmaz. emlakjet 90 dakikadan sık taranmaz (sitedeki "Şimdi tara" bu kuralı atlar).
+Bir kaynak üst üste iki çalıştırmada hiç taranamazsa PC Telegram'a çözüm önerisiyle haber verir.
+Tek kaynak: `python main.py feed-push --only sahibinden`.
 GitHub tarafı beslemeyi normal bir kaynak gibi işler: yeni ilan / fiyat düşüşü bildirimi, kopya
 tespiti, filtre sayfası. 3 saatten eski besleme işlenmez (ilanlar silinmez, uyarı gitmez); aynı besleme
 iki kez işlenmez. Bütçe, yayınlanan `data.json`'dan alınır (`/butce` değişikliği PC'ye de yansır).

@@ -27,6 +27,15 @@ STICKY = ("description", "lat", "lon", "heating", "building_age", "elevator", "m
           "furnished_src", "office", "floor", "floor_no", "listed_date", "rooms")
 
 
+def _minutes_between(a: str, b: str) -> float:
+    """İki UTC zaman damgası (YYYY-MM-DDTHH:MM:SSZ) arasındaki dakika; okunamazsa sonsuz."""
+    try:
+        fmt = "%Y-%m-%dT%H:%M:%SZ"
+        return (datetime.strptime(b, fmt) - datetime.strptime(a, fmt)).total_seconds() / 60.0
+    except (TypeError, ValueError):
+        return float("inf")
+
+
 class Pipeline:
     def __init__(self, cfg: Config, db: DB, notifier: Notifier, sources: Optional[list[Source]] = None):
         self.cfg = cfg
@@ -192,6 +201,13 @@ class Pipeline:
                 s_stats["blocked"] = True
                 summary["errors"].append(f"{src.name}: kısa süre önce engellendi, {blocked_until} UTC'ye kadar atlanıyor")
                 continue
+            # GitHub'da hem zamanlayıcı hem PC tetikleyebilir: siteyi `M2KIRA_MIN_INTERVAL_MIN` dakikadan sık tarama
+            min_iv = float(os.environ.get("M2KIRA_MIN_INTERVAL_MIN", "") or 0)
+            last_ok = self.db.get_setting(f"last_scan_ok:{src.name}")
+            if min_iv > 0 and getattr(src, "site_scraper", True) and last_ok and _minutes_between(last_ok, started) < min_iv:
+                s_stats["skipped"] = True
+                log.info("%s: %s UTC'de tarandı; %g dk dolmadan yeniden taranmıyor", src.name, last_ok, min_iv)
+                continue
             src.db = self.db  # tam geçiş planı, e-posta UID'si, güncel bütçe
             if hasattr(src, "begin_run"):
                 src.begin_run()
@@ -249,6 +265,8 @@ class Pipeline:
                                                          f"{esc(s_stats['last_error'])}")
             elif not s_stats["blocked"]:
                 self.db.set_setting(streak_key, 0)
+            if not s_stats["blocked"] and s_stats["neighborhoods"]:
+                self.db.set_setting(f"last_scan_ok:{src.name}", started)
         summary["notified"] = self._notify_events(budget)
         summary["finished"] = utcnow()
         self.last_summary = summary
@@ -572,6 +590,20 @@ class Pipeline:
         if link:
             text += f'\n\n🔎 <a href="{esc(link)}">Filtre sayfası</a> (durak durak, harita, işe ulaşım süresi)'
         self.notifier.send(text, subject="m2kira günlük özet")
+        self.db.set_setting("summary_sent_on", datetime.now().date().isoformat())
+
+    def daily_summary_if_due(self, ignore_time: bool = False, now: Optional[datetime] = None) -> bool:
+        """Günlük özeti günde bir kez gönderir. GitHub'ın zamanlanmış çalıştırması düşerse özet, özet saatinden
+        sonraki ilk çalıştırmada (zamanlayıcı ya da PC tetiklemesi) gider. Saat yerel saattir (TZ)."""
+        now = now or datetime.now()
+        if self.db.get_setting("summary_sent_on") == now.date().isoformat():
+            return False
+        hh, mm = (int(x) for x in str(self.cfg.get("daily_summary_time", default="09:00")).split(":")[:2])
+        if not ignore_time and (now.hour, now.minute) < (hh, mm):
+            return False
+        self.send_daily_summary()
+        self.db.set_setting("summary_sent_on", now.date().isoformat())
+        return True
 
     def status_text(self) -> str:
         c = self.db.counts()

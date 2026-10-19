@@ -160,6 +160,7 @@ class SahibindenMailSource(Source):
     name = "sahibinden_mail"
     supports_detail = False
     per_neighborhood = False   # mahalle mahalle değil, tek seferde
+    site_scraper = False       # siteye değil e-posta kutusuna bakar
 
     def __init__(self, cfg):
         super().__init__(cfg)

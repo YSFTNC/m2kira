@@ -16,6 +16,7 @@ class Source:
     name: str = "base"
     supports_detail: bool = False
     per_neighborhood: bool = True   # False: tek çağrıda tüm ilanlar (birleşik arama, e-posta)
+    site_scraper: bool = True       # ilan sitesine doğrudan istek atar (GitHub'da en az aralık kuralı uygulanır)
 
     def __init__(self, cfg: "Config"):
         self.cfg = cfg

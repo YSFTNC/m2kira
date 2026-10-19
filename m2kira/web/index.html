@@ -516,7 +516,7 @@ const GH = {
     catch (e) { if (retry && (e.status === 409 || e.status === 422)) { await new Promise((r) => setTimeout(r, 1500)); return this.writeSettings(obj, false); } throw e; }
     return obj.updated;
   },
-  async dispatch(sources = "") { await this.api(`repos/${this.repo()}/actions/workflows/${D.repo.workflow}/dispatches`, { method: "POST", body: JSON.stringify({ ref: "main", inputs: { sources } }) }); },
+  async dispatch(sources = "", force = "") { await this.api(`repos/${this.repo()}/actions/workflows/${D.repo.workflow}/dispatches`, { method: "POST", body: JSON.stringify({ ref: "main", inputs: force ? { sources, force } : { sources } }) }); },
   async runs() { return this.api(`repos/${this.repo()}/actions/runs?per_page=6`, {}, !!this.token()); },
 };
 function connected() { return !!GH.token(); }
@@ -1033,7 +1033,7 @@ function renderStatus() {
     ${srcCard("sahibinden", "sahibinden", "Evdeki bilgisayardan, açıkken ya da uykudayken (şarjda), giriş yapılmış Chrome profilinle görünmez tarama · bilgisayar kapalıyken sahibinden uygulamasının kayıtlı arama bildirimi", st.sahibinden, feedLine("sahibinden") + `<div class="kv"><a href="https://banaozel.sahibinden.com/favori-aramalarim" target="_blank" rel="noopener noreferrer">Kayıtlı aramalarım ↗</a></div>`, feedOk("sahibinden") ? "ok" : (fg.sahibinden ? "warn" : "bad"))}
   </div>
   <div class="panel"><h2>Son çalıştırmalar</h2><div class="runs-wrap" id="d-runs"><p class="small">Yükleniyor…</p></div></div>`;
-  $("#d-scan").onclick = async () => { if (!connected()) { openConn(); return; } try { await GH.dispatch(""); $("#d-msg").textContent = "Tarama başlatıldı (~3-5 dk)."; startPending("Tarama sürüyor"); setTimeout(loadRuns, 4000); } catch (e) { $("#d-msg").textContent = "Başlatılamadı: " + e.message; } };
+  $("#d-scan").onclick = async () => { if (!connected()) { openConn(); return; } try { await GH.dispatch("", "1"); $("#d-msg").textContent = "Tarama başlatıldı (~3-5 dk)."; startPending("Tarama sürüyor"); setTimeout(loadRuns, 4000); } catch (e) { $("#d-msg").textContent = "Başlatılamadı: " + e.message; } };
   $("#d-refresh").onclick = () => reloadData(true);
   loadRuns();
 }
