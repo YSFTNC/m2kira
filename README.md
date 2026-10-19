@@ -37,7 +37,8 @@ bilgi, token ya da sahibinden oturumu içermez).
 
 | Kaynak | Nerede çalışır | Bildirim |
 |---|---|---|
-| hepsiemlak + emlakjet | GitHub Actions, her 2 saatte (PC'den bağımsız) | Telegram kartı, 09:00 özet |
+| emlakjet | GitHub Actions, her 2 saatte (PC'den bağımsız) | Telegram kartı, 09:00 özet, filtre sayfası |
+| hepsiemlak | **PC açıkken** Görev Zamanlayıcı ile 2 saatte bir (pencere açmaz) → GitHub'a besleme | aynı Telegram kartları ve filtre sayfası; PC kapalıyken son bilinen hali kalır |
 | sahibinden | sahibinden'in kendi favori araması **"M2 eşyalı 39bin altı"** (hesabına kaydedildi) | sahibinden uygulaması (anlık) + e-posta; istenirse e-posta Telegram'a aktarılır |
 
 sahibinden arama sonuçları üye girişi ve gerçek tarayıcı istediği için sunucudan taranamıyor; bu
@@ -69,9 +70,10 @@ dakika olduğu için tarama 5 saatte bire düşer.
 Bilinmesi gerekenler:
 - GitHub zamanlanmış işleri bazen 5-15 dk gecikmeli başlatır.
 - Telegram komutları anında değil, bir sonraki çalıştırmada işlenir (`/liste`, `/butce` vb.).
-- GitHub'ın veri merkezi IP'lerinde hepsiemlak'ın Cloudflare'ı daha sert olabilir. Engellenirse
-  Telegram'a "hepsiemlak erişimi engelledi" uyarısı gelir; emlakjet etkilenmez. O durumda hepsiemlak
-  için evdeki bir Raspberry Pi ya da küçük bir VPS kullanılabilir (aşağıda).
+- hepsiemlak GitHub'ın veri merkezi IP'lerini Cloudflare doğrulamasında engelliyor (19 Ekim 2026'da
+  headless ve sanal ekranlı görünür Chrome ile denendi, ikisi de HTTP 403). Bu yüzden hepsiemlak ev
+  internetinden, PC açıkken taranıyor (aşağıda "hepsiemlak: PC beslemesi"). PC kapalıyken de
+  hepsiemlak isteniyorsa evde sürekli açık bir cihaz (Raspberry Pi, eski bir dizüstü) gerekir.
 - Public repoda 60 gün commit olmazsa GitHub zamanlamayı durdurur; Actions sekmesinden yeniden açılır.
 
 **sahibinden'i Telegram'a da almak (isteğe bağlı):** sahibinden e-postaları hangi adrese geliyorsa
@@ -85,6 +87,22 @@ gerçek Chrome'u ayrı bir profille açar; orada bir kez giriş yaptıktan sonra
 `python main.py scan --source sahibinden` aynı birleşik aramayı (2-3 sayfa) bu Chrome üzerinden tarar
 ve ilan detaylarından koordinatla yürüme mesafesini hesaplar.
 
+### hepsiemlak: PC beslemesi
+
+```powershell
+powershell -ExecutionPolicy Bypass -File deploy\pc-gorev.ps1          # Görev Zamanlayıcı görevini kur
+powershell -ExecutionPolicy Bypass -File deploy\pc-gorev.ps1 -Kaldir  # kaldır
+python main.py feed-push                                             # elle bir kez çalıştır
+```
+
+Görev oturum açıkken 2 saatte bir ve oturum açılışında `python main.py feed-push` çalıştırır:
+hepsiemlak taranır (hızlı geçiş + günde bir tam geçiş), sonuç reponun `feed` dalına
+`feed/hepsiemlak.json` olarak yazılır ve GitHub işi `sources=hepsiemlak_feed` ile hemen tetiklenir.
+GitHub tarafı beslemeyi normal bir kaynak gibi işler: yeni ilan / fiyat düşüşü bildirimi, kopya
+tespiti, filtre sayfası. 3 saatten eski besleme işlenmez (ilanlar silinmez, uyarı gitmez); aynı besleme
+iki kez işlenmez. Bütçe, yayınlanan `data.json`'dan alınır (`/butce` değişikliği PC'ye de yansır).
+Kayıt: `data\m2kira.log`.
+
 ### Alternatif çalışma yerleri
 
 - **Raspberry Pi / VPS** (komutlar anında, ev IP'si Cloudflare için en rahatı): `docker compose up -d --build`
@@ -94,7 +112,7 @@ ve ilan detaylarından koordinatla yürüme mesafesini hesaplar.
 ## Yerel kurulum ve komutlar
 
 ```bash
-python -m venv .venv && .venv\Scriptsctivate      # Linux/mac: source .venv/bin/activate
+python -m venv .venv && .venv\Scripts\activate      # Linux/mac: source .venv/bin/activate
 pip install -r requirements.txt
 python -m playwright install chromium
 copy .env.example .env                               # Telegram token'ı .env'e yazın
