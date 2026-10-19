@@ -1,8 +1,9 @@
 # m2kira — PC kapalıyken de çalışan zamanlanmış tarama (GitHub Actions, ücretsiz).
 #  * Her 2 saatte: Telegram komutlarını işle -> emlakjet (+ varsa sahibinden e-postaları) + PC'den gelen
-#    hepsiemlak beslemesini işle -> bildir.
-#  * PC açıkken Görev Zamanlayıcı `python main.py feed-push` ile hepsiemlak'ı tarar, `feed` dalına yazar ve
-#    bu işi `sources=hepsiemlak_feed` ile hemen tetikler (hepsiemlak GitHub IP'lerini Cloudflare'da engelliyor).
+#    hepsiemlak ve sahibinden beslemelerini işle -> bildir.
+#  * PC açıkken Görev Zamanlayıcı `python main.py feed-push` ile hepsiemlak'ı ve sahibinden'i tarar, `feed`
+#    dalına yazar ve bu işi `sources=hepsiemlak_feed,sahibinden_feed` ile hemen tetikler (hepsiemlak GitHub
+#    IP'lerini Cloudflare'da engelliyor; sahibinden giriş yapılmış gerçek Chrome istiyor).
 #  * Her gün 09:00 (TR): günlük özet.  * Her çalıştırmada filtre sayfası GitHub Pages'e yayınlanır.
 #  * Veritabanı (data/m2kira.sqlite) çalıştırmalar arasında actions/cache ile taşınır.
 # Gerekli secrets: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID. İsteğe bağlı: IMAP_HOST, IMAP_USER, IMAP_PASSWORD.
@@ -17,7 +18,7 @@ on:
   workflow_dispatch:
     inputs:
       sources:
-        description: "Taranacak kaynaklar (boş = varsayılan). PC beslemesi: hepsiemlak_feed"
+        description: "Taranacak kaynaklar (boş = varsayılan). PC beslemeleri: hepsiemlak_feed, sahibinden_feed"
         required: false
         default: ""
 
