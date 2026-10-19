@@ -264,7 +264,7 @@ class HepsiemlakSource(Source):
         slug = self._slug(nb)
         if not slug:
             result.complete = False
-            result.errors.append("hepsiemlak slug'ı tanımlı değil")
+            result.full_pass = False  # bu kaynakta mahalle yok (config: false) — hata değil
             return result
         # Hızlı geçiş (her tarama): yalnızca fast_categories'in eşyalı listesi -> yeni ilan / fiyat düşüşü.
         # Tam geçiş (mahalle başına full_scan_every_hours'ta bir, taramada en çok max_full_per_run mahalle):

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>M2 Kiralık</title>
-<meta name="description" content="Ankara M2 hattı eşyalı kiralık ilanlar — durak durak filtreleme">
+<meta name="description" content="Ankara M2 hattı eşyalı kiralık ilanlar — durak durak filtreleme, ayarlar ve durum">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c2410c'/%3E%3Ctext x='16' y='22' font-size='15' font-family='Arial' font-weight='700' fill='white' text-anchor='middle'%3EM2%3C/text%3E%3C/svg%3E">
 <style>
 :root {
@@ -34,15 +34,24 @@ body { font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 a { color: inherit; }
 button, input, select { font: inherit; color: inherit; }
 .wrap { max-width: 1180px; margin: 0 auto; padding: 0 16px; }
-header.top { padding: 18px 0 8px; }
+header.top { padding: 16px 0 6px; }
+.toprow { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
 h1 { font-size: 22px; margin: 0; letter-spacing: -.01em; }
 .meta { color: var(--muted); font-size: 13px; margin-top: 2px; }
+.tabs { display: flex; gap: 4px; margin: 12px 0 0; border-bottom: 1px solid var(--border); }
+.tab { background: none; border: 0; border-bottom: 3px solid transparent; padding: 8px 14px; cursor: pointer; font-weight: 600; color: var(--muted); }
+.tab[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--accent); }
+.conn { font-size: 12.5px; border: 1px solid var(--border); background: var(--surface); border-radius: 999px; padding: 5px 11px; cursor: pointer; }
+.conn.on { border-color: var(--ok); color: var(--ok); }
 .presets { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 4px; }
 .chip { border: 1px solid var(--border); background: var(--surface); border-radius: 999px; padding: 6px 12px;
   cursor: pointer; font-size: 13.5px; white-space: nowrap; line-height: 1.2; }
 .chip:hover { border-color: var(--muted); }
 .chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
 .chip:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--info); outline-offset: 2px; }
+.btn { border: 1px solid var(--border); background: var(--surface); border-radius: 10px; padding: 8px 14px; cursor: pointer; font-weight: 600; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
 
 /* hat şeridi */
 .linebox { position: sticky; top: 0; z-index: 20; background: var(--bg); padding: 8px 0 6px; border-bottom: 1px solid var(--border); }
@@ -64,7 +73,7 @@ h1 { font-size: 22px; margin: 0; letter-spacing: -.01em; }
 details.filters { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin: 12px 0; box-shadow: var(--shadow); }
 details.filters > summary { cursor: pointer; padding: 12px 14px; font-weight: 600; list-style: none; display: flex; justify-content: space-between; align-items: center; }
 details.filters > summary::-webkit-details-marker { display: none; }
-details.filters > summary .sumtxt { font-weight: 400; color: var(--muted); font-size: 13px; margin-left: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+details.filters > summary .sumtxt { font-weight: 400; color: var(--muted); font-size: 13px; margin-left: 8px; }
 .fgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px 22px; padding: 4px 14px 14px; }
 .fgroup h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 6px; font-weight: 600; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -114,49 +123,121 @@ select.sel { padding: 7px 9px; border: 1px solid var(--border); border-radius: 8
 .tag.f-partial, .tag.f-either { background: var(--warn-soft); border-color: transparent; color: var(--warn); }
 .tag.warn { background: var(--bad-soft); border-color: transparent; color: var(--bad); }
 .tag.inc { background: var(--info-soft); border-color: transparent; color: var(--info); }
-.acts { display: flex; gap: 6px; margin-top: 2px; }
-.acts button { border: 1px solid var(--border); background: var(--surface-2); border-radius: 8px; padding: 4px 10px; font-size: 12.5px; cursor: pointer; }
+.acts { display: flex; gap: 6px; margin-top: 2px; flex-wrap: wrap; }
+.acts button, .acts a { border: 1px solid var(--border); background: var(--surface-2); border-radius: 8px; padding: 4px 10px; font-size: 12.5px; cursor: pointer; text-decoration: none; }
 .acts button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.detail { border-top: 1px dashed var(--border); padding-top: 8px; font-size: 13.5px; display: flex; flex-direction: column; gap: 6px; }
+.detail .desc { color: var(--fg); white-space: pre-wrap; overflow-wrap: anywhere; }
+.detail dl { display: grid; grid-template-columns: max-content 1fr; gap: 2px 12px; margin: 0; }
+.detail dt { color: var(--muted); }
+.detail dd { margin: 0; }
 .empty { text-align: center; color: var(--muted); padding: 40px 10px; }
 #map { height: 70vh; min-height: 380px; border-radius: var(--radius); border: 1px solid var(--border); }
 .note { font-size: 12.5px; color: var(--muted); margin: 18px 0 30px; }
 .more { display: block; margin: 12px auto; }
+
+/* ayarlar + durum */
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin: 14px 0; box-shadow: var(--shadow); }
+.panel h2 { font-size: 17px; margin: 0 0 4px; }
+.panel > .small { margin-bottom: 10px; display: block; }
+.sgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px 24px; }
+.nblist { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 2px 16px; }
+.savebar { position: sticky; bottom: 0; background: var(--bg); border-top: 1px solid var(--border); padding: 10px 0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; z-index: 15; }
+.banner { border-radius: 10px; padding: 10px 12px; margin: 12px 0; font-size: 13.5px; }
+.banner.info { background: var(--info-soft); color: var(--info); }
+.banner.warn { background: var(--warn-soft); color: var(--warn); }
+.banner.ok { background: var(--ok-soft); color: var(--ok); }
+.scards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.scard { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; box-shadow: var(--shadow); }
+.scard h3 { margin: 0 0 6px; font-size: 15px; display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.dotst { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.dotst.ok { background: var(--ok); } .dotst.warn { background: var(--warn); } .dotst.bad { background: var(--bad); }
+.kv { font-size: 13.5px; color: var(--muted); margin: 2px 0; }
+.kv b { color: var(--fg); font-weight: 600; }
+table.runs { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+table.runs td, table.runs th { text-align: left; padding: 6px 6px; border-bottom: 1px solid var(--border); }
+table.runs th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+.runs-wrap { overflow-x: auto; }
+dialog { border: 1px solid var(--border); border-radius: 14px; background: var(--surface); color: var(--fg); max-width: min(560px, calc(100vw - 32px)); padding: 18px; }
+dialog::backdrop { background: rgba(0,0,0,.45); }
+dialog ol { padding-left: 20px; margin: 8px 0; font-size: 14px; }
+dialog li { margin: 3px 0; }
+.toast { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-size: 14px; z-index: 100; max-width: calc(100vw - 32px); box-shadow: 0 4px 16px rgba(0,0,0,.25); }
+[hidden] { display: none !important; }
 @media (max-width: 640px) {
   .cards { grid-template-columns: 1fr; }
   .stn { width: 70px; flex-basis: 70px; }
   h1 { font-size: 20px; }
+  .tab { padding: 8px 10px; }
 }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header class="top">
-    <h1 id="title">M2 Kiralık</h1>
-    <div class="meta" id="meta">Yükleniyor…</div>
-    <div class="presets" id="presets" role="toolbar" aria-label="Hazır filtreler"></div>
+    <div class="toprow">
+      <div><h1 id="title">M2 Kiralık</h1><div class="meta" id="meta">Yükleniyor…</div></div>
+      <button class="conn" id="connbtn" type="button">GitHub'a bağlan</button>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Bölümler">
+      <button class="tab" role="tab" data-tab="ilan" type="button">İlanlar</button>
+      <button class="tab" role="tab" data-tab="ayar" type="button">Ayarlar</button>
+      <button class="tab" role="tab" data-tab="durum" type="button">Durum</button>
+    </nav>
+    <div id="pending"></div>
   </header>
 </div>
-<div class="linebox">
-  <div class="wrap">
-    <div class="line-scroll"><div class="line" id="line" role="group" aria-label="M2 durakları"></div></div>
-    <div class="line-actions"><span id="linehint">Durağa dokun: o durağı seç / kaldır (birden çok seçilebilir)</span><button class="linkbtn" id="allst">Tüm duraklar</button></div>
-  </div>
-</div>
-<div class="wrap">
-  <details class="filters" id="fbox">
-    <summary><span>Filtreler<span class="sumtxt" id="fsum"></span></span><span class="small" id="ftoggle">aç / kapa</span></summary>
-    <div class="fgrid" id="fgrid"></div>
-  </details>
-  <div class="toolbar">
-    <div><span class="count" id="count"></span> <span class="small" id="countsub"></span></div>
-    <div class="row">
-      <select class="sel" id="sort" aria-label="Sıralama"></select>
-      <div class="seg" id="views" role="group" aria-label="Görünüm"></div>
+
+<section id="tab-ilan">
+  <div class="wrap"><div class="presets" id="presets" role="toolbar" aria-label="Hazır filtreler"></div></div>
+  <div class="linebox">
+    <div class="wrap">
+      <div class="line-scroll"><div class="line" id="line" role="group" aria-label="M2 durakları"></div></div>
+      <div class="line-actions"><span id="linehint"></span><button class="linkbtn" id="allst" type="button">Tüm duraklar</button></div>
     </div>
   </div>
-  <main id="results"></main>
-  <p class="note" id="note"></p>
-</div>
+  <div class="wrap">
+    <details class="filters" id="fbox">
+      <summary><span>Filtreler<span class="sumtxt" id="fsum"></span></span><span class="small">aç / kapa</span></summary>
+      <div class="fgrid" id="fgrid"></div>
+    </details>
+    <div class="toolbar">
+      <div><span class="count" id="count"></span> <span class="small" id="countsub"></span></div>
+      <div class="row">
+        <select class="sel" id="sort" aria-label="Sıralama"></select>
+        <div class="seg" id="views" role="group" aria-label="Görünüm"></div>
+      </div>
+    </div>
+    <main id="results"></main>
+    <p class="note" id="note"></p>
+  </div>
+</section>
+
+<section id="tab-ayar" hidden><div class="wrap" id="ayar"></div></section>
+<section id="tab-durum" hidden><div class="wrap" id="durum"></div></section>
+
+<dialog id="conndlg" aria-labelledby="conntitle">
+  <h2 id="conntitle" style="margin:0 0 6px;font-size:18px">GitHub'a bağlan</h2>
+  <p class="small" style="font-size:13.5px">İlanları görmek ve filtrelemek için gerekmez. <b>Ayarları kaydetmek, tarama başlatmak,
+    favori ve gizlediklerini cihazlar arasında eşitlemek</b> için bu tarayıcıya bir kez bir GitHub anahtarı tanıtılır.
+    Anahtar yalnız bu tarayıcıda saklanır ve yalnızca <code id="dlgrepo">m2kira</code> reposuna yazabilir.</p>
+  <ol>
+    <li><a id="patlink" href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">Yeni anahtar oluştur</a> sayfasını aç.</li>
+    <li>Ad: <b>m2kira-site</b>, süre: 90 gün.</li>
+    <li><b>Repository access</b> → <i>Only select repositories</i> → <b id="dlgrepo2">m2kira</b>.</li>
+    <li><b>Permissions</b> → <i>Contents</i>: <b>Read and write</b>, <i>Actions</i>: <b>Read and write</b>.</li>
+    <li><b>Generate token</b> → çıkan anahtarı aşağı yapıştır.</li>
+  </ol>
+  <input class="txt" id="tokin" type="password" placeholder="github_pat_…" autocomplete="off" spellcheck="false">
+  <div class="row" style="margin-top:12px;justify-content:flex-end">
+    <button class="btn" type="button" id="tokdel" hidden>Bağlantıyı kaldır</button>
+    <button class="btn" type="button" id="tokcancel">Vazgeç</button>
+    <button class="btn primary" type="button" id="toksave">Bağlan</button>
+  </div>
+  <p class="small" id="tokmsg"></p>
+</dialog>
+<div class="toast" id="toast" hidden role="status" aria-live="polite"></div>
+
 <script>
 "use strict";
 const $ = (s) => document.querySelector(s);
@@ -168,13 +249,14 @@ const norm = (s) => String(s || "").toLocaleLowerCase("tr").replace(/ı/g, "i").
 const store = {
   get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+  del(k) { try { localStorage.removeItem(k); } catch (e) {} },
 };
 const SRC_SHORT = { hepsiemlak: "he", emlakjet: "ej", sahibinden: "sb" };
 const SRC_LONG = { he: "hepsiemlak", ej: "emlakjet", sb: "sahibinden" };
-const shortId = (id) => { const [s, x] = id.split(":"); return (SRC_SHORT[s] || s) + ":" + x; };
 const longId = (id) => { const [s, x] = id.split(":"); return (SRC_LONG[s] || s) + ":" + x; };
 
 const ROOMS = [["1+0", "Stüdyo"], ["1+1", "1+1"], ["2+1", "2+1"], ["3+1", "3+1"], ["4+", "4+"]];
+const ROOMS_SET = [["1+0", "Stüdyo"], ["1+1", "1+1"], ["2+1", "2+1"], ["3+1", "3+1"], ["4+1", "4+1"], ["5+1", "5+1"]];
 const FUR = [["full", "Eşyalı"], ["partial", "Kısmi (beyaz eşya)"], ["either", "Eşyalı/eşyasız"], ["unknown", "Belirsiz"], ["none", "Eşyasız"]];
 const SRCS = [["hepsiemlak", "hepsiemlak"], ["emlakjet", "emlakjet"], ["sahibinden", "sahibinden"]];
 const EXCL = [
@@ -197,12 +279,38 @@ const SORTS = [
 const VIEWS = [["st", "Duraklar"], ["list", "Liste"], ["map", "Harita"]];
 
 const DEF = () => ({
-  ok: 1, tier: "", st: [], pmin: "", pmax: "", rooms: [], fur: [], wmax: WMAX, unv: 1, ct: "", cmax: CMAX,
+  tab: "ilan", ok: 1, tier: "", st: [], pmin: "", pmax: "", rooms: [], fur: [], wmax: WMAX, unv: 1, ct: "", cmax: CMAX,
   src: [], ex: ["kopya"], inc: 0, drop: 0, fav: 0, nw: 0, m2min: "", q: "", sort: "rec", view: "st", hidden: 0,
 });
 let D = null, S = DEF(), PRESENT = new Set();
 let favs = new Set(store.get("m2k_favs", [])), hid = new Set(store.get("m2k_hidden", []));
-let visibleLimit = 120;
+let hidMap = store.get("m2k_hidmap", {});        // siteden gizle/göster kararları (eşitlenecek)
+let visibleLimit = 120, openDetails = new Set();
+let SET = null;                                   // ayar formu durumu
+let remoteSha = null;
+
+/* ---------------- yardımcılar ---------------- */
+function toast(msg, ms = 3500) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast._t); toast._t = setTimeout(() => { t.hidden = true; }, ms); }
+function debounce(fn, ms = 200) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
+function roomKey(r) {
+  if (!r) return ""; if (r === "1+0") return "1+0";
+  const n = parseFloat(r); if (isNaN(n)) return "";
+  if (n >= 4) return "4+"; if (n >= 3) return "3+1"; if (n >= 2) return "2+1"; return "1+1";
+}
+function parseT(s) { if (!s) return NaN; return Date.parse(s.length <= 16 ? s + ":00Z" : s); }
+function ageHours(fs) { const t = parseT(fs); return isNaN(t) ? 1e9 : (Date.now() - t) / 36e5; }
+function tkeys() { return (D.targets || []).map((t) => t.short || t.name); }
+function tdat(i) { const t = (D.targets || [])[i] || {}; return t.dat || t.name || ""; }
+function commute(it, which) {
+  const ks = tkeys(), cm = it.cm || {};
+  if (which === "both") { const vals = ks.map((k) => cm[k]).filter((v) => v != null); return vals.length === ks.length && vals.length ? Math.max(...vals) : null; }
+  return cm[which] ?? null;
+}
+function median(arr) { if (!arr.length) return null; const s = [...arr].sort((a, b) => a - b); const m = s.length >> 1; return s.length % 2 ? s[m] : Math.round((s[m - 1] + s[m]) / 2); }
+function fmtDate(iso) { if (!iso) return ""; const d = new Date(iso.length <= 10 ? iso + "T00:00:00" : (iso.length <= 16 ? iso + ":00Z" : iso)); return isNaN(d) ? iso : d.toLocaleDateString("tr-TR", { day: "numeric", month: "short" }); }
+function fmtWhen(iso) { if (!iso) return "?"; const d = new Date(parseT(iso)); return isNaN(d) ? iso : d.toLocaleString("tr-TR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); }
+function ago(fs) { const h = ageHours(fs); if (h > 1e8) return ""; if (h < 1) return Math.max(1, Math.round(h * 60)) + " dk önce"; if (h < 24) return Math.round(h) + " sa önce"; return Math.round(h / 24) + " gün önce"; }
+function isHidden(it) { if (it.id in hidMap) return hidMap[it.id]; return it.hid || hid.has(it.id); }
 
 /* ---------------- durum <-> adres çubuğu ---------------- */
 function encodeState(s) {
@@ -225,38 +333,90 @@ function decodeState(str) {
   }
   return d;
 }
-function saveState() {
-  const h = encodeState(S);
-  history.replaceState(null, "", h ? "#" + h : location.pathname + location.search);
-  store.set("m2k_state", h);
+function saveState() { const h = encodeState(S); history.replaceState(null, "", h ? "#" + h : location.pathname + location.search); store.set("m2k_state", h); }
+
+/* ---------------- GitHub (yazma işlemleri) ---------------- */
+const GH = {
+  token() { return store.get("m2k_gh", ""); },
+  repo() { return (D && D.repo && D.repo.name) || "YSFTNC/m2kira"; },
+  async api(path, opts = {}, auth = true) {
+    const headers = { Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" };
+    if (auth && this.token()) headers.Authorization = "Bearer " + this.token();
+    if (opts.body) headers["Content-Type"] = "application/json";
+    const r = await fetch("https://api.github.com/" + path, { ...opts, headers });
+    if (r.status === 204) return null;
+    const txt = await r.text();
+    if (!r.ok) { const e = new Error(r.status + ": " + (txt.slice(0, 160) || r.statusText)); e.status = r.status; throw e; }
+    return txt ? JSON.parse(txt) : null;
+  },
+  b64enc(str) { const bytes = new TextEncoder().encode(str); let bin = ""; for (let i = 0; i < bytes.length; i += 8192) bin += String.fromCharCode(...bytes.subarray(i, i + 8192)); return btoa(bin); },
+  b64dec(b64) { const bin = atob(b64.replace(/\n/g, "")); const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0)); return new TextDecoder().decode(bytes); },
+  async readSettings() {
+    try {
+      const f = await this.api(`repos/${this.repo()}/contents/${D.repo.settings_path}?ref=${encodeURIComponent(D.repo.branch)}`, {}, !!this.token());
+      remoteSha = f.sha; return JSON.parse(this.b64dec(f.content));
+    } catch (e) { if (e.status === 404) { remoteSha = null; return null; } throw e; }
+  },
+  async writeSettings(obj) {
+    obj.updated = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+    const cur = await this.readSettings().catch(() => null);  // güncel sha
+    const body = { message: "site ayarları " + obj.updated, content: this.b64enc(JSON.stringify(obj, null, 1)), branch: D.repo.branch };
+    if (remoteSha) body.sha = remoteSha;
+    const res = await this.api(`repos/${this.repo()}/contents/${D.repo.settings_path}`, { method: "PUT", body: JSON.stringify(body) });
+    remoteSha = res && res.content ? res.content.sha : null;
+    return obj.updated;
+  },
+  async dispatch(sources = "") {
+    await this.api(`repos/${this.repo()}/actions/workflows/${D.repo.workflow}/dispatches`, { method: "POST", body: JSON.stringify({ ref: "main", inputs: { sources } }) });
+  },
+  async runs() { return this.api(`repos/${this.repo()}/actions/runs?per_page=6`, {}, !!this.token()); },
+};
+function connected() { return !!GH.token(); }
+function renderConn() {
+  const b = $("#connbtn");
+  b.textContent = connected() ? "● Bağlı" : "GitHub'a bağlan";
+  b.classList.toggle("on", connected());
+  b.title = connected() ? "Ayarlar, tarama ve eşitleme açık. Tıkla: bağlantıyı yönet" : "Ayar kaydetmek ve tarama başlatmak için bağlan";
+}
+function openConn() {
+  $("#dlgrepo").textContent = GH.repo(); $("#dlgrepo2").textContent = GH.repo().split("/")[1];
+  $("#tokin").value = ""; $("#tokmsg").textContent = connected() ? "Bu tarayıcı bağlı. Yeni anahtar girersen değiştirilir." : "";
+  $("#tokdel").hidden = !connected();
+  $("#conndlg").showModal();
+}
+async function saveToken() {
+  const t = $("#tokin").value.trim();
+  if (!t) { $("#tokmsg").textContent = "Anahtar boş."; return; }
+  $("#tokmsg").textContent = "Deneniyor…";
+  try {
+    const r = await fetch(`https://api.github.com/repos/${GH.repo()}`, { headers: { Accept: "application/vnd.github+json", Authorization: "Bearer " + t } });
+    if (!r.ok) throw new Error(r.status === 401 ? "anahtar geçersiz" : "repo erişimi yok (" + r.status + ")");
+    store.set("m2k_gh", t);
+    $("#conndlg").close(); renderConn(); toast("Bağlandı. Ayarlar ve tarama düğmeleri açık.");
+    await pullRemote(); renderAll();
+  } catch (e) { $("#tokmsg").textContent = "Olmadı: " + e.message; }
 }
 
-/* ---------------- yardımcılar ---------------- */
-function roomKey(r) {
-  if (!r) return "";
-  if (r === "1+0") return "1+0";
-  const n = parseFloat(r);
-  if (isNaN(n)) return "";
-  if (n >= 4) return "4+";
-  if (n >= 3) return "3+1";
-  if (n >= 2) return "2+1";
-  return "1+1";
+/* ---------------- eşitleme (favori + gizle) ---------------- */
+async function pullRemote() {
+  if (!connected()) return;
+  try {
+    const rs = await GH.readSettings();
+    if (rs) {
+      for (const f of rs.favorites || []) favs.add(f);
+      for (const [k, v] of Object.entries(rs.hidden || {})) if (!(k in hidMap)) hidMap[k] = v;
+      store.set("m2k_favs", [...favs]); store.set("m2k_hidmap", hidMap);
+      SET = Object.assign(SET || {}, pickSettings(rs));
+    }
+  } catch (e) { console.warn("ayarlar okunamadı", e); }
 }
-function ageHours(fs) {
-  if (!fs) return 1e9;
-  const t = Date.parse(fs.length <= 16 ? fs + ":00Z" : fs);
-  return isNaN(t) ? 1e9 : (Date.now() - t) / 36e5;
-}
-function tkeys() { return (D.targets || []).map((t) => t.short || t.name); }
-function tdat(i) { const t = (D.targets || [])[i] || {}; return t.dat || t.name || ""; }
-function commute(it, which) {
-  const ks = tkeys(), cm = it.cm || {};
-  if (which === "both") {
-    const vals = ks.map((k) => cm[k]).filter((v) => v != null);
-    return vals.length === ks.length && vals.length ? Math.max(...vals) : null;
-  }
-  return cm[which] ?? null;
-}
+const pushSync = debounce(async () => {
+  if (!connected()) return;
+  try { await GH.writeSettings(settingsPayload()); toast("Favori/gizle eşitlendi"); }
+  catch (e) { toast("Eşitlenemedi: " + e.message, 6000); }
+}, 2500);
+
+/* ---------------- filtreleme ---------------- */
 function excluded(it, s) {
   for (const key of s.ex) {
     if (key === "kopya") { if ((it.dup || []).some((d) => PRESENT.has(longId(d)))) return true; continue; }
@@ -268,7 +428,7 @@ function excluded(it, s) {
 function pass(it, s, skipStation) {
   if (s.ok && !it.ok) return false;
   if (s.tier && it.tier !== s.tier) return false;
-  if (!s.hidden && (it.hid || hid.has(it.id))) return false;
+  if (!s.hidden && isHidden(it)) return false;
   if (s.fav && !favs.has(it.id)) return false;
   if (!skipStation && s.st.length && !s.st.includes(it.st || "?")) return false;
   if (s.pmin !== "" && (it.p ?? 0) < +s.pmin) return false;
@@ -284,10 +444,7 @@ function pass(it, s, skipStation) {
   if (s.drop && !it.pp) return false;
   if (s.nw && ageHours(it.fs) > s.nw) return false;
   if (s.m2min !== "" && (it.m2 ?? 0) < +s.m2min) return false;
-  if (s.q) {
-    const hay = norm([it.t, it.desc, it.d, it.of, it.st].join(" "));
-    if (!norm(s.q).split(/\s+/).filter(Boolean).every((w) => hay.includes(w))) return false;
-  }
+  if (s.q) { const hay = norm([it.t, it.desc, it.d, it.of, it.st].join(" ")); if (!norm(s.q).split(/\s+/).filter(Boolean).every((w) => hay.includes(w))) return false; }
   return true;
 }
 function sorter(key) {
@@ -305,22 +462,14 @@ function sorter(key) {
     cmax: (a, b) => c(a, "both") - c(b, "both") || (a.p ?? big) - (b.p ?? big),
     m2: (a, b) => (b.m2 ?? -1) - (a.m2 ?? -1),
     ppm: (a, b) => ((a.p && a.m2) ? a.p / a.m2 : big) - ((b.p && b.m2) ? b.p / b.m2 : big),
-  }[key] || ((a, b) => 0);
+  }[key] || (() => 0);
 }
-function median(arr) { if (!arr.length) return null; const s = [...arr].sort((a, b) => a - b); const m = s.length >> 1; return s.length % 2 ? s[m] : Math.round((s[m - 1] + s[m]) / 2); }
-function fmtDate(iso) { if (!iso) return ""; const d = new Date(iso.length <= 10 ? iso + "T00:00:00" : (iso.length <= 16 ? iso + ":00Z" : iso)); return isNaN(d) ? iso : d.toLocaleDateString("tr-TR", { day: "numeric", month: "short" }); }
-function fmtWhen(iso) { if (!iso) return "?"; const d = new Date(iso); return isNaN(d) ? iso : d.toLocaleString("tr-TR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); }
-function ago(fs) { const h = ageHours(fs); if (h > 1e8) return ""; if (h < 1) return "az önce"; if (h < 24) return Math.round(h) + " sa önce"; return Math.round(h / 24) + " gün önce"; }
 
 /* ---------------- hazır filtreler ---------------- */
 function presets() {
   const ks = tkeys(), t0 = (D.targets || [])[0], t1 = (D.targets || [])[1];
-  const P = [
-    ["Önerilen", () => ({})],
-    ["Yeni (24 sa)", () => ({ nw: 24, sort: "new" })],
-    ["Fiyatı düşenler", () => ({ drop: 1, sort: "price" })],
-  ];
-  if (t0) P.push([`${t0.dat || t0.name} yakın`, () => ({ ct: ks[0], cmax: 25, sort: "c0" })]);
+  const P = [["Önerilen", () => ({})], ["Yeni (24 sa)", () => ({ nw: 24, sort: "new" })], ["Fiyatı düşenler", () => ({ drop: 1, sort: "price" })]];
+  if (t0) P.push([`${tdat(0)} yakın`, () => ({ ct: ks[0], cmax: 25, sort: "c0" })]);
   if (t1) P.push([`${t1.name} rotası`, () => ({ ct: ks[1], cmax: 45, sort: "c1" })]);
   if (t0 && t1) P.push(["İki hedefe de yakın", () => ({ ct: "both", cmax: 45, sort: "cmax", view: "list" })]);
   P.push(
@@ -337,17 +486,17 @@ function applyPreset(fn) { S = Object.assign(DEF(), fn()); visibleLimit = 120; r
 function presetMatches(fn) { return encodeState(Object.assign(DEF(), fn())) === encodeState(S); }
 
 /* ---------------- filtre paneli ---------------- */
-function chipGroup(title, opts, key, multi = true) {
+function chipGroup(title, opts, getArr, setArr, multi = true) {
   const g = document.createElement("div"); g.className = "fgroup";
   g.innerHTML = `<h3>${esc(title)}</h3><div class="chips"></div>`;
   const box = g.querySelector(".chips");
   for (const [v, label] of opts) {
     const b = document.createElement("button"); b.className = "chip"; b.type = "button"; b.textContent = label;
-    b.setAttribute("aria-pressed", String(S[key].includes(v)));
+    b.setAttribute("aria-pressed", String(getArr().includes(v)));
     b.onclick = () => {
-      const set = new Set(S[key]);
+      const set = new Set(getArr());
       set.has(v) ? set.delete(v) : (multi ? set.add(v) : (set.clear(), set.add(v)));
-      S[key] = [...set]; renderAll(false);
+      setArr([...set]); b.setAttribute("aria-pressed", String(set.has(v)));
     };
     box.appendChild(b);
   }
@@ -357,34 +506,29 @@ function buildFilters() {
   const grid = $("#fgrid"); grid.innerHTML = "";
   const cap = Math.ceil(D.budget * (1 + D.tol / 100) / 500) * 500;
   const ks = tkeys();
-
+  const upd = (k) => (v) => { S[k] = v; renderAll(false); };
   const g1 = document.createElement("div"); g1.className = "fgroup";
   g1.innerHTML = `<h3>Kapsam</h3>
-    <label class="ck"><input type="checkbox" id="f-ok" ${S.ok ? "checked" : ""}> Yalnız kriterlere uyanlar <span class="small">(bütçe ${esc(TL(D.budget))} +%${D.tol}, eşyalı, yürünebilir)</span></label>
+    <label class="ck"><input type="checkbox" id="f-ok" ${S.ok ? "checked" : ""}> Yalnız kriterlere uyanlar <span class="small">(bütçe ${esc(TL(D.budget))} +%${D.tol}, eşya, yürüme — Ayarlar sekmesinden)</span></label>
     <label class="ck"><input type="checkbox" id="f-hidden" ${S.hidden ? "checked" : ""}> Gizlediklerimi de göster</label>
     <div class="row" style="margin-top:6px"><span class="small">Yeni:</span> <select class="sel" id="f-nw">${NEW_OPTS.map(([v, l]) => `<option value="${v}" ${+S.nw === v ? "selected" : ""}>${l}</option>`).join("")}</select></div>`;
   grid.appendChild(g1);
-
   const g2 = document.createElement("div"); g2.className = "fgroup";
   g2.innerHTML = `<h3>Fiyat (TL/ay)</h3><div class="row">
-    <input class="num" id="f-pmin" type="number" inputmode="numeric" step="500" min="0" placeholder="en az" value="${esc(S.pmin)}">
-    <span>–</span>
+    <input class="num" id="f-pmin" type="number" inputmode="numeric" step="500" min="0" placeholder="en az" value="${esc(S.pmin)}"><span>–</span>
     <input class="num" id="f-pmax" type="number" inputmode="numeric" step="500" min="0" placeholder="${esc(NF.format(cap))}" value="${esc(S.pmax)}"></div>
     <div class="row" style="margin-top:8px"><span class="small">m² en az</span><input class="num" id="f-m2" type="number" inputmode="numeric" step="5" min="0" placeholder="—" value="${esc(S.m2min)}"></div>
     <label class="ck" style="margin-top:6px"><input type="checkbox" id="f-inc" ${S.inc ? "checked" : ""}> Faturalar / aidat dahil olanlar</label>
     <label class="ck"><input type="checkbox" id="f-drop" ${S.drop ? "checked" : ""}> Yalnız fiyatı düşenler</label>`;
   grid.appendChild(g2);
-
-  grid.appendChild(chipGroup("Oda", ROOMS, "rooms"));
-  grid.appendChild(chipGroup("Eşya", FUR, "fur"));
-
+  grid.appendChild(chipGroup("Oda", ROOMS, () => S.rooms, upd("rooms")));
+  grid.appendChild(chipGroup("Eşya", FUR, () => S.fur, upd("fur")));
   const g3 = document.createElement("div"); g3.className = "fgroup";
   g3.innerHTML = `<h3>Durağa yürüme</h3>
     <div class="row"><input type="range" id="f-wmax" min="3" max="${WMAX}" step="1" value="${S.wmax}" aria-label="En fazla yürüme dakikası"></div>
     <div class="small" id="f-wlabel"></div>
-    <label class="ck"><input type="checkbox" id="f-unv" ${S.unv ? "checked" : ""}> Mesafesi doğrulanmamışları da göster <span class="small">(konum bilgisi yok)</span></label>`;
+    <label class="ck"><input type="checkbox" id="f-unv" ${S.unv ? "checked" : ""}> Mesafesi doğrulanmamışları da göster <span class="small">(ilanda konum yok)</span></label>`;
   grid.appendChild(g3);
-
   if (ks.length) {
     const g4 = document.createElement("div"); g4.className = "fgroup";
     const opts = [["", "Kapalı"], ...D.targets.map((t, i) => [ks[i], t.name])];
@@ -395,15 +539,12 @@ function buildFilters() {
       <div class="small" id="f-clabel"></div>`;
     grid.appendChild(g4);
   }
-
-  grid.appendChild(chipGroup("Kaynak", SRCS, "src"));
-  grid.appendChild(chipGroup("Gizle (uyarılı ilanlar)", EXCL.map((e) => [e[0], e[1]]), "ex"));
-
+  grid.appendChild(chipGroup("Kaynak", SRCS, () => S.src, upd("src")));
+  grid.appendChild(chipGroup("Gizle (uyarılı ilanlar)", EXCL.map((e) => [e[0], e[1]]), () => S.ex, upd("ex")));
   const g5 = document.createElement("div"); g5.className = "fgroup";
   g5.innerHTML = `<h3>Metin ara</h3><input class="txt" id="f-q" type="search" placeholder="ör. balkon, doğalgaz, asansör" value="${esc(S.q)}">
     <div class="row" style="margin-top:10px"><button class="chip" type="button" id="f-reset">Filtreleri sıfırla</button></div>`;
   grid.appendChild(g5);
-
   const on = (id, ev, fn) => { const el = $(id); if (el) el.addEventListener(ev, fn); };
   on("#f-ok", "change", (e) => { S.ok = e.target.checked ? 1 : 0; renderAll(false); });
   on("#f-hidden", "change", (e) => { S.hidden = e.target.checked ? 1 : 0; renderAll(false); });
@@ -423,7 +564,6 @@ function buildFilters() {
 }
 function wLabel() { const el = $("#f-wlabel"); if (el) el.textContent = S.wmax >= WMAX ? "Sınır yok" : `En fazla ${S.wmax} dk (~${Math.round(S.wmax * 64)} m kuş uçuşu)`; }
 function cLabel() { const el = $("#f-clabel"); if (el) el.textContent = !S.ct ? "Hedef seçince süre sınırı açılır" : (S.cmax >= CMAX ? "Sınır yok" : `En fazla ${S.cmax} dk`); }
-function debounce(fn, ms = 200) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
 function filterSummary() {
   const parts = [];
   if (!S.ok) parts.push("tüm ilanlar"); if (S.tier) parts.push("pazarlıkla");
@@ -442,11 +582,10 @@ function filterSummary() {
 /* ---------------- hat şeridi ---------------- */
 function renderLine(base) {
   const box = $("#line"); box.innerHTML = "";
-  const byStation = {};
-  for (const it of base) (byStation[it.st || "?"] ||= []).push(it);
+  const by = {};
+  for (const it of base) (by[it.st || "?"] ||= []).push(it);
   for (const s of D.line) {
-    const arr = byStation[s.name] || [];
-    const prices = arr.map((i) => i.p).filter(Boolean);
+    const arr = by[s.name] || [], prices = arr.map((i) => i.p).filter(Boolean);
     const b = document.createElement("button"); b.type = "button";
     b.className = "stn" + (arr.length ? " has" : " none");
     b.setAttribute("aria-pressed", String(S.st.includes(s.name)));
@@ -455,12 +594,35 @@ function renderLine(base) {
     b.onclick = () => { const set = new Set(S.st); set.has(s.name) ? set.delete(s.name) : set.add(s.name); S.st = [...set]; visibleLimit = 120; renderAll(false); };
     box.appendChild(b);
   }
-  const unk = (byStation["?"] || []).length;
-  $("#linehint").textContent = S.st.length ? `${S.st.length} durak seçili` + (unk ? ` · ${unk} ilanın durağı belirsiz` : "") : "Durağa dokun: o durağı seç / kaldır (birden çok seçilebilir)";
+  const unk = (by["?"] || []).length;
+  $("#linehint").textContent = S.st.length ? `${S.st.length} durak seçili` + (unk ? ` · ${unk} ilanın durağı belirsiz` : "") : "Durağa dokun: seç / kaldır (birden çok seçilebilir)";
   $("#allst").style.visibility = S.st.length ? "visible" : "hidden";
 }
 
 /* ---------------- kartlar ---------------- */
+function detailHtml(it) {
+  const st = D.line.find((s) => s.name === it.st);
+  const rows = [
+    ["Kaynak / ilan", `${esc(it.src)}${it.of ? " · " + esc(it.of) : ""}`],
+    it.ld ? ["İlan tarihi", esc(fmtDate(it.ld))] : null,
+    ["İlk görülme", esc(fmtWhen(it.fs)) + " (" + esc(ago(it.fs)) + ")"],
+    it.ph ? ["Fiyat geçmişi", it.ph.map((p) => esc(TL(p))).join(" → ")] : null,
+    it.heat ? ["Isınma", esc(it.heat)] : null,
+    it.el != null ? ["Asansör", it.el ? "var" : "yok"] : null,
+    it.age ? ["Bina yaşı", esc(it.age)] : null,
+    it.aid ? ["Aidat", esc(TL(it.aid))] : null,
+    it.cat ? ["Tür", esc(it.cat)] : null,
+    (it.dup || []).length ? ["Muhtemel kopyası", esc(it.dup.join(", "))] : null,
+  ].filter(Boolean);
+  const links = [];
+  if (it.lat && it.lon) {
+    links.push(`<a href="https://www.google.com/maps?q=${it.lat},${it.lon}" target="_blank" rel="noopener noreferrer">Haritada aç</a>`);
+    if (st) links.push(`<a href="https://www.google.com/maps/dir/?api=1&origin=${it.lat},${it.lon}&destination=${st.lat},${st.lon}&travelmode=walking" target="_blank" rel="noopener noreferrer">${esc(st.name)} durağına yürüyüş</a>`);
+  }
+  return `<div class="detail">${it.desc ? `<div class="desc">${esc(it.desc)}${it.desc.length >= 400 ? "…" : ""}</div>` : ""}
+    <dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl>
+    ${links.length ? `<div class="acts">${links.join("")}</div>` : ""}</div>`;
+}
 function card(it) {
   const ks = tkeys(), cm = it.cm || {};
   const badges = [];
@@ -471,14 +633,13 @@ function card(it) {
   const spec = [it.r === "1+0" ? "Stüdyo" : it.r, it.m2 ? `${it.m2} m²${it.m2n ? ` (net ${it.m2n})` : ""}` : null, it.fl,
     it.age && it.age !== "0" ? `bina ${it.age}` : null, it.aid ? `aidat ${NF.format(it.aid)}` : null, it.el === true ? "asansörlü" : null].filter(Boolean).map(esc).join(" · ");
   const walk = it.v && it.wm != null ? `🚶 <b>${it.wm} dk</b> (${NF.format(it.dm)} m)` : `<span title="İlanda konum yok; mahallenin durağı varsayıldı">mesafe doğrulanmadı</span>`;
-  const com = ks.filter((k) => cm[k] != null).map((k, i) => `${esc((D.targets.find((t) => (t.short || t.name) === k) || {}).name || k)} <b>${it.v ? "" : "~"}${cm[k]} dk</b>`).join(" · ");
-  const tags = [];
-  tags.push(`<span class="tag f-${esc(it.fur)}">${esc(D.fur_labels[it.fur] || it.fur)}</span>`);
+  const com = ks.filter((k) => cm[k] != null).map((k) => `${esc((D.targets.find((t) => (t.short || t.name) === k) || {}).name || k)} <b>${it.v ? "" : "~"}${cm[k]} dk</b>`).join(" · ");
+  const tags = [`<span class="tag f-${esc(it.fur)}">${esc(D.fur_labels[it.fur] || it.fur)}</span>`];
   const incTxt = { hepsi: "her şey dahil", faturalar: "faturalar dahil", aidat: "aidat dahil", internet: "internet dahil" };
   for (const i of it.inc || []) tags.push(`<span class="tag inc">${esc(incTxt[i] || i)}</span>`);
   for (const f of it.fg) if (!["mesafe_dogrulanmadi", "esya_belirsiz", "pazarlikla"].includes(f)) tags.push(`<span class="tag warn">⚠ ${esc(D.flag_labels[f] || f)}</span>`);
   if ((it.dup || []).length) tags.push(`<span class="tag" title="${esc(it.dup.join(", "))}">kopya olabilir</span>`);
-  const isFav = favs.has(it.id), isHid = hid.has(it.id) || it.hid;
+  const isFav = favs.has(it.id), isHid = isHidden(it), open = openDetails.has(it.id);
   return `<article class="card${isFav ? " fav" : ""}${isHid ? " dim" : ""}" data-id="${esc(it.id)}">
     <div class="ctop"><div class="price">${esc(TL(it.p))}${it.pp ? `<s>${esc(TL(it.pp))}</s>` : ""}</div><div class="badges">${badges.join("")}</div></div>
     <a class="ttl" href="${esc(safeUrl(it.url))}" target="_blank" rel="noopener noreferrer">${esc(it.t)}</a>
@@ -486,8 +647,9 @@ function card(it) {
     <div class="loc">📍 ${esc(it.d || "?")} → <b>${esc(it.st || "durak belirsiz")}</b> · ${walk}</div>
     ${com ? `<div class="com">🚇 ${com}</div>` : ""}
     <div class="tags">${tags.join("")}</div>
-    <div class="foot">${esc(it.src)}${it.of ? " · " + esc(it.of) : ""}${it.ld ? " · ilan " + esc(fmtDate(it.ld)) : ""} · ilk görülme ${esc(ago(it.fs))}</div>
-    <div class="acts"><button type="button" data-act="fav" aria-pressed="${isFav}">${isFav ? "★ Favori" : "☆ Favori"}</button><button type="button" data-act="hide" aria-pressed="${isHid}">${isHid ? "Göster" : "Gizle"}</button></div>
+    <div class="foot">${esc(it.src)}${it.of ? " · " + esc(it.of) : ""} · ilk görülme ${esc(ago(it.fs))}</div>
+    <div class="acts"><button type="button" data-act="fav" aria-pressed="${isFav}">${isFav ? "★ Favori" : "☆ Favori"}</button><button type="button" data-act="hide" aria-pressed="${isHid}">${isHid ? "Göster" : "Gizle"}</button><button type="button" data-act="detail" aria-expanded="${open}">${open ? "Detayı kapat" : "Detay"}</button></div>
+    ${open ? detailHtml(it) : ""}
   </article>`;
 }
 
@@ -512,8 +674,7 @@ function renderMap(list) {
       map = L.map("map", { scrollWheelZoom: true });
       map.fitBounds(L.latLngBounds(D.line.map((s) => [s.lat, s.lon])), { padding: [30, 30] });
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap" }).addTo(map);
-      const lineLL = D.line.map((s) => [s.lat, s.lon]);
-      L.polyline(lineLL, { color: getComputedStyle(document.documentElement).getPropertyValue("--line").trim() || "#c2410c", weight: 5, opacity: .7 }).addTo(map);
+      L.polyline(D.line.map((s) => [s.lat, s.lon]), { color: "#c2410c", weight: 5, opacity: .7 }).addTo(map);
       for (const s of D.line) {
         L.circle([s.lat, s.lon], { radius: D.max_walk_m || 1000, color: "#c2410c", weight: 1, fillOpacity: .04, interactive: false }).addTo(map);
         L.circleMarker([s.lat, s.lon], { radius: 6, color: "#fff", weight: 2, fillColor: "#c2410c", fillOpacity: 1 }).bindTooltip(s.name).addTo(map);
@@ -522,7 +683,7 @@ function renderMap(list) {
     if (mapLayer) mapLayer.remove();
     mapLayer = L.layerGroup().addTo(map);
     for (const it of withPos) {
-      const col = it.tier === "uygun" ? "#15803d" : it.tier === "pazarlikla" ? "#ca8a04" : "#6b7280";
+      const col = favs.has(it.id) ? "#c2410c" : it.tier === "uygun" ? "#15803d" : it.tier === "pazarlikla" ? "#ca8a04" : "#6b7280";
       L.circleMarker([it.lat, it.lon], { radius: 7, color: "#fff", weight: 1.5, fillColor: col, fillOpacity: .95 })
         .bindPopup(`<b>${esc(TL(it.p))}</b> · ${esc(it.r || "")} · ${esc(it.m2 ? it.m2 + " m²" : "")}<br><a href="${esc(safeUrl(it.url))}" target="_blank" rel="noopener noreferrer">${esc(it.t)}</a><br>${esc(it.st || "")}${it.wm != null ? " · " + it.wm + " dk yürüme" : ""}`)
         .addTo(mapLayer);
@@ -534,24 +695,19 @@ function renderResults(list) {
   const res = $("#results");
   if (S.view === "map") { renderMap(list); return; }
   map = null; mapLayer = null;
-  if (!list.length) { res.innerHTML = `<div class="empty">Bu filtrelerle ilan yok. <button class="linkbtn" id="clr">Filtreleri gevşet</button></div>`; $("#clr").onclick = () => { const v = S.view; S = DEF(); S.view = v; renderAll(); }; return; }
+  if (!list.length) { res.innerHTML = `<div class="empty">Bu filtrelerle ilan yok. <button class="linkbtn" id="clr" type="button">Filtreleri gevşet</button></div>`; $("#clr").onclick = () => { const v = S.view; S = DEF(); S.view = v; renderAll(); }; return; }
   if (S.view === "list") {
     const shown = list.slice(0, visibleLimit);
-    res.innerHTML = `<div class="cards">${shown.map(card).join("")}</div>` + (list.length > shown.length ? `<button class="chip more" id="more">+${list.length - shown.length} ilan daha göster</button>` : "");
+    res.innerHTML = `<div class="cards">${shown.map(card).join("")}</div>` + (list.length > shown.length ? `<button class="chip more" id="more" type="button">+${list.length - shown.length} ilan daha göster</button>` : "");
   } else {
     const groups = {};
     for (const it of list) (groups[it.st || "?"] ||= []).push(it);
-    const order = D.line.map((s) => s.name).concat(["?"]);
-    const ks = tkeys();
+    const order = D.line.map((s) => s.name).concat(["?"]), ks = tkeys();
     let html = "";
     for (const name of order) {
       const arr = groups[name]; if (!arr) continue;
       const prices = arr.map((i) => i.p).filter(Boolean);
-      const st = D.line.find((s) => s.name === name);
-      let stCom = "";
-      if (st) {
-        stCom = ks.map((k) => { const t = D.targets.find((x) => (x.short || x.name) === k); const own = arr.filter((i) => i.cm && i.cm[k] != null).map((i) => i.cm[k]); return own.length ? `${esc(t.name)} ~${median(own)} dk` : ""; }).filter(Boolean).join(" · ");
-      }
+      const stCom = ks.map((k) => { const t = D.targets.find((x) => (x.short || x.name) === k); const own = arr.filter((i) => i.cm && i.cm[k] != null).map((i) => i.cm[k]); return own.length ? `${esc(t.name)} ~${median(own)} dk` : ""; }).filter(Boolean).join(" · ");
       html += `<section class="group"><div class="ghead"><h2>${esc(name === "?" ? "Durağı belirsiz" : name)}</h2>
         <span class="gstat">${arr.length} ilan · en ucuz ${esc(TL(Math.min(...prices)))} · medyan ${esc(TL(median(prices)))}${stCom ? " · " + stCom : ""}</span></div>
         <div class="cards">${arr.map(card).join("")}</div></section>`;
@@ -561,27 +717,181 @@ function renderResults(list) {
   const more = $("#more"); if (more) more.onclick = () => { visibleLimit += 120; renderResults(list); };
 }
 
+/* ---------------- ayarlar sekmesi ---------------- */
+function pickSettings(src) {
+  const keys = ["budget", "budget_tolerance_pct", "rooms_allowed", "furnished_accept", "include_unknown_furnished", "max_walk_m",
+    "walk_tolerance_m", "exclude_flags", "notify_removed", "notify_stations", "disabled_neighborhoods"];
+  const o = {}; for (const k of keys) if (src && k in src) o[k] = JSON.parse(JSON.stringify(src[k])); return o;
+}
+function settingsPayload() {
+  const o = pickSettings(SET);
+  o.favorites = [...favs];
+  o.hidden = hidMap;
+  return o;
+}
+function renderSettings() {
+  const box = $("#ayar"); const s = SET; const flagKeys = D.flag_keys || [];
+  const lab = (f) => (D.flag_labels && D.flag_labels[f]) || f;
+  const disabled = new Set(s.disabled_neighborhoods || []);
+  box.innerHTML = `
+  ${connected() ? "" : `<div class="banner warn">Ayarları kaydetmek için sağ üstten <b>GitHub'a bağlan</b>. Bağlanmadan da değerleri görebilir, deneyebilirsin.</div>`}
+  ${D.settings.updated ? `<p class="small">Son kaydedilen site ayarı: ${esc(fmtWhen(D.settings.updated))}. Değişiklikler kayıttan sonraki çalıştırmada uygulanır; "Kaydet ve uygula" bunu hemen başlatır (~2 dk).</p>` : `<p class="small">Bu ayarlar bildirimleri ve "kriterlere uyan" listesini belirler. "Kaydet ve uygula" GitHub'da kısa bir çalıştırma başlatır (~2 dk), sayfa kendiliğinden yenilenir.</p>`}
+  <div class="panel"><h2>Bütçe</h2><span class="small">Bu tutara kadar "uygun", pazarlık payına kadar "pazarlıkla" sayılır.</span>
+    <div class="sgrid">
+      <div><div class="small">Aylık kira tavanı (TL)</div><input class="num" style="max-width:180px" id="s-budget" type="number" inputmode="numeric" step="500" min="1000" value="${esc(s.budget)}"></div>
+      <div><div class="small">Pazarlık payı (%)</div><input class="num" id="s-tol" type="number" inputmode="numeric" step="1" min="0" max="50" value="${esc(s.budget_tolerance_pct)}"></div>
+    </div></div>
+  <div class="panel"><h2>Daire</h2><span class="small">Hiç oda seçilmezse her oda tipi kabul.</span>
+    <div class="sgrid"><div id="s-rooms"></div><div id="s-fur"></div></div></div>
+  <div class="panel"><h2>Metroya yürüme</h2><span class="small">Konumu bilinen ilanlarda en yakın M2 durağına kuş uçuşu mesafe. Sınırın üstü "sınırda" (bildirilir), sınır + tolerans üstü "uzak" (bildirilmez).</span>
+    <div class="sgrid">
+      <div><div class="small">Sınır (m)</div><input class="num" id="s-walk" type="number" inputmode="numeric" step="50" min="200" max="5000" value="${esc(s.max_walk_m)}"> <span class="small" id="s-walkmin"></span></div>
+      <div><div class="small">Tolerans (m)</div><input class="num" id="s-walktol" type="number" inputmode="numeric" step="50" min="0" max="3000" value="${esc(s.walk_tolerance_m)}"></div>
+    </div></div>
+  <div class="panel"><h2>Bildirim</h2><span class="small">Telegram'a hangi ilanların gideceği. Favori ilanların fiyat düşüşü ve yayından kalkması her zaman bildirilir.</span>
+    <div class="sgrid"><div id="s-excl"></div><div id="s-stations"></div></div>
+    <label class="ck" style="margin-top:10px"><input type="checkbox" id="s-removed" ${s.notify_removed ? "checked" : ""}> Daha önce bildirilen ilan yayından kalkınca haber ver</label></div>
+  <div class="panel"><h2>Mahalleler</h2><span class="small">İşaretsiz mahalleler taranmaz (hepsiemlak ve emlakjet). sahibinden kayıtlı aramasını sahibinden.com'dan düzenle.</span>
+    <div class="nblist">${(D.neighborhoods || []).map((n) => `<label class="ck"><input type="checkbox" data-nb="${esc(n.key)}" ${disabled.has(n.key) ? "" : "checked"}> ${esc(n.name)} <span class="small" style="flex-basis:auto;padding:0">→ ${esc(n.station || "?")}</span></label>`).join("")}</div></div>
+  <div class="savebar">
+    <button class="btn primary" type="button" id="s-apply" ${connected() ? "" : "disabled"}>Kaydet ve uygula</button>
+    <button class="btn" type="button" id="s-save" ${connected() ? "" : "disabled"}>Yalnız kaydet</button>
+    <button class="btn" type="button" id="s-reset">Değişiklikleri geri al</button>
+    <span class="small" id="s-msg"></span>
+  </div>`;
+  const rooms = chipGroup("Oda tipleri", ROOMS_SET, () => s.rooms_allowed || [], (v) => { s.rooms_allowed = v; });
+  $("#s-rooms").replaceWith(rooms);
+  const fur = chipGroup("Kabul edilen eşya durumu", FUR, () => s.furnished_accept || [], (v) => { s.furnished_accept = v; s.include_unknown_furnished = v.includes("unknown"); });
+  $("#s-fur").replaceWith(fur);
+  const ex = chipGroup("Bildirilmeyecek uyarılar", flagKeys.map((f) => [f, lab(f)]), () => s.exclude_flags || [], (v) => { s.exclude_flags = v; });
+  $("#s-excl").replaceWith(ex);
+  const sts = chipGroup("Yalnız bu duraklar (hiçbiri = hepsi)", D.line.map((x) => [x.name, x.name.replace("-Danıştay", "")]), () => s.notify_stations || [], (v) => { s.notify_stations = v; });
+  $("#s-stations").replaceWith(sts);
+  const walkMin = () => { const el = $("#s-walkmin"); if (el) el.textContent = `≈ ${Math.round((+$("#s-walk").value || 0) * 1.25 / 80)} dk yürüme`; };
+  $("#s-budget").oninput = (e) => { s.budget = +e.target.value || s.budget; };
+  $("#s-tol").oninput = (e) => { s.budget_tolerance_pct = +e.target.value || 0; };
+  $("#s-walk").oninput = (e) => { s.max_walk_m = +e.target.value || s.max_walk_m; walkMin(); };
+  $("#s-walktol").oninput = (e) => { s.walk_tolerance_m = +e.target.value || 0; };
+  $("#s-removed").onchange = (e) => { s.notify_removed = e.target.checked; };
+  box.querySelectorAll("[data-nb]").forEach((cb) => cb.addEventListener("change", () => {
+    const set = new Set(s.disabled_neighborhoods || []); cb.checked ? set.delete(cb.dataset.nb) : set.add(cb.dataset.nb); s.disabled_neighborhoods = [...set];
+  }));
+  $("#s-reset").onclick = () => { SET = pickSettings(D.settings); renderSettings(); toast("Geri alındı"); };
+  $("#s-save").onclick = () => saveSettings(false);
+  $("#s-apply").onclick = () => saveSettings(true);
+  walkMin();
+}
+async function saveSettings(apply) {
+  if (!connected()) { openConn(); return; }
+  const msg = $("#s-msg"); msg.textContent = "Kaydediliyor…";
+  $("#s-apply").disabled = $("#s-save").disabled = true;
+  try {
+    if (!SET.furnished_accept || !SET.furnished_accept.length) throw new Error("en az bir eşya durumu seçilmeli");
+    await GH.writeSettings(settingsPayload());
+    if (apply) { await GH.dispatch("none"); startPending("Ayarlar uygulanıyor"); msg.textContent = "Kaydedildi, uygulanıyor (~2 dk)."; }
+    else msg.textContent = "Kaydedildi. Bir sonraki taramada uygulanacak.";
+    toast("Ayarlar kaydedildi");
+  } catch (e) { msg.textContent = "Kaydedilemedi: " + e.message; }
+  finally { $("#s-apply").disabled = $("#s-save").disabled = false; }
+}
+
+/* ---------------- durum sekmesi ---------------- */
+function srcCard(title, sub, st, extraHtml, level) {
+  return `<div class="scard"><h3><span>${title}</span><span class="dotst ${level}" title="${level === "ok" ? "çalışıyor" : level === "warn" ? "dikkat" : "sorun"}"></span></h3>
+    <div class="kv">${sub}</div>${st ? `<div class="kv">Son tarama: <b>${esc(fmtWhen(st.last))}</b> (${esc(ago(st.last))})</div>
+    <div class="kv">Aktif <b>${st.active}</b> ilan · uygun <b>${st.matching}</b></div>
+    ${st.errors && st.error_texts.length ? `<div class="kv">Son hata: ${esc(st.error_texts[0])}</div>` : ""}` : ""}${extraHtml || ""}</div>`;
+}
+function renderStatus() {
+  const box = $("#durum"); const st = D.status || {};
+  const feedAge = D.feed_generated ? ageHours(D.feed_generated) : null;
+  const feedOk = feedAge != null && feedAge <= (D.feed_max_age_hours || 3);
+  const ejLevel = st.emlakjet ? (st.emlakjet.errors > 2 || ageHours(st.emlakjet.last) > 5 ? "warn" : "ok") : "bad";
+  const tg = D.telegram_bot ? `<a href="https://t.me/${esc(D.telegram_bot)}" target="_blank" rel="noopener noreferrer">@${esc(D.telegram_bot)}</a>` : "Telegram botu";
+  box.innerHTML = `
+  <div class="panel"><h2>Genel</h2>
+    <div class="kv">Son çalıştırma: <b>${esc(fmtWhen(D.last_scan || D.generated))}</b> · sayfa üretildi ${esc(ago(D.generated))}</div>
+    <div class="kv">Zamanlama: her <b>${D.schedule ? D.schedule.every_hours : 2} saatte</b> bir tarama, her gün <b>${esc(D.schedule ? D.schedule.summary : "09:00")}</b> özet · bildirimler ${tg}</div>
+    <div class="kv">Kriterlere uyan aktif ilan: <b>${D.items.filter((i) => i.ok && !isHidden(i)).length}</b> · son 24 saatte yeni uygun: <b>${D.new24 ?? "?"}</b> · bütçe <b>${esc(TL(D.budget))}</b></div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn primary" type="button" id="d-scan">Şimdi tara</button>
+      <button class="btn" type="button" id="d-refresh">Sayfayı yenile</button>
+      <a class="btn" href="https://github.com/${esc(GH.repo())}/actions" target="_blank" rel="noopener noreferrer">GitHub Actions</a>
+    </div>
+    <p class="small" id="d-msg">${connected() ? "" : "Tarama başlatmak için sağ üstten GitHub'a bağlan."}</p></div>
+  <div class="scards">
+    ${srcCard("emlakjet", "GitHub'da, her 2 saatte bir", st.emlakjet, "", ejLevel)}
+    ${srcCard("hepsiemlak", "PC açıkken, Görev Zamanlayıcı ile 2 saatte bir → GitHub'a besleme", st.hepsiemlak,
+      `<div class="kv">Son PC beslemesi: <b>${esc(D.feed_generated ? fmtWhen(D.feed_generated) : "yok")}</b>${D.feed_generated ? " (" + esc(ago(D.feed_generated)) + ")" : ""}</div>
+       ${feedOk ? "" : `<div class="kv">PC kapalıyken hepsiemlak güncellenmez; mevcut ilanlar sayfada kalır.</div>`}`, feedOk ? "ok" : "warn")}
+    ${srcCard("sahibinden", "sahibinden'in kendi kayıtlı araması: <b>M2 eşyalı 39bin altı</b> — bildirimler sahibinden uygulamasına ve e-postana gelir", st.sahibinden || null,
+      `<div class="kv"><a href="https://banaozel.sahibinden.com/favori-aramalarim" target="_blank" rel="noopener noreferrer">Favori aramalarımı aç</a></div>`, "ok")}
+  </div>
+  <div class="panel"><h2>Son çalıştırmalar</h2><div class="runs-wrap" id="d-runs"><p class="small">Yükleniyor…</p></div></div>`;
+  $("#d-scan").onclick = async () => {
+    if (!connected()) { openConn(); return; }
+    try { await GH.dispatch(""); $("#d-msg").textContent = "Tarama başlatıldı (~3-5 dk)."; startPending("Tarama sürüyor"); setTimeout(loadRuns, 4000); }
+    catch (e) { $("#d-msg").textContent = "Başlatılamadı: " + e.message; }
+  };
+  $("#d-refresh").onclick = () => reloadData(true);
+  loadRuns();
+}
+async function loadRuns() {
+  const box = $("#d-runs"); if (!box) return;
+  try {
+    const r = await GH.runs();
+    const rows = (r.workflow_runs || []).map((w) => {
+      const state = w.status === "completed" ? (w.conclusion === "success" ? "✅ tamam" : w.conclusion === "cancelled" ? "⏹ iptal" : "⚠️ " + w.conclusion) : "⏳ sürüyor";
+      const ev = w.event === "schedule" ? "zamanlanmış" : w.event === "workflow_dispatch" ? "elle / PC / site" : w.event;
+      return `<tr><td>${esc(fmtWhen(w.created_at))}</td><td>${esc(ev)}</td><td>${esc(state)}</td><td><a href="${esc(safeUrl(w.html_url))}" target="_blank" rel="noopener noreferrer">kayıt</a></td></tr>`;
+    }).join("");
+    box.innerHTML = `<table class="runs"><thead><tr><th>Zaman</th><th>Tetikleyen</th><th>Sonuç</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
+  } catch (e) { box.innerHTML = `<p class="small">Çalıştırma listesi alınamadı (${esc(e.message)}).</p>`; }
+}
+
+/* ---------------- bekleyen işlem (yeni veri gelince yenile) ---------------- */
+function startPending(label) {
+  const until = Date.now() + 8 * 60 * 1000, base = D.generated;
+  store.set("m2k_pending", { label, until, base });
+  pollPending();
+}
+async function pollPending() {
+  const p = store.get("m2k_pending", null), box = $("#pending");
+  if (!p || Date.now() > p.until) { store.del("m2k_pending"); box.innerHTML = ""; return; }
+  box.innerHTML = `<div class="banner info">⏳ ${esc(p.label)}… Bitince sayfa kendiliğinden yenilenecek.</div>`;
+  try {
+    const r = await fetch("data.json?t=" + Date.now(), { cache: "no-store" });
+    const d = await r.json();
+    if (d.generated !== p.base) { store.del("m2k_pending"); box.innerHTML = ""; applyData(d); toast("Yeni veriler yüklendi"); return; }
+  } catch (e) {}
+  setTimeout(pollPending, 20000);
+}
+async function reloadData(showToast) {
+  try { const r = await fetch("data.json?t=" + Date.now(), { cache: "no-store" }); applyData(await r.json()); if (showToast) toast("Güncel veriler yüklendi"); }
+  catch (e) { toast("Veri alınamadı: " + e.message); }
+}
+
 /* ---------------- ana çizim ---------------- */
-let lastList = [];
+function renderTabs() {
+  for (const b of document.querySelectorAll(".tab")) b.setAttribute("aria-selected", String(b.dataset.tab === S.tab));
+  $("#tab-ilan").hidden = S.tab !== "ilan"; $("#tab-ayar").hidden = S.tab !== "ayar"; $("#tab-durum").hidden = S.tab !== "durum";
+}
 function renderAll(rebuildFilters = true, keepFocus = false) {
-  saveState();
+  saveState(); renderTabs(); renderConn();
+  if (S.tab === "ayar") { renderSettings(); return; }
+  if (S.tab === "durum") { renderStatus(); return; }
   const base = D.items.filter((it) => pass(it, S, true));
   const list = base.filter((it) => pass(it, S, false)).sort(sorter(S.sort));
-  lastList = list;
   renderLine(base);
   if (!keepFocus) buildFilters();
   $("#fsum").textContent = filterSummary();
   $("#count").textContent = `${list.length} ilan`;
-  const verified = list.filter((i) => i.v).length;
-  $("#countsub").textContent = list.length ? `· ${verified} tanesinin konumu doğrulanmış` : "";
-  // hazır filtre çipleri
+  $("#countsub").textContent = list.length ? `· ${list.filter((i) => i.v).length} tanesinin konumu doğrulanmış` : "";
   const pbox = $("#presets"); pbox.innerHTML = "";
   for (const [label, fn] of presets()) {
     const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.textContent = label;
-    b.setAttribute("aria-pressed", String(presetMatches(fn)));
-    b.onclick = () => applyPreset(fn); pbox.appendChild(b);
+    b.setAttribute("aria-pressed", String(presetMatches(fn))); b.onclick = () => applyPreset(fn); pbox.appendChild(b);
   }
-  // sıralama + görünüm
   const ks = tkeys();
   $("#sort").innerHTML = SORTS.filter(([k]) => (k === "c0" ? ks[0] : k === "c1" ? ks[1] : k === "cmax" ? ks.length > 1 : true))
     .map(([k, l]) => `<option value="${k}" ${S.sort === k ? "selected" : ""}>${esc(l.replace("1. hedefe", tdat(0)).replace("2. hedefe", tdat(1)))}</option>`).join("");
@@ -591,37 +901,54 @@ function renderAll(rebuildFilters = true, keepFocus = false) {
 
 /* ---------------- olaylar ---------------- */
 document.addEventListener("click", (e) => {
+  const t = e.target.closest("[data-tab]");
+  if (t) { S.tab = t.dataset.tab; renderAll(); window.scrollTo({ top: 0 }); return; }
   const v = e.target.closest("[data-view]");
   if (v) { S.view = v.dataset.view; visibleLimit = 120; renderAll(false); return; }
   const a = e.target.closest("[data-act]");
   if (a) {
     const id = a.closest(".card").dataset.id;
+    if (a.dataset.act === "detail") { openDetails.has(id) ? openDetails.delete(id) : openDetails.add(id); renderAll(false, true); return; }
     if (a.dataset.act === "fav") { favs.has(id) ? favs.delete(id) : favs.add(id); store.set("m2k_favs", [...favs]); }
-    else { hid.has(id) ? hid.delete(id) : hid.add(id); store.set("m2k_hidden", [...hid]); }
+    else { const it = D.items.find((x) => x.id === id); const now = !isHidden(it); hidMap[id] = now; store.set("m2k_hidmap", hidMap); }
+    pushSync();
     renderAll(false, true);
   }
 });
 $("#sort").addEventListener("change", (e) => { S.sort = e.target.value; renderAll(false, true); });
 $("#allst").addEventListener("click", () => { S.st = []; renderAll(false); });
+$("#connbtn").addEventListener("click", openConn);
+$("#toksave").addEventListener("click", saveToken);
+$("#tokin").addEventListener("keydown", (e) => { if (e.key === "Enter") saveToken(); });
+$("#tokcancel").addEventListener("click", () => $("#conndlg").close());
+$("#tokdel").addEventListener("click", () => { store.del("m2k_gh"); $("#conndlg").close(); renderAll(); toast("Bağlantı kaldırıldı"); });
 window.addEventListener("hashchange", () => { const h = location.hash.slice(1); if (h !== encodeState(S)) { S = decodeState(h); renderAll(); } });
 
 /* ---------------- başlat ---------------- */
-fetch("data.json", { cache: "no-cache" }).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); }).then((data) => {
+function applyData(data) {
   D = data;
   PRESENT = new Set(D.items.map((i) => i.id));
+  for (const f of (D.settings && D.settings.favorites) || []) favs.add(f);
+  store.set("m2k_favs", [...favs]);
+  SET = pickSettings(D.settings || {});
   document.title = D.title || "M2 Kiralık";
   $("#title").textContent = D.title || "M2 Kiralık";
-  const okN = D.items.filter((i) => i.ok && !i.hid).length;
+  const okN = D.items.filter((i) => i.ok && !isHidden(i)).length;
   $("#meta").textContent = `Son tarama ${fmtWhen(D.last_scan || D.generated)} · ${okN} uygun / ${D.items.length} aktif ilan · bütçe ${TL(D.budget)}`;
+  const t = D.targets || [];
+  $("#note").innerHTML = "Ulaşım süreleri tahminidir: yürüme (konum yoksa ~" + (D.unknown_walk_min || 10) + " dk) + bekleme + durak başına ~" + String(D.ride_min_per_stop || 2.2).replace(".", ",") + " dk" +
+    (t.filter((x) => x.note).length ? " · " + t.filter((x) => x.note).map((x) => esc(x.name + ": " + x.note)).join(" · ") : "") +
+    ". Favori ve gizledikler bu tarayıcıda saklanır; GitHub'a bağlıysan tüm cihazlarda eşitlenir ve gizlenen ilanlar bildirim üretmez.";
+  renderAll();
+}
+fetch("data.json", { cache: "no-cache" }).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(async (data) => {
   const h = location.hash.slice(1) || store.get("m2k_state", "");
   S = decodeState(h);
   $("#fbox").open = !!store.get("m2k_fopen", false);
   $("#fbox").addEventListener("toggle", () => store.set("m2k_fopen", $("#fbox").open));
-  const t = D.targets || [];
-  $("#note").innerHTML = "Ulaşım süreleri tahminidir: yürüme (konum yoksa ~" + (D.unknown_walk_min || 10) + " dk) + bekleme + durak başına ~" + String(D.ride_min_per_stop || 2.2).replace(".", ",") + " dk" +
-    (t.filter((x) => x.note).length ? " · " + t.filter((x) => x.note).map((x) => esc(x.name + ": " + x.note)).join(" · ") : "") +
-    ". Favori ve gizlediklerin yalnız bu tarayıcıda saklanır. Telegram'daki <code>/gizle</code> komutuyla gizlenenler her yerde gizlenir.";
-  renderAll();
+  applyData(data);
+  if (connected()) { await pullRemote(); renderAll(); }
+  pollPending();
 }).catch((err) => { $("#meta").textContent = "Veri yüklenemedi: " + err; });
 </script>
 </body>

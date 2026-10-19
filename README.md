@@ -5,33 +5,41 @@ ilanlarını hepsiemlak, emlakjet ve sahibinden üzerinden düzenli tarar; krite
 ilanları ve **fiyat düşüşlerini** anında, her sabah 09:00'da da bir özet olarak Telegram'a
 (ya da e-posta / ntfy.sh) gönderir. Yayından kalkan ilanları da takip eder.
 
-## Filtre sayfası — https://ysftnc.github.io/m2kira/
+## Web sitesi — https://ysftnc.github.io/m2kira/
 
-Her taramadan sonra (2 saatte bir) yeniden üretilen, telefonda da çalışan ilan ekranı. Filtreleme
-tamamen tarayıcıda, anında yapılır.
+Her çalıştırmadan sonra yeniden üretilen, telefonda da çalışan yönetim sitesi. Üç sekme:
 
-- **Durak şeridi**: Kızılay → Koru hat sırasıyla her durakta ilan sayısı ve en ucuz fiyat. Durağa
-  dokununca o durak seçilir (birden çok seçilebilir). "Duraklar" görünümü ilanları durak durak
-  gruplar; her grup başlığında adet, en ucuz, medyan ve işe tahmini ulaşım süresi.
-- **Hazır filtreler**: Önerilen · Yeni (24 sa) · Fiyatı düşenler · Milli Kütüphane'ye yakın ·
-  Şehir Hastanesi rotası · İki hedefe de yakın · En ucuz 1+1 · Yürüme ≤ 8 dk · Faturalar dahil ·
-  Pazarlıkla · Favoriler · Tümü.
-- **Filtreler**: fiyat aralığı, m², oda, eşya durumu, durağa yürüme dakikası (konumu doğrulanmamışları
-  gösterme seçeneğiyle), işe ulaşım süresi sınırı, kaynak, uyarılı ilanları gizleme (kısıtlı,
-  günlük/oda, kot/bodrum, uzak, ACİL/kapora, Ankaray, şüpheli ucuz, kopya), faturalar dahil,
-  fiyatı düşen, yeni ilan, metin arama.
-- **Sıralama**: önerilen, fiyat, en yeni, yürüme, Milli Kütüphane'ye / Şehir Hastanesi'ne süre,
-  iki hedefe birden yakınlık, m², TL/m².
-- **Görünümler**: Duraklar · Liste · Harita (M2 hattı, 1 km yürüme halkaları, ilanlar).
-- **İşe ulaşım** (tahmini, kapıdan kapıya): durağa yürüme + 3 dk bekleme + durak başına 2,2 dk;
-  Şehir Hastanesi için Tarım Bakanlığı–Danıştay'dan 113-5 otobüsüne +15 dk. `config.yaml → commute`.
-- **Favori / Gizle**: bu tarayıcıda saklanır. Filtre kombinasyonu adres çubuğunda durur; yer imi
-  olarak kaydedilebilir ya da paylaşılabilir.
-- Telegram: `/filtre` (ya da `/filtre Kızılay`) sayfa linkini, `/durak` durak durak özeti verir;
-  günlük özet ve toplu bildirimde de link var.
+**İlanlar** (herkese açık, filtreleme tarayıcıda anında)
+- Durak şeridi: Kızılay → Koru hat sırasıyla her durakta ilan sayısı ve en ucuz fiyat; durağa dokununca
+  seçilir (birden çok). "Duraklar" görünümü ilanları durak durak gruplar (adet, en ucuz, medyan, işe süre).
+- Hazır filtreler: Önerilen · Yeni (24 sa) · Fiyatı düşenler · Milli Kütüphane'ye yakın · Şehir Hastanesi
+  rotası · İki hedefe de yakın · En ucuz 1+1 · Yürüme ≤ 8 dk · Faturalar dahil · Pazarlıkla · Favoriler · Tümü.
+- Filtreler: fiyat, m², oda, eşya, durağa yürüme, işe ulaşım süresi, kaynak, uyarılı ilanları gizleme,
+  faturalar dahil, fiyatı düşen, yeni, metin arama. Sıralama: fiyat, yeni, yürüme, hedeflere süre, m², TL/m².
+- Görünümler: Duraklar · Liste · Harita. Kartta "Detay": açıklama, fiyat geçmişi, ilk görülme, haritada
+  aç, durağa yürüyüş tarifi. Filtre kombinasyonu adres çubuğunda durur (yer imi / paylaşım).
 
-Not: repo public olduğu için sayfa da herkese açıktır (ilan verisi zaten herkese açık; kişisel
-bilgi, token ya da sahibinden oturumu içermez).
+**Ayarlar** (bildirimleri ve "kriterlere uyan" listesini belirler)
+- Bütçe ve pazarlık payı, kabul edilen oda tipleri ve eşya durumları, metroya yürüme sınırı ve toleransı,
+  bildirilmeyecek uyarılar, yalnız seçilen duraklar için bildirim, kalkma bildirimi, taranacak mahalleler.
+- "Kaydet ve uygula": ayarları reponun `feed` dalına (`feed/settings.json`) yazar ve kısa bir GitHub
+  çalıştırması başlatır (~2 dk); tüm ilanlar yeni ayarlarla yeniden değerlendirilir, yeni uygun hale
+  gelenler Telegram'a "✅ Artık kriterlere uyuyor" diye gelir, sayfa kendiliğinden yenilenir.
+- Telegram'daki `/butce`, `/gizle`, `/mahalle` da çalışmaya devam eder; site yeniden kaydedene kadar geçerlidir.
+
+**Durum**
+- Kaynak başına son tarama, aktif/uygun ilan, son hata; PC'nin son hepsiemlak beslemesinin zamanı;
+  son GitHub çalıştırmaları; "Şimdi tara" (tam tarama, ~3-5 dk).
+
+**GitHub'a bağlanma** (yalnız yazma işlemleri için, tarayıcı başına bir kez): sağ üstteki düğme adım
+adım anlatır — github.com'da yalnız `m2kira` reposuna *Contents* ve *Actions* yazma izni olan
+fine-grained bir anahtar oluşturup yapıştırmak. Anahtar yalnız o tarayıcıda saklanır. Bağlıyken
+favoriler ve gizlenenler tüm cihazlarda eşitlenir; gizlenen ilan bildirim üretmez, favori ilanın fiyat
+düşüşü ve yayından kalkması her durumda bildirilir.
+
+Telegram: `/filtre` (ya da `/filtre Kızılay`) site linkini, `/durak` durak durak özeti verir; günlük
+özette ve toplu bildirimde de link var. Not: repo public olduğu için site de herkese açıktır (ilan
+verisi zaten herkese açık; token, kişisel bilgi ya da sahibinden oturumu içermez).
 
 ## PC kapalıyken bildirim — önerilen kurulum (≈10 dk, ücretsiz)
 
@@ -282,7 +290,8 @@ m2kira/
   sources/   hepsiemlak.py emlakjet.py sahibinden.py sahibinden_mail.py
   db.py      dedup.py    pipeline.py              SQLite, kopya tespiti, tarama orkestrasyonu
   format.py  notify/     bot.py  scheduler.py     mesajlar, Telegram/e-posta/ntfy, komutlar, zamanlayıcı
-  web.py     web/index.html                        filtre sayfası (data.json üretimi + arayüz)
+  web.py     web/index.html  site_settings.py      web sitesi (data.json + arayüz) ve siteden gelen ayarlar
+  feed.py    sources/hepsiemlak_feed.py            PC -> GitHub hepsiemlak beslemesi
 tests/                  pytest + kayıtlı HTML/JSON fikstürleri
 deploy/                 kurulum.ps1 (GitHub Actions kurulumu), m2kira.service (systemd)
 .github/workflows/      scan.yml (2 saatte bir tarama + 09:00 özet)

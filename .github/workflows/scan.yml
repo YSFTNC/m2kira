@@ -67,13 +67,16 @@ jobs:
       - name: Bağımlılıklar
         run: pip install -r requirements.txt
 
-      - name: hepsiemlak beslemesi (PC'den)
+      - name: hepsiemlak beslemesi (PC'den) + site ayarları
         run: |
           mkdir -p data/feed
-          if git fetch -q --depth=1 origin feed 2>/dev/null && git show FETCH_HEAD:feed/hepsiemlak.json > data/feed/hepsiemlak.json 2>/dev/null; then
-            python -c "import json; d=json.load(open('data/feed/hepsiemlak.json', encoding='utf-8')); print('besleme:', d['generated'], d['listings'], 'ilan')"
-          else
-            rm -f data/feed/hepsiemlak.json; echo "besleme yok"
+          if git fetch -q --depth=1 origin feed 2>/dev/null; then
+            if git show FETCH_HEAD:feed/hepsiemlak.json > data/feed/hepsiemlak.json 2>/dev/null; then
+              python -c "import json; d=json.load(open('data/feed/hepsiemlak.json', encoding='utf-8')); print('besleme:', d['generated'], d['listings'], 'ilan')"
+            else rm -f data/feed/hepsiemlak.json; echo "besleme yok"; fi
+            if git show FETCH_HEAD:feed/settings.json > data/feed/settings.json 2>/dev/null; then
+              python -c "import json; d=json.load(open('data/feed/settings.json', encoding='utf-8')); print('site ayarları:', d.get('updated'))"
+            else rm -f data/feed/settings.json; echo "site ayarı yok"; fi
           fi
 
       - name: Günlük özet

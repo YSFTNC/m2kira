@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from typing import Any, Optional
 
 from .config import Config, Neighborhood
-from .db import DB, utcnow
+from .db import DB, row_to_listing, utcnow
 from .dedup import find_duplicates
 from .format import esc, fmt_price, format_line, format_listing, format_summary, long_id, short_id
 from .geo import walk_minutes
@@ -181,6 +181,7 @@ class Pipeline:
         summary: dict[str, Any] = {"started": started, "trigger": trigger, "budget": budget, "sources": {},
                                    "new": 0, "price_drop": 0, "removed": 0, "errors": [], "notified": 0}
         log.info("tarama başladı (%s): %d kaynak × %d mahalle, bütçe %s", trigger, len(self.sources), len(nbs), budget)
+        summary["now_matching"] = self.reevaluate_all(budget)
         for src in self.sources:
             s_stats = {"neighborhoods": 0, "items": 0, "pages": 0, "errors": 0, "blocked": False}
             summary["sources"][src.name] = s_stats
@@ -329,6 +330,9 @@ class Pipeline:
                 summary["new"] += 1
                 self._annotate_duplicates(l)
             else:
+                if l.matches and not old.get("matches") and not old.get("notified_at") and old.get("active"):
+                    # eskiden kriter dışıydı, şimdi uyuyor (ör. detaydan eşya/konum geldi)
+                    self.db.add_event(Event(listing_id=l.id, kind="now_matches", new_price=l.price, created_at=now))
                 if not old.get("active"):
                     self.db.add_event(Event(listing_id=l.id, kind="reappeared", old_price=old.get("price"),
                                             new_price=l.price, created_at=now))
@@ -361,6 +365,36 @@ class Pipeline:
             return
         until = datetime.fromtimestamp(datetime.now(timezone.utc).timestamp() + mins * 60, tz=timezone.utc)
         self.db.set_setting(f"blocked_until:{src.name}", until.strftime("%Y-%m-%dT%H:%M:%SZ"))
+
+    def reevaluate_all(self, budget: Optional[int] = None) -> int:
+        """Tüm aktif ilanları güncel ayarlarla (bütçe, oda, eşya, yürüme, hariç bayraklar — siteden ya da
+        Telegram'dan değişmiş olabilir) yeniden değerlendirir. Yeni uygun hale gelen ve daha önce hiç
+        bildirilmemiş ilanlar için 'now_matches' olayı üretir. Döndürür: yeni uygun sayısı."""
+        budget = budget or self.budget()
+        now = utcnow()
+        newly = 0
+        for r in self.db.active_listings(include_hidden=True):
+            l = row_to_listing(r)
+            keep = [f for f in (r.get("flags") or []) if f.startswith("kopya:") or f == "fiyat_cok_dusuk"]
+            nb = self.cfg.neighborhood_by_key(l.neighborhood_key or "") or self._neighborhood_for(
+                l, Neighborhood(name=l.neighborhood_key or "?", station=r.get("nearest_station") or ""))
+            self.enrich(l, nb)
+            self.evaluate(l, budget)
+            l.flags = l.flags + [f for f in keep if f not in l.flags]
+            changed = {}
+            for k in ("matches", "match_tier", "flags", "nearest_station", "distance_m", "walk_minutes_est",
+                      "distance_verified", "furnished", "price_includes"):
+                nv, ov = getattr(l, k), r.get(k)
+                if (bool(nv) if k in ("matches", "distance_verified") else nv) != (bool(ov) if k in ("matches", "distance_verified") else ov):
+                    changed[k] = nv
+            if changed:
+                self.db.update_fields(l.id, **changed)
+            if l.matches and not r.get("matches") and not r.get("notified_at"):
+                self.db.add_event(Event(listing_id=l.id, kind="now_matches", new_price=l.price, created_at=now))
+                newly += 1
+        if newly:
+            log.info("yeniden değerlendirme: %d ilan artık kriterlere uyuyor", newly)
+        return newly
 
     def _neighborhood_for(self, l: Listing, fallback: Neighborhood) -> Neighborhood:
         """Birleşik aramadan gelen ilanı (sahibinden, e-posta) config'teki mahalleye eşler."""
@@ -421,6 +455,9 @@ class Pipeline:
         if not events:
             return 0
         notify_removed = bool(self.cfg.get("notify_removed", default=True))
+        # siteden: yalnız bu duraklar için bildir (boş = hepsi); favoriler her zaman (fiyat düşüşü / kalkma)
+        stations = set(self.cfg.get("notify_stations", default=[]) or [])
+        favorites = set(self.cfg.get("favorites", default=[]) or [])
         cards: list[tuple[dict[str, Any], dict[str, Any]]] = []
         done: list[int] = []
         for ev in events:
@@ -429,11 +466,16 @@ class Pipeline:
             if not l or l.get("hidden"):
                 continue
             evd = {"kind": ev.kind, "old_price": ev.old_price, "new_price": ev.new_price}
-            if ev.kind in ("new", "reappeared", "price_drop"):
-                if l.get("matches") and l.get("active"):
+            fav = l["id"] in favorites
+            if fav:
+                evd["fav"] = True
+            if ev.kind in ("new", "reappeared", "price_drop", "now_matches"):
+                if fav and ev.kind == "price_drop" and l.get("active"):
+                    cards.append((l, evd))
+                elif l.get("matches") and l.get("active") and (not stations or l.get("nearest_station") in stations or fav):
                     cards.append((l, evd))
             elif ev.kind == "removed":
-                if notify_removed and l.get("notified_at"):
+                if (notify_removed and l.get("notified_at")) or fav:
                     cards.append((l, evd))
         sent = 0
         compact_threshold = int(self.cfg.get("compact_threshold", default=12))
@@ -444,7 +486,7 @@ class Pipeline:
             if link:
                 lines.append(f'🔎 <a href="{esc(link)}">Filtre sayfasında aç</a>')
             for l, evd in sorted(cards, key=lambda c: (c[0].get('price') or 0)):
-                head = {"new": "🆕", "reappeared": "♻️", "price_drop": "💸", "removed": "❌"}.get(evd["kind"], "")
+                head = {"new": "🆕", "reappeared": "♻️", "price_drop": "💸", "removed": "❌", "now_matches": "✅"}.get(evd["kind"], "")
                 lines.append(head + " " + format_line(l))
             try:
                 self.notifier.send("\n".join(lines), subject=f"m2kira: {len(cards)} değişiklik")

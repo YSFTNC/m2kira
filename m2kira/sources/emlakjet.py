@@ -324,7 +324,7 @@ class EmlakjetSource(Source):
         slug = nb.slug_for("emlakjet")
         if not slug:
             result.complete = False
-            result.errors.append("emlakjet slug'ı tanımlı değil")
+            result.full_pass = False  # bu kaynakta mahalle yok (config: false) — hata değil
             return result
         # fast_categories her taramada; diğerleri (residence) yalnız tam geçişte (full_scan_every_hours)
         full = self.claim_full_pass(nb.key)

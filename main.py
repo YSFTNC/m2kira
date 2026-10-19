@@ -68,6 +68,9 @@ def main(argv: list[str] | None = None) -> int:
     setup_logging(cfg.data_dir, args.verbose)
     log = logging.getLogger("main")
     db = DB(cfg.db_path)
+    # web sitesinden kaydedilen ayarlar (GitHub Actions'ta feed dalından indirilir)
+    from m2kira import site_settings
+    site_settings.apply_from_file(cfg, db)
 
     if args.cmd == "sahibinden-login":
         from m2kira.sources.sahibinden import SahibindenSource

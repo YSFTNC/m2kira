@@ -16,6 +16,7 @@ EVENT_HEAD = {
     "price_drop": "💸 Fiyat düştü",
     "price_up": "📈 Fiyat arttı",
     "removed": "❌ Yayından kalktı",
+    "now_matches": "✅ Artık kriterlere uyuyor",
 }
 
 
@@ -71,6 +72,8 @@ def format_listing(l: dict[str, Any], event: Optional[dict[str, Any]] = None, bu
         head = EVENT_HEAD.get(event.get("kind", ""), event.get("kind", ""))
         if event.get("kind") in ("price_drop", "price_up") and event.get("old_price"):
             head += f": {fmt_price(event['old_price'])} → {fmt_price(event['new_price'])}"
+        if event.get("fav"):
+            head = "⭐ " + head + " (favori)"
     tier = ""
     if l.get("match_tier") == "pazarlikla":
         tier = " 🤝 bütçe üstü, pazarlıkla"

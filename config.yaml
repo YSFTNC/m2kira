@@ -27,6 +27,7 @@ compact_threshold: 12                             # tek taramada bundan fazla de
 web:
   title: "M2 Kiralık"
   url: "https://ysftnc.github.io/m2kira/"   # Telegram mesajlarındaki link
+  telegram_bot: "Iremev_bot"                 # sitede "Telegram'da aç" linki
 commute:                   # kapıdan kapıya ≈ yürüme + bekleme + durak sayısı × dk/durak + ek süre
   ride_min_per_stop: 2.2   # M2'de duraklar arası ortalama
   wait_min: 3

@@ -116,6 +116,7 @@ def build_payload(cfg: Config, db: DB, budget: Optional[int] = None) -> dict[str
             "tier": r.get("match_tier"),
             "hid": bool(r.get("hidden")),
             "aid": extras.get("aidat"),
+            "ph": h if len(h) > 1 else None,
             "desc": desc[:DESC_SNIPPET],
             "cm": commute_minutes(r.get("nearest_station"), r.get("walk_minutes_est"),
                                   bool(r.get("distance_verified")), cfg, line, targets),
@@ -131,9 +132,24 @@ def build_payload(cfg: Config, db: DB, budget: Optional[int] = None) -> dict[str
             "med": int(statistics.median(prices)) if prices else None,
         }
     last = db.last_scan_info() or {}
+    from .site_settings import effective
+    fc = cfg.source_cfg("hepsiemlak_feed")
     return {
         "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "last_scan": last.get("finished_at") or last.get("started_at"),
+        "settings": effective(cfg, db),
+        "status": source_status(db),
+        "feed_generated": db.get_setting("feed_processed:hepsiemlak"),
+        "neighborhoods": [{"name": n.name, "key": n.key, "station": n.station, "enabled": n.enabled}
+                          for n in cfg.neighborhoods],
+        "repo": {"name": str(fc.get("repo", "YSFTNC/m2kira")), "branch": str(fc.get("branch", "feed")),
+                 "settings_path": "feed/settings.json", "workflow": "scan.yml"},
+        "schedule": {"every_hours": cfg.scan_interval_hours, "summary": str(cfg.get("daily_summary_time", default="09:00"))},
+        "telegram_bot": str(cfg.get("web", "telegram_bot", default="") or ""),
+        "feed_max_age_hours": float(fc.get("max_age_hours", 3)),
+        "flag_keys": ["gunluk", "oda", "uzak", "kisit", "kot_bodrum", "acil", "kapora", "depozitosuz",
+                      "kisa_sureli", "ankaray_uyari", "fiyat_cok_dusuk", "esya_belirsiz"],
+        "new24": sum(1 for i in items if i["ok"] and i["fs"] and i["fs"] >= _hours_ago(24)),
         "budget": budget,
         "tol": tol,
         "max_walk_m": int(cfg.get("max_walk_m", default=1000)),
@@ -147,6 +163,30 @@ def build_payload(cfg: Config, db: DB, budget: Optional[int] = None) -> dict[str
         "ride_min_per_stop": float(cfg.get("commute", "ride_min_per_stop", default=2.2)),
         "items": items,
     }
+
+
+def _hours_ago(h: float) -> str:
+    from datetime import timedelta
+    return (datetime.now(timezone.utc) - timedelta(hours=h)).strftime("%Y-%m-%dT%H:%M")
+
+
+def source_status(db: DB) -> dict[str, Any]:
+    """Kaynak başına son deneme ve son başarılı tarama özeti (site 'Durum' sekmesi)."""
+    out: dict[str, Any] = {}
+    srcs = [r[0] for r in db.conn.execute("SELECT DISTINCT source FROM scan_log")]
+    for src in srcs:
+        last = db.conn.execute("SELECT MAX(started_at) FROM scan_log WHERE source=?", (src,)).fetchone()[0]
+        row = db.conn.execute(
+            "SELECT MAX(finished_at), SUM(items), SUM(pages), SUM(CASE WHEN error IS NOT NULL THEN 1 ELSE 0 END) "
+            "FROM scan_log WHERE source=? AND started_at=?", (src, last)).fetchone()
+        errs = [r[0] for r in db.conn.execute(
+            "SELECT DISTINCT error FROM scan_log WHERE source=? AND started_at=? AND error IS NOT NULL LIMIT 3", (src, last))]
+        ok = db.conn.execute("SELECT MAX(finished_at) FROM scan_log WHERE source=? AND items > 0", (src,)).fetchone()[0]
+        active = db.conn.execute("SELECT COUNT(*), SUM(matches) FROM listings WHERE source=? AND active=1", (src,)).fetchone()
+        out[src] = {"last": row[0], "items": int(row[1] or 0), "pages": int(row[2] or 0), "errors": int(row[3] or 0),
+                    "error_texts": [e[:240] for e in errs], "last_ok": ok,
+                    "active": int(active[0] or 0), "matching": int(active[1] or 0)}
+    return out
 
 
 def export_site(cfg: Config, db: DB, out_dir: Path) -> dict[str, Any]:

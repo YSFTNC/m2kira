@@ -55,6 +55,7 @@ class HepsiemlakFeedSource(Source):
             return
         if self.db is not None and self.db.get_setting("feed_processed:hepsiemlak") == gen:
             self.status = "bu besleme zaten işlendi"
+            self._reported = True   # hata değil: sessiz geç
             return
         self.units = {u["nb"]: u for u in feed.get("units") or []}
         self.status = f"besleme {gen} ({sum(len(u['listings']) for u in self.units.values())} ilan)"
