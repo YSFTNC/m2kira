@@ -1,6 +1,6 @@
 ﻿<#
-m2kira — PC görevi: hepsiemlak'ı PC açıkken 2 saatte bir tarayıp GitHub'a besleme olarak gönderir.
-(hepsiemlak, GitHub sunucularının IP'lerini Cloudflare doğrulamasında engelliyor; ev interneti gerekiyor.)
+m2kira — PC görevi: hepsiemlak ve sahibinden'i PC açıkken 2 saatte bir tarayıp GitHub'a besleme olarak gönderir.
+(hepsiemlak GitHub IP'lerini Cloudflare'da engelliyor; sahibinden giriş + gerçek Chrome istiyor.)
 
   powershell -ExecutionPolicy Bypass -File deploy\pc-gorev.ps1            # kur / güncelle
   powershell -ExecutionPolicy Bypass -File deploy\pc-gorev.ps1 -Kaldir    # kaldır
@@ -31,7 +31,7 @@ $set = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries
         -ExecutionTimeLimit (New-TimeSpan -Minutes 40) -MultipleInstances IgnoreNew
 $pr = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -LogonType Interactive -RunLevel Limited
 Register-ScheduledTask -TaskName $name -Action $action -Trigger @($t1, $t2) -Settings $set -Principal $pr `
-    -Description "m2kira: hepsiemlak'ı tarar, GitHub'a besleme gönderir (deploy\pc-gorev.ps1)" -Force | Out-Null
+    -Description "m2kira: hepsiemlak + sahibinden'i tarar, GitHub'a besleme gönderir (deploy\pc-gorev.ps1)" -Force | Out-Null
 
 $task = Get-ScheduledTask -TaskName $name -ErrorAction SilentlyContinue
 if ($task) {

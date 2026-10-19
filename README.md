@@ -16,6 +16,10 @@ Her çalıştırmadan sonra yeniden üretilen, telefonda da çalışan yönetim 
   rotası · İki hedefe de yakın · En ucuz 1+1 · Yürüme ≤ 8 dk · Faturalar dahil · Pazarlıkla · Favoriler · Tümü.
 - Filtreler: fiyat, m², oda, eşya, durağa yürüme, işe ulaşım süresi, kaynak, uyarılı ilanları gizleme,
   faturalar dahil, fiyatı düşen, yeni, metin arama. Sıralama: fiyat, yeni, yürüme, hedeflere süre, m², TL/m².
+- Fotoğraflı kartlar (hepsiemlak, emlakjet, sahibinden), üstte gösterge kutuları (ilan sayısı, son 24 saatte
+  yeni, en ucuz, medyan, kaynaklara göre dağılım) — hepsi seçili filtrelere göre; durak gruplarının başında
+  fiyatların nokta şeridi ve bütçe çizgisi. Filtreler yandan açılan panelde; aktif filtreler × ile kaldırılan
+  etiketler olarak görünür. Açık/koyu tema düğmesi; telefonda alt sekme çubuğu (İlanlar · Harita · Ayarlar · Durum).
 - Görünümler: Duraklar · Liste · Harita. Kartta "Detay": açıklama, fiyat geçmişi, ilk görülme, haritada
   aç, durağa yürüyüş tarifi. Filtre kombinasyonu adres çubuğunda durur (yer imi / paylaşım).
 
@@ -46,11 +50,12 @@ verisi zaten herkese açık; token, kişisel bilgi ya da sahibinden oturumu içe
 | Kaynak | Nerede çalışır | Bildirim |
 |---|---|---|
 | emlakjet | GitHub Actions, her 2 saatte (PC'den bağımsız) | Telegram kartı, 09:00 özet, filtre sayfası |
-| hepsiemlak | **PC açıkken** Görev Zamanlayıcı ile 2 saatte bir (pencere açmaz) → GitHub'a besleme | aynı Telegram kartları ve filtre sayfası; PC kapalıyken son bilinen hali kalır |
-| sahibinden | sahibinden'in kendi favori araması **"M2 eşyalı 39bin altı"** (hesabına kaydedildi) | sahibinden uygulaması (anlık) + e-posta; istenirse e-posta Telegram'a aktarılır |
+| hepsiemlak | **PC açıkken** Görev Zamanlayıcı ile 2 saatte bir (pencere açmaz) → GitHub'a besleme | aynı Telegram kartları ve site; PC kapalıyken son bilinen hali kalır |
+| sahibinden | **PC açıkken** aynı görev, giriş yapılmış Chrome profilinle görünmez tarar → GitHub'a besleme. Ayrıca sahibinden'in kendi kayıtlı araması **"M2 eşyalı 39bin altı"** | Telegram kartları ve site (fotoğraf, konum, harita); PC kapalıyken sahibinden uygulaması bildirir |
 
-sahibinden arama sonuçları üye girişi ve gerçek tarayıcı istediği için sunucudan taranamıyor; bu
-yüzden sitenin kendi bildirim sistemi kullanılıyor. Kayıtlı arama 22 hedef mahalleyi, "Eşyalı: Evet"
+sahibinden arama sonuçları üye girişi ve gerçek tarayıcı istediği için GitHub sunucusundan taranamıyor;
+bu yüzden PC açıkken PC'deki görev tarayıp siteye gönderir, PC kapalıyken sahibinden'in kendi bildirim
+sistemi devreye girer. Hem görev hem kayıtlı arama 22 hedef mahalleyi, "Eşyalı: Evet"
 ve 39.000 TL tavanını içeriyor; Konutkent, Yaşamkent ve Beytepe dışarıda (oradaki ilanların hiçbiri
 istasyona 1,5 km'den yakın değil). **Telefonda sahibinden uygulamasında aynı hesapla oturum açık
 olmalı ve bildirim izni verilmeli.**
@@ -95,13 +100,21 @@ gerçek Chrome'u ayrı bir profille açar; orada bir kez giriş yaptıktan sonra
 `python main.py scan --source sahibinden` aynı birleşik aramayı (2-3 sayfa) bu Chrome üzerinden tarar
 ve ilan detaylarından koordinatla yürüme mesafesini hesaplar.
 
-### hepsiemlak: PC beslemesi
+### PC beslemesi: hepsiemlak + sahibinden
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File deploy\pc-gorev.ps1          # Görev Zamanlayıcı görevini kur
 powershell -ExecutionPolicy Bypass -File deploy\pc-gorev.ps1 -Kaldir  # kaldır
 python main.py feed-push                                             # elle bir kez çalıştır
 ```
+
+sahibinden için: görev, gerçek Google Chrome'u giriş yaptığın profille (`data/chrome-profile`) **görünmez**
+(`--headless=new`) açar; 22 mahallelik kayıtlı aramayı (2 sayfa) okur, konum için tarama başına en fazla
+15 yeni ilanın detayını çeker (detaylar önbellekte kalır, her ilan bir kez) ve Chrome'u kapatır. sahibinden
+kısa sürede çok detay açılınca geçici bir giriş duvarı gösteriyor (~30 detayda görüldü); o zaman detay o
+tarama için bırakılır, liste yine gönderilir. Oturum gerçekten düşerse PC'den Telegram'a
+"🔑 sahibinden oturumu düştü" uyarısı gelir: `python main.py sahibinden-chrome` çalıştırıp açılan Chrome'da
+giriş yap, pencereyi kapat.
 
 Görev oturum açıkken 2 saatte bir ve oturum açılışında `python main.py feed-push` çalıştırır:
 hepsiemlak taranır (hızlı geçiş + günde bir tam geçiş), sonuç reponun `feed` dalına
@@ -224,7 +237,7 @@ python main.py bot-once            # birikmiş Telegram komutlarını bir kez i�
 |---|---|---|---|
 | hepsiemlak | Cloudflare managed challenge (curl/requests 403) + hız sınırı (HTTP 429) | headless Chrome/Chromium (Playwright), yalnız HTML, `window.__NUXT__` JSON, 8 sn aralık | Koordinat, eşya bayrağı, m², kat, ofis listede hazır. `?maxPrice=` ve `?page=` robots.txt'te serbest (site bunları `p32`/`p33`'e çevirir). Eşyalı filtresine girmeyen ilanlar "eşyasız" sayılır; başlık "eşyalı / eşyalı veya eşyasız" diyorsa metin kazanır. |
 | emlakjet | Düz HTTP 200 | `requests` + schema.org ld+json + Next.js RSC yükü | Liste kartında eşya rozeti/eski fiyat; detayda koordinat, Eşya Durumu, aidat. robots.txt `max_fiyat`/`oda_sayisi` parametrelerini yasaklar, kullanılmaz. |
-| sahibinden | Cloudflare + PerimeterX; arama sonuçları **giriş istiyor**; Playwright Chromium'da doğrulama sonsuz döngüye giriyor | PC kapalı: sitenin favori arama bildirimi (+ isteğe bağlı `sahibinden_mail`). PC açık: `mode: cdp` ile kullanıcının gerçek Chrome'u | Tek birleşik arama: 22 mahalle kimliği + `a103713=true` (Eşyalı) + `price_max`, 50'şer ilanlık 2-3 sayfa. Sonuç yoksa (`data-totalmatches="0"`) tablo "benzer ilanlar" önerisiyle gelir; parser bunları atar. Detay: `dl.classifiedInfoList` dt/dd, `#gmap[data-lat/lon]`. |
+| sahibinden | Cloudflare + PerimeterX; arama sonuçları **giriş istiyor**; Playwright Chromium'da doğrulama döngüsü, headless Chromium'da engel | PC'de kullanıcının **gerçek Chrome**'u, giriş yapılmış ayrı profil, `--headless=new` (görünmez) → `feed/sahibinden.json` → GitHub'da `sahibinden_feed` | Tek birleşik arama: 22 mahalle kimliği + `a103713=true` (Eşyalı) + `price_max`, 50'şer ilanlık 2 sayfa. Sonuç yoksa (`data-totalmatches="0"`) tablo "benzer ilanlar" önerisiyle gelir; parser bunları atar. Detay: `dl.classifiedInfoList` dt/dd, `#gmap[data-lat/lon]`. Fotoğraf: satırdaki `lthmb_` → `x5_`. |
 | emlakclick | Düz HTTP, ancak mahalle sayfası URL'si bulunamadı (404) | — | Uygulanmadı (yedek kaynak). |
 
 Her site için parser ayrı modüldedir: `m2kira/sources/hepsiemlak.py`, `emlakjet.py`, `sahibinden.py`.
