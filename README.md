@@ -5,6 +5,34 @@ ilanlarını hepsiemlak, emlakjet ve sahibinden üzerinden düzenli tarar; krite
 ilanları ve **fiyat düşüşlerini** anında, her sabah 09:00'da da bir özet olarak Telegram'a
 (ya da e-posta / ntfy.sh) gönderir. Yayından kalkan ilanları da takip eder.
 
+## Filtre sayfası — https://ysftnc.github.io/m2kira/
+
+Her taramadan sonra (2 saatte bir) yeniden üretilen, telefonda da çalışan ilan ekranı. Filtreleme
+tamamen tarayıcıda, anında yapılır.
+
+- **Durak şeridi**: Kızılay → Koru hat sırasıyla her durakta ilan sayısı ve en ucuz fiyat. Durağa
+  dokununca o durak seçilir (birden çok seçilebilir). "Duraklar" görünümü ilanları durak durak
+  gruplar; her grup başlığında adet, en ucuz, medyan ve işe tahmini ulaşım süresi.
+- **Hazır filtreler**: Önerilen · Yeni (24 sa) · Fiyatı düşenler · Milli Kütüphane'ye yakın ·
+  Şehir Hastanesi rotası · İki hedefe de yakın · En ucuz 1+1 · Yürüme ≤ 8 dk · Faturalar dahil ·
+  Pazarlıkla · Favoriler · Tümü.
+- **Filtreler**: fiyat aralığı, m², oda, eşya durumu, durağa yürüme dakikası (konumu doğrulanmamışları
+  gösterme seçeneğiyle), işe ulaşım süresi sınırı, kaynak, uyarılı ilanları gizleme (kısıtlı,
+  günlük/oda, kot/bodrum, uzak, ACİL/kapora, Ankaray, şüpheli ucuz, kopya), faturalar dahil,
+  fiyatı düşen, yeni ilan, metin arama.
+- **Sıralama**: önerilen, fiyat, en yeni, yürüme, Milli Kütüphane'ye / Şehir Hastanesi'ne süre,
+  iki hedefe birden yakınlık, m², TL/m².
+- **Görünümler**: Duraklar · Liste · Harita (M2 hattı, 1 km yürüme halkaları, ilanlar).
+- **İşe ulaşım** (tahmini, kapıdan kapıya): durağa yürüme + 3 dk bekleme + durak başına 2,2 dk;
+  Şehir Hastanesi için Tarım Bakanlığı–Danıştay'dan 113-5 otobüsüne +15 dk. `config.yaml → commute`.
+- **Favori / Gizle**: bu tarayıcıda saklanır. Filtre kombinasyonu adres çubuğunda durur; yer imi
+  olarak kaydedilebilir ya da paylaşılabilir.
+- Telegram: `/filtre` (ya da `/filtre Kızılay`) sayfa linkini, `/durak` durak durak özeti verir;
+  günlük özet ve toplu bildirimde de link var.
+
+Not: repo public olduğu için sayfa da herkese açıktır (ilan verisi zaten herkese açık; kişisel
+bilgi, token ya da sahibinden oturumu içermez).
+
 ## PC kapalıyken bildirim — önerilen kurulum (≈10 dk, ücretsiz)
 
 | Kaynak | Nerede çalışır | Bildirim |
@@ -99,6 +127,8 @@ python main.py bot-once            # birikmiş Telegram komutlarını bir kez i�
 | `/butce 40000` | bütçe tavanı (kalıcı; config'i ezer) |
 | `/mahalle` · `/mahalle ekle Ayrancı Kızılay` · `/mahalle sil Ayrancı` | izlenen mahalleler |
 | `/gizle he:131733-2621` · `/goster ...` | ilanı gizle / geri getir |
+| `/durak` | durak durak özet (hat sırasıyla adet, en ucuz, medyan; her durak filtre sayfasına link) |
+| `/filtre` · `/filtre Kızılay` | filtre sayfası linki (isteğe bağlı durak seçili) |
 | `/ozet` · `/tara` · `/durum` · `/yardim` | özet, hemen tara, durum |
 
 İlan kimlikleri kısa biçimde: `he:` hepsiemlak, `ej:` emlakjet, `sb:` sahibinden.
@@ -234,6 +264,7 @@ m2kira/
   sources/   hepsiemlak.py emlakjet.py sahibinden.py sahibinden_mail.py
   db.py      dedup.py    pipeline.py              SQLite, kopya tespiti, tarama orkestrasyonu
   format.py  notify/     bot.py  scheduler.py     mesajlar, Telegram/e-posta/ntfy, komutlar, zamanlayıcı
+  web.py     web/index.html                        filtre sayfası (data.json üretimi + arayüz)
 tests/                  pytest + kayıtlı HTML/JSON fikstürleri
 deploy/                 kurulum.ps1 (GitHub Actions kurulumu), m2kira.service (systemd)
 .github/workflows/      scan.yml (2 saatte bir tarama + 09:00 özet)

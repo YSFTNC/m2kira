@@ -152,6 +152,8 @@ foreach ($k in @("IMAP_HOST", "IMAP_USER", "IMAP_PASSWORD")) {
 
 # ------------------------------------------------------------------ 6. İlk çalıştırma
 Step "İlk tarama başlatılıyor"
+# Filtre sayfası: GitHub Pages (kaynak: Actions). Zaten açıksa hata verir, sorun değil.
+[void](Quiet { gh api -X POST "repos/$login/$RepoName/pages" -f build_type=workflow })
 [void](Quiet { gh workflow enable scan.yml --repo "$login/$RepoName" })
 Start-Sleep -Seconds 3
 gh workflow run scan.yml --repo "$login/$RepoName"
@@ -160,3 +162,4 @@ Write-Host ""
 Write-Host "Tamam. İlk tarama ~15-25 dk sürer; sonuçlar Telegram'a tek liste halinde gelir." -ForegroundColor Green
 Write-Host "Sonrası her 2 saatte bir (private: 5 saatte bir) ve her sabah 09:00'da özet. PC'nin açık olması gerekmez."
 Write-Host "İzleme: https://github.com/$login/$RepoName/actions"
+Write-Host "Filtre sayfası (ilk çalıştırmadan sonra): https://$($login.ToLower()).github.io/$RepoName/"

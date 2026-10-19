@@ -1,9 +1,10 @@
 # m2kira — PC kapalıyken de çalışan zamanlanmış tarama (GitHub Actions, ücretsiz).
 #  * Her 2 saatte: Telegram komutlarını işle -> hepsiemlak + emlakjet (+ varsa sahibinden e-postaları) tara -> bildir.
 #  * Her gün 09:00 (TR): günlük özet.
+#  * Her çalıştırmada filtre sayfası (durak durak, harita, işe ulaşım) GitHub Pages'e yayınlanır.
 #  * Veritabanı (data/m2kira.sqlite) çalıştırmalar arasında actions/cache ile taşınır.
 # Gerekli secrets: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID. İsteğe bağlı: IMAP_HOST, IMAP_USER, IMAP_PASSWORD.
-# Kurulum: deploy/kurulum.ps1 (gh CLI ile repo + secrets + ilk çalıştırma).
+# Kurulum: deploy/kurulum.ps1 (gh CLI ile repo + secrets + Pages + ilk çalıştırma).
 # Not: GitHub zamanlanmış işleri birkaç dakika gecikmeli başlatabilir; public repoda 60 gün commit
 # olmazsa zamanlama otomatik durur (Actions sekmesinden tekrar açılır).
 name: m2kira
@@ -16,6 +17,8 @@ on:
 
 permissions:
   contents: read
+  pages: write
+  id-token: write
 
 concurrency:
   group: m2kira
@@ -25,6 +28,9 @@ jobs:
   run:
     runs-on: ubuntu-latest
     timeout-minutes: 50
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
     env:
       TZ: Europe/Istanbul
       PYTHONIOENCODING: utf-8
@@ -74,3 +80,22 @@ jobs:
         with:
           path: data/m2kira.sqlite
           key: m2kira-db-${{ github.run_id }}
+
+      - name: Filtre sayfasını üret
+        if: always() && hashFiles('data/m2kira.sqlite') != ''
+        run: python main.py export-web --out _site
+
+      - name: Pages ayarı
+        if: always() && hashFiles('_site/index.html') != ''
+        uses: actions/configure-pages@v5
+
+      - name: Pages paketi
+        if: always() && hashFiles('_site/index.html') != ''
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Pages yayını
+        id: deploy
+        if: always() && hashFiles('_site/index.html') != ''
+        uses: actions/deploy-pages@v4

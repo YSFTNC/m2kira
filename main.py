@@ -58,6 +58,8 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("sahibinden-chrome", help="gerçek Chrome'u ayrı profil + uzaktan hata ayıklama portuyla aç (cdp modu)")
     sub.add_parser("test-notify")
     sub.add_parser("bot-once", help="birikmiş Telegram komutlarını bir kez işle (cron / GitHub Actions)")
+    p_web = sub.add_parser("export-web", help="filtre sayfasını (index.html + data.json) üret")
+    p_web.add_argument("--out", default="_site")
     args = ap.parse_args(argv)
 
     cfg = load_config(args.config)
@@ -82,6 +84,13 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         print(f"Chrome açıldı ({exe}). Bu pencerede doğrulamayı geçip sahibinden'e giriş yapın; pencereyi açık bırakın.\n"
               "config.yaml -> sources.sahibinden.mode: cdp olmalı. Deneme: python main.py scan --dry --source sahibinden --neighborhood Kızılay")
+        return 0
+
+    if args.cmd == "export-web":
+        from m2kira.web import export_site
+        info = export_site(cfg, db, Path(args.out))
+        print(f"filtre sayfası: {info['items']} aktif ilan ({info['matching']} uygun) -> {info['out']}")
+        db.close()
         return 0
 
     notifier = build_notifier(cfg)

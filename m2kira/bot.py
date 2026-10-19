@@ -23,6 +23,8 @@ HELP = """<b>m2kira komutları</b>
 /mahalle — izlenen mahalleler · /mahalle ekle &lt;ad&gt; [istasyon] · /mahalle sil &lt;ad&gt;
 /gizle &lt;id&gt; · /goster &lt;id&gt; — ilanı gizle / geri getir
 /ozet — özet (istasyon bazında sayı, en ucuz, medyan)
+/durak — durak durak özet (hat sırasıyla)
+/filtre [durak] — filtre sayfası linki (ör. /filtre Kızılay)
 /tara — şimdi tara
 /durum — son tarama, sayılar, hatalar
 /yardim — bu mesaj"""
@@ -122,6 +124,10 @@ class TelegramBot:
             self.cmd_hide(msg, args, False)
         elif cmd in ("/ozet", "/özet"):
             self._reply(msg, self.p.summary_text(title="Özet"))
+        elif cmd == "/durak":
+            self._reply(msg, self.p.station_overview())
+        elif cmd in ("/filtre", "/sayfa", "/web"):
+            self.cmd_filtre(msg, args)
         elif cmd == "/tara":
             if self.p.lock.locked():
                 self._reply(msg, "Tarama zaten sürüyor.")
@@ -156,6 +162,20 @@ class TelegramBot:
             return
         head = f"<b>{len(rows)} ilan</b> (bütçe {fmt_price(self.p.budget())}), en ucuz {min(n, len(rows))}:"
         self._reply(msg, head + "\n" + "\n".join(format_line(r) for r in rows[:n]))
+
+    def cmd_filtre(self, msg: dict[str, Any], args: list[str]) -> None:
+        if not self.p.web_link():
+            self._reply(msg, "Filtre sayfası adresi config.yaml'da (web.url) tanımlı değil.")
+            return
+        if args:
+            st = self.p.stations.get(" ".join(args))
+            if st and st.line == "M2":
+                self._reply(msg, f'🔎 <a href="{esc(self.p.web_link(st=st.name))}">{esc(st.name)} ilanları</a>')
+                return
+            self._reply(msg, f"Durak bulunamadı: {esc(' '.join(args))}. Tüm ilanlar:\n{esc(self.p.web_link())}")
+            return
+        self._reply(msg, f'🔎 <a href="{esc(self.p.web_link())}">Filtre sayfası</a>\n'
+                         "Durak durak görünüm, fiyat/oda/eşya/yürüme filtreleri, işe ulaşım süresi, harita.")
 
     def cmd_ilan(self, msg: dict[str, Any], args: list[str]) -> None:
         if not args:

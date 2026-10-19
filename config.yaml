@@ -23,6 +23,19 @@ block_cooldown_min: 45                            # bir kaynak engellenince (429
 notify_removed: true                              # daha önce bildirilen ilan kalkınca haber ver
 compact_threshold: 12                             # tek taramada bundan fazla değişiklik varsa tek liste gönder
 
+# --- filtre sayfası (GitHub Pages) ve işe ulaşım tahmini
+web:
+  title: "M2 Kiralık"
+  url: "https://ysftnc.github.io/m2kira/"   # Telegram mesajlarındaki link
+commute:                   # kapıdan kapıya ≈ yürüme + bekleme + durak sayısı × dk/durak + ek süre
+  ride_min_per_stop: 2.2   # M2'de duraklar arası ortalama
+  wait_min: 3
+  unknown_walk_min: 10     # konumu olmayan ilan için varsayılan yürüme
+  targets:
+    - {name: "Milli Kütüphane", dat: "Milli Kütüphane'ye", short: "MK", station: "Milli Kütüphane", extra_min: 0}
+    - {name: "Şehir Hastanesi", dat: "Şehir Hastanesi'ne", short: "ŞH", station: "Tarım Bakanlığı-Danıştay", extra_min: 15,
+       note: "Tarım Bakanlığı–Danıştay durağından 113-5 otobüsü dahil (≈15 dk, tahmini)"}
+
 request_interval_sec: 5    # aynı siteye ardışık istekler arası en az bekleme
 cache:
   list_ttl_min: 20

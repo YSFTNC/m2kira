@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import statistics
 import threading
 from datetime import datetime, timezone
 from typing import Any, Optional
@@ -431,6 +432,9 @@ class Pipeline:
         if len(cards) > compact_threshold:
             # ilk tarama / çok sayıda değişiklik: tek bir kompakt liste
             lines = [f"<b>📬 {len(cards)} değişiklik</b> (bütçe {fmt_price(budget)})"]
+            link = self.web_link(nw=24, sort="new")
+            if link:
+                lines.append(f'🔎 <a href="{esc(link)}">Filtre sayfasında aç</a>')
             for l, evd in sorted(cards, key=lambda c: (c[0].get('price') or 0)):
                 head = {"new": "🆕", "reappeared": "♻️", "price_drop": "💸", "removed": "❌"}.get(evd["kind"], "")
                 lines.append(head + " " + format_line(l))
@@ -472,11 +476,51 @@ class Pipeline:
         rows = self.matching_listings(max_price=budget)
         return format_summary(rows, budget, title=title, limit=limit)
 
+    # ------------------------------------------------------------------ filtre sayfası linkleri
+    def web_link(self, **state: Any) -> Optional[str]:
+        base = str(self.cfg.get("web", "url", default="") or "").strip()
+        if not base:
+            return None
+        from urllib.parse import urlencode
+        params = {k: (",".join(v) if isinstance(v, (list, tuple)) else v) for k, v in state.items() if v not in (None, "", [])}
+        return base + ("#" + urlencode(params) if params else "")
+
+    def station_overview(self) -> str:
+        """Hat sırasıyla durak durak uygun ilan sayısı, en ucuz ve medyan fiyat (+ sayfa linki)."""
+        budget = self.budget()
+        rows = self.matching_listings(max_price=int(budget * (1 + self.cfg.budget_tolerance_pct / 100.0)))
+        lines = [f"<b>🚇 Durak durak</b> (bütçe {fmt_price(budget)} +%{self.cfg.budget_tolerance_pct:g})"]
+        unknown = 0
+        by_station: dict[str, list[int]] = {}
+        for r in rows:
+            if r.get("nearest_station") and r.get("price"):
+                by_station.setdefault(r["nearest_station"], []).append(r["price"])
+            else:
+                unknown += 1
+        for s in (x for x in self.stations.stations if x.line == "M2"):
+            prices = by_station.get(s.name, [])
+            if not prices:
+                lines.append(f"▫️ {esc(s.name)}: —")
+                continue
+            link = self.web_link(st=s.name)
+            name = f'<a href="{esc(link)}">{esc(s.name)}</a>' if link else esc(s.name)
+            lines.append(f"🔸 {name}: <b>{len(prices)}</b> ilan · en ucuz {fmt_price(min(prices))} · medyan "
+                         f"{fmt_price(int(statistics.median(prices)))}")
+        if unknown:
+            lines.append(f"(+{unknown} ilanın durağı belirsiz)")
+        link = self.web_link()
+        if link:
+            lines.append(f'\n🔎 <a href="{esc(link)}">Filtre sayfası</a> — durak, fiyat, oda, yürüme, işe ulaşım')
+        return "\n".join(lines)
+
     def send_daily_summary(self) -> None:
         text = self.summary_text()
         extra = self.matching_listings(tier="pazarlikla")
         if extra:
             text += "\n\n<b>🤝 Bütçe üstü, pazarlıkla</b>\n" + "\n".join(format_line(l) for l in extra[:10])
+        link = self.web_link()
+        if link:
+            text += f'\n\n🔎 <a href="{esc(link)}">Filtre sayfası</a> (durak durak, harita, işe ulaşım süresi)'
         self.notifier.send(text, subject="m2kira günlük özet")
 
     def status_text(self) -> str:
