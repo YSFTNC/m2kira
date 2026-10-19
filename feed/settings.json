@@ -18,7 +18,9 @@
  "notify_removed": true,
  "notify_stations": [],
  "disabled_neighborhoods": [],
- "favorites": [],
+ "favorites": [
+  "hepsiemlak:146714-567"
+ ],
  "hidden": {},
- "updated": "2026-10-19T20:24:08Z"
+ "updated": "2026-10-19T21:45:09Z"
 }
