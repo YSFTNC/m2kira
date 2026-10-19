@@ -134,8 +134,19 @@ def parse_list_html(html: str, default_year: Optional[int] = None) -> list[Listi
             district=district,
             listed_date=listed,
             category="Daire",
+            extras={"img": _thumb(row)},
         )
     return list(out.values())
+
+
+def _thumb(row) -> Optional[str]:
+    """Satırdaki küçük resim -> daha büyük sürüm (lthmb_ -> x5_)."""
+    for img in row.select("td.searchResultsLargeThumbnail img") or row.select("img"):
+        src = img.get("src") or img.get("data-src") or ""
+        # yalnız ilan fotoğrafı (/photos/...); "büyük fotoğraf" gibi simgeler (/assets/) değil
+        if src.startswith("http") and "shbdn.com/photos/" in src:
+            return src.replace("/lthmb_", "/x5_")
+    return None
 
 
 # ---------------------------------------------------------------- detay
@@ -323,6 +334,7 @@ class SahibindenSource(Source):
                     raise ParseError(f"sahibinden: liste tablosu bulunamadı (başlık: {bp.title!r}; sayfa {debug} olarak kaydedildi)")
                 break
             for l in rows:
+                l.furnished_src = True   # arama "Eşyalı: Evet" (a103713=true) filtresiyle yapılıyor
                 merged.setdefault(l.id, l)
             offset += PAGE_SIZE
             if total is not None and offset >= total:

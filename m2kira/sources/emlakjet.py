@@ -113,6 +113,15 @@ def _props(entry: dict) -> dict[str, str]:
     return props
 
 
+def _img(v: Any) -> Optional[str]:
+    """ld+json 'image' (str ya da liste) -> 480 px genişlikte görsel."""
+    if isinstance(v, list):
+        v = v[0] if v else None
+    if not isinstance(v, str) or not v.startswith("http"):
+        return None
+    return re.sub(r"/resize/\d+/\d+/", "/resize/480/0/", v)
+
+
 def _id_from_url(url: str) -> Optional[str]:
     m = _ID_FROM_URL.search(url.split("?")[0].split("#")[0])
     return m.group(1) if m else None
@@ -154,7 +163,7 @@ def parse_list_html(html: str, expect_district: Optional[str] = None) -> tuple[l
                 district=district,
                 listed_date=parse_date_any(e.get("datePosted")),
                 category="Daire" if "daire" in fold(props.get("İlan Tipi", "daire")) else props.get("İlan Tipi"),
-                extras={"tag": tag},
+                extras={"tag": tag, "img": _img(e.get("image"))},
             )
             if fold(tag) == "esyali":
                 listing.furnished_src = True

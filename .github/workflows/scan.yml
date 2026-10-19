@@ -46,7 +46,7 @@ jobs:
       IMAP_USER: ${{ secrets.IMAP_USER }}
       IMAP_PASSWORD: ${{ secrets.IMAP_PASSWORD }}
       # hepsiemlak doğrudan değil PC beslemesinden; sahibinden tarayıcı modu sunucuda çalışmaz
-      M2KIRA_SOURCES: ${{ inputs.sources || 'hepsiemlak_feed,emlakjet,sahibinden_mail' }}
+      M2KIRA_SOURCES: ${{ inputs.sources || 'hepsiemlak_feed,sahibinden_feed,emlakjet,sahibinden_mail' }}
       M2KIRA_BLOCK_COOLDOWN_MIN: "0"   # her çalıştırma farklı IP: önceki engel yüzünden kaynağı atlama
     steps:
       - uses: actions/checkout@v4
@@ -71,9 +71,11 @@ jobs:
         run: |
           mkdir -p data/feed
           if git fetch -q --depth=1 origin feed 2>/dev/null; then
-            if git show FETCH_HEAD:feed/hepsiemlak.json > data/feed/hepsiemlak.json 2>/dev/null; then
-              python -c "import json; d=json.load(open('data/feed/hepsiemlak.json', encoding='utf-8')); print('besleme:', d['generated'], d['listings'], 'ilan')"
-            else rm -f data/feed/hepsiemlak.json; echo "besleme yok"; fi
+            for f in hepsiemlak sahibinden; do
+              if git show FETCH_HEAD:feed/$f.json > data/feed/$f.json 2>/dev/null; then
+                python -c "import json,sys; d=json.load(open('data/feed/$f.json', encoding='utf-8')); print('$f beslemesi:', d['generated'], d['listings'], 'ilan')"
+              else rm -f data/feed/$f.json; echo "$f beslemesi yok"; fi
+            done
             if git show FETCH_HEAD:feed/settings.json > data/feed/settings.json 2>/dev/null; then
               python -c "import json; d=json.load(open('data/feed/settings.json', encoding='utf-8')); print('site ayarları:', d.get('updated'))"
             else rm -f data/feed/settings.json; echo "site ayarı yok"; fi

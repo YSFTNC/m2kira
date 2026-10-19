@@ -27,6 +27,7 @@ def test_parse_list_bahcelievler():
     assert l.district == "Bahçelievler" and l.listed_date == "2026-09-30"
     assert l.url == "https://www.emlakjet.com/ilan/bahcelievlerde-kiralik-10-ful-esyali-2-kat-payolcer-on-cephe-daire-19920719"
     assert l.office == "SEFİR EMLAK"
+    assert l.extras["img"].startswith("https://imaj.emlakjet.com/resize/480/0/listing/19920719/")
     assert l.extras.get("previous_price") == 39000
     assert "manzarali" in l.extras.get("badges", [])
     # ilan etiketi EŞYALI olan kart -> kaynak bayrağı

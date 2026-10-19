@@ -116,6 +116,7 @@ def build_payload(cfg: Config, db: DB, budget: Optional[int] = None) -> dict[str
             "tier": r.get("match_tier"),
             "hid": bool(r.get("hidden")),
             "aid": extras.get("aidat"),
+            "img": extras.get("img") if str(extras.get("img") or "").startswith("https://") else None,
             "ph": h if len(h) > 1 else None,
             "desc": desc[:DESC_SNIPPET],
             "cm": commute_minutes(r.get("nearest_station"), r.get("walk_minutes_est"),
@@ -139,7 +140,7 @@ def build_payload(cfg: Config, db: DB, budget: Optional[int] = None) -> dict[str
         "last_scan": last.get("finished_at") or last.get("started_at"),
         "settings": effective(cfg, db),
         "status": source_status(db),
-        "feed_generated": db.get_setting("feed_processed:hepsiemlak"),
+        "feed_generated": {s: db.get_setting(f"feed_processed:{s}") for s in ("hepsiemlak", "sahibinden")},
         "neighborhoods": [{"name": n.name, "key": n.key, "station": n.station, "enabled": n.enabled}
                           for n in cfg.neighborhoods],
         "repo": {"name": str(fc.get("repo", "YSFTNC/m2kira")), "branch": str(fc.get("branch", "feed")),

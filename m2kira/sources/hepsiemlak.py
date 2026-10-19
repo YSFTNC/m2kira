@@ -69,6 +69,18 @@ def parse_list_state(state: Any) -> tuple[list[dict], int, int]:
     return items, total_page, total_ads
 
 
+IMG_CDN = "https://hecdn01.hemlak.com/mncropresize/400/300/"
+
+
+def image_url(path: Any) -> Optional[str]:
+    """Liste kartındaki görsel yolu (ds01/...jpg) -> CDN'de 400x300 kırpılmış görsel."""
+    if not path or not isinstance(path, str):
+        return None
+    if path.startswith("http"):
+        return path
+    return IMG_CDN + path.lstrip("/")
+
+
 def _first(v: Any) -> Any:
     if isinstance(v, (list, tuple)):
         return v[0] if v else None
@@ -115,6 +127,7 @@ def item_to_listing(it: dict, furnished_src: Optional[bool] = None) -> Listing:
             "seller_type": it.get("sellerType"),
             "listing_type": (it.get("category") or {}).get("typeName"),
             "floor_count": (it.get("floor") or {}).get("count"),
+            "img": image_url(it.get("imageUrl")),
         },
     )
     if listing.currency and listing.currency not in ("TL", "TRY"):

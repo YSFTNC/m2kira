@@ -28,6 +28,8 @@ def test_parse_real_list():
     by_id = {r.source_id: r for r in rows}
     gordion = by_id["1260966563"]
     assert gordion.price == 35000 and gordion.rooms == "1+0" and gordion.m2_gross == 43 and gordion.district == "Ümit"
+    imgs = [r.extras.get("img") for r in rows if r.extras.get("img")]
+    assert len(imgs) >= 40 and all(u.startswith("https://i") and "shbdn.com" in u and "/x5_" in u for u in imgs)
 
 
 def test_suggestions_page_is_empty():

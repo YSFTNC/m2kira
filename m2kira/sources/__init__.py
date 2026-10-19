@@ -15,18 +15,19 @@ def build_sources(cfg: "Config") -> list[Source]:
     ortam değişkeni verilirse yalnızca o kaynaklar (seçim anahtarı: select_key ya da name)."""
     from .emlakjet import EmlakjetSource
     from .hepsiemlak import HepsiemlakSource
-    from .hepsiemlak_feed import HepsiemlakFeedSource
+    from .hepsiemlak_feed import HepsiemlakFeedSource, SahibindenFeedSource
     from .sahibinden import SahibindenSource
     from .sahibinden_mail import SahibindenMailSource
 
     only = {s.strip() for s in (os.environ.get("M2KIRA_SOURCES") or "").split(",") if s.strip()}
     out: list[Source] = []
-    for cls in (HepsiemlakSource, HepsiemlakFeedSource, EmlakjetSource, SahibindenSource, SahibindenMailSource):
+    for cls in (HepsiemlakSource, HepsiemlakFeedSource, EmlakjetSource, SahibindenSource, SahibindenFeedSource,
+                SahibindenMailSource):
         key = getattr(cls, "select_key", cls.name)
         if only:
             if key not in only:
                 continue
-        elif cls is HepsiemlakFeedSource:
+        elif cls in (HepsiemlakFeedSource, SahibindenFeedSource):
             continue  # besleme yalnızca açıkça istenince (GitHub Actions)
         if not cfg.source_enabled(key):
             continue

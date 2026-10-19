@@ -31,6 +31,7 @@ def test_parse_list_kizilay_esyali():
     assert by_id["129908-1377"].price == 32000 and by_id["129908-1377"].rooms == "1+1"
     assert by_id["129908-1336"].rooms == "1+0"  # Stüdyo
     assert by_id["154593-12"].district == "Namık Kemal" and by_id["154593-12"].m2_net == 57
+    assert l.extras["img"].startswith("https://hecdn01.hemlak.com/mncropresize/400/300/ds01/")
 
 
 def test_parse_list_bad_state():

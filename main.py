@@ -60,8 +60,10 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("bot-once", help="birikmiş Telegram komutlarını bir kez işle (cron / GitHub Actions)")
     p_web = sub.add_parser("export-web", help="filtre sayfasını (index.html + data.json) üret")
     p_web.add_argument("--out", default="_site")
-    p_feed = sub.add_parser("feed-push", help="PC: hepsiemlak'ı tara, GitHub'a besleme olarak gönder, işi tetikle")
-    p_feed.add_argument("--no-push", action="store_true", help="yalnız tara, data/feed/hepsiemlak.json'a yaz")
+    p_feed = sub.add_parser("feed-push", help="PC: hepsiemlak + sahibinden'i tara, GitHub'a besleme olarak gönder, işi tetikle")
+    p_feed.add_argument("--no-push", action="store_true", help="yalnız tara, data/feed/*.json'a yaz")
+    p_feed.add_argument("--only", choices=["hepsiemlak", "sahibinden"], help="yalnız bu kaynak")
+    p_feed.add_argument("--details", type=int, default=None, help="sahibinden: bu çalıştırmada en fazla kaç yeni ilan detayı")
     args = ap.parse_args(argv)
 
     cfg = load_config(args.config)
@@ -95,25 +97,33 @@ def main(argv: list[str] | None = None) -> int:
         import json as _json
         from m2kira import feed
         feed.sync_budget_from_web(cfg, db)
-        payload = feed.collect(cfg, db)
-        out = cfg.data_dir / "feed" / "hepsiemlak.json"
-        out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(_json.dumps(payload, ensure_ascii=False), encoding="utf-8")
-        log.info("hepsiemlak beslemesi: %d birim, %d ilan, %d hata -> %s", len(payload["units"]), payload["listings"],
-                 len(payload["errors"]), out)
-        rc = 0
-        if not payload["units"]:
-            log.warning("hiç birim taranamadı; gönderilmiyor (%s)", "; ".join(payload["errors"])[:300])
-            rc = 1
-        elif not args.no_push:
-            try:
-                where = feed.push(cfg, payload)
-                log.info("besleme gönderildi: %s", where)
-                if feed.trigger(cfg):
-                    log.info("GitHub işi tetiklendi (hepsiemlak_feed)")
-            except Exception as exc:  # noqa: BLE001
-                log.error("besleme gönderilemedi: %s", exc)
+        wanted = [args.only] if args.only else [s for s in feed.FEED_SOURCES if cfg.source_enabled(f"{s}_feed")]
+        rc, pushed = 0, []
+        for source in wanted:
+            if source == "hepsiemlak":
+                payload = feed.collect_hepsiemlak(cfg, db)
+            else:
+                payload = feed.collect_sahibinden(cfg, db, max_details=args.details)
+                feed.notify_login_needed(cfg, db, payload["errors"])
+            out = cfg.data_dir / "feed" / f"{source}.json"
+            out.parent.mkdir(parents=True, exist_ok=True)
+            out.write_text(_json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+            log.info("%s beslemesi: %d birim, %d ilan, %d hata -> %s", source, len(payload["units"]), payload["listings"],
+                     len(payload["errors"]), out)
+            if not payload["units"]:
+                log.warning("%s: hiç birim taranamadı; gönderilmiyor (%s)", source, "; ".join(payload["errors"])[:300])
                 rc = 1
+                continue
+            if args.no_push:
+                continue
+            try:
+                log.info("besleme gönderildi: %s", feed.push(cfg, payload))
+                pushed.append(f"{source}_feed")
+            except Exception as exc:  # noqa: BLE001
+                log.error("%s beslemesi gönderilemedi: %s", source, exc)
+                rc = 1
+        if pushed and feed.trigger(cfg, ",".join(pushed)):
+            log.info("GitHub işi tetiklendi (%s)", ",".join(pushed))
         db.close()
         return rc
 

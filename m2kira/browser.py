@@ -217,4 +217,5 @@ class BrowserFetcher:
 
 def _is_challenge(title: str) -> bool:
     t = (title or "").lower()
-    return "just a moment" in t or "bir dakika" in t or "attention required" in t
+    return ("just a moment" in t or "bir dakika" in t or "attention required" in t
+            or "doğrulama" in t or "dogrulama" in t)

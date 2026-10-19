@@ -2,222 +2,377 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>M2 Kiralık</title>
-<meta name="description" content="Ankara M2 hattı eşyalı kiralık ilanlar — durak durak filtreleme, ayarlar ve durum">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c2410c'/%3E%3Ctext x='16' y='22' font-size='15' font-family='Arial' font-weight='700' fill='white' text-anchor='middle'%3EM2%3C/text%3E%3C/svg%3E">
+<meta name="description" content="Ankara M2 hattında eşyalı kiralık daireler: hepsiemlak, emlakjet ve sahibinden ilanları durak durak">
+<meta name="theme-color" content="#f5f5f3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%230f0f0e'/%3E%3Ctext x='16' y='21.5' font-size='14' font-family='Arial' font-weight='700' fill='white' text-anchor='middle'%3EM2%3C/text%3E%3C/svg%3E">
 <style>
+/* ---------- tokenlar ---------- */
 :root {
-  --bg: #f6f5f2; --surface: #ffffff; --surface-2: #f0eee9; --fg: #1c1b19; --muted: #6b6760;
-  --border: #e2dfd8; --accent: #c2410c; --accent-fg: #ffffff; --accent-soft: #fde9dd;
-  --ok: #15803d; --ok-soft: #dcf3e3; --warn: #a16207; --warn-soft: #fbf0cf; --bad: #b91c1c; --bad-soft: #fde2e2;
-  --info: #1d4ed8; --info-soft: #e1e9fd; --line: #c2410c; --shadow: 0 1px 2px rgba(0,0,0,.06), 0 2px 8px rgba(0,0,0,.04);
-  --radius: 12px; color-scheme: light;
+  color-scheme: light;
+  --bg: #f5f5f3; --surface: #ffffff; --surface-2: #f1f0ed; --surface-3: #e9e8e4;
+  --fg: #0f0f0e; --fg-2: #52514e; --muted: #7d7b75; --border: rgba(11,11,11,.09); --border-2: rgba(11,11,11,.16);
+  --grid: #e1e0d9; --axis: #c3c2b7;
+  --sel: #0f0f0e; --sel-fg: #ffffff;
+  --good: #0ca30c; --good-text: #006300; --good-soft: #e3f4e3;
+  --warn: #fab219; --warn-text: #7a5000; --warn-soft: #fdf2d6;
+  --crit: #d03b3b; --crit-text: #b42323; --crit-soft: #fbe6e6;
+  --heart: #e5484d;
+  --s-he: #2a78d6; --s-ej: #eb6834; --s-sb: #1baf7a;
+  --dot: #2a78d6;
+  --shadow-1: 0 1px 2px rgba(15,15,14,.05);
+  --shadow-2: 0 1px 2px rgba(15,15,14,.04), 0 8px 24px rgba(15,15,14,.07);
+  --appbar: rgba(245,245,243,.82);
+  --r: 16px; --r-sm: 10px;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #141312; --surface: #1d1c1a; --surface-2: #262421; --fg: #edebe7; --muted: #a29d94;
-    --border: #34312d; --accent: #fb7a3c; --accent-fg: #1a0d05; --accent-soft: #3a2116;
-    --ok: #4ade80; --ok-soft: #133222; --warn: #facc15; --warn-soft: #352b0b; --bad: #f87171; --bad-soft: #3b1717;
-    --info: #93b4ff; --info-soft: #1a2442; --line: #fb7a3c; --shadow: none; color-scheme: dark;
+    color-scheme: dark;
+    --bg: #0d0d0d; --surface: #1a1a19; --surface-2: #232321; --surface-3: #2d2d2a;
+    --fg: #f0efec; --fg-2: #c3c2b7; --muted: #8f8d86; --border: rgba(255,255,255,.08); --border-2: rgba(255,255,255,.16);
+    --grid: #2c2c2a; --axis: #383835;
+    --sel: #f0efec; --sel-fg: #0d0d0d;
+    --good: #0ca30c; --good-text: #3ccf3c; --good-soft: #12301a;
+    --warn: #fab219; --warn-text: #fab219; --warn-soft: #33290c;
+    --crit: #e66767; --crit-text: #f08a8a; --crit-soft: #3a1818;
+    --heart: #ff6369;
+    --s-he: #3987e5; --s-ej: #d95926; --s-sb: #199e70;
+    --dot: #3987e5;
+    --shadow-1: none; --shadow-2: 0 8px 24px rgba(0,0,0,.35);
+    --appbar: rgba(13,13,13,.78);
   }
 }
 :root[data-theme="dark"] {
-  --bg: #141312; --surface: #1d1c1a; --surface-2: #262421; --fg: #edebe7; --muted: #a29d94;
-  --border: #34312d; --accent: #fb7a3c; --accent-fg: #1a0d05; --accent-soft: #3a2116;
-  --ok: #4ade80; --ok-soft: #133222; --warn: #facc15; --warn-soft: #352b0b; --bad: #f87171; --bad-soft: #3b1717;
-  --info: #93b4ff; --info-soft: #1a2442; --line: #fb7a3c; --shadow: none; color-scheme: dark;
+  color-scheme: dark;
+  --bg: #0d0d0d; --surface: #1a1a19; --surface-2: #232321; --surface-3: #2d2d2a;
+  --fg: #f0efec; --fg-2: #c3c2b7; --muted: #8f8d86; --border: rgba(255,255,255,.08); --border-2: rgba(255,255,255,.16);
+  --grid: #2c2c2a; --axis: #383835;
+  --sel: #f0efec; --sel-fg: #0d0d0d;
+  --good: #0ca30c; --good-text: #3ccf3c; --good-soft: #12301a;
+  --warn: #fab219; --warn-text: #fab219; --warn-soft: #33290c;
+  --crit: #e66767; --crit-text: #f08a8a; --crit-soft: #3a1818;
+  --heart: #ff6369;
+  --s-he: #3987e5; --s-ej: #d95926; --s-sb: #199e70;
+  --dot: #3987e5;
+  --shadow-1: none; --shadow-2: 0 8px 24px rgba(0,0,0,.35);
+  --appbar: rgba(13,13,13,.78);
 }
+
+/* ---------- temel ---------- */
 * { box-sizing: border-box; }
 html, body { margin: 0; background: var(--bg); color: var(--fg); }
-body { font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-text-size-adjust: 100%; }
+body { font: 15px/1.5 system-ui, -apple-system, "Segoe UI Variable Text", "Segoe UI", Roboto, sans-serif; -webkit-text-size-adjust: 100%; -webkit-font-smoothing: antialiased; }
 a { color: inherit; }
 button, input, select { font: inherit; color: inherit; }
-.wrap { max-width: 1180px; margin: 0 auto; padding: 0 16px; }
-header.top { padding: 16px 0 6px; }
-.toprow { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
-h1 { font-size: 22px; margin: 0; letter-spacing: -.01em; }
-.meta { color: var(--muted); font-size: 13px; margin-top: 2px; }
-.tabs { display: flex; gap: 4px; margin: 12px 0 0; border-bottom: 1px solid var(--border); }
-.tab { background: none; border: 0; border-bottom: 3px solid transparent; padding: 8px 14px; cursor: pointer; font-weight: 600; color: var(--muted); }
-.tab[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--accent); }
-.conn { font-size: 12.5px; border: 1px solid var(--border); background: var(--surface); border-radius: 999px; padding: 5px 11px; cursor: pointer; }
-.conn.on { border-color: var(--ok); color: var(--ok); }
-.presets { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 4px; }
-.chip { border: 1px solid var(--border); background: var(--surface); border-radius: 999px; padding: 6px 12px;
-  cursor: pointer; font-size: 13.5px; white-space: nowrap; line-height: 1.2; }
-.chip:hover { border-color: var(--muted); }
-.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
-.chip:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--info); outline-offset: 2px; }
-.btn { border: 1px solid var(--border); background: var(--surface); border-radius: 10px; padding: 8px 14px; cursor: pointer; font-weight: 600; }
-.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
-.btn:disabled { opacity: .5; cursor: not-allowed; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; border-radius: 6px; }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 0 16px; }
+[hidden] { display: none !important; }
+.muted { color: var(--muted); }
+.small { font-size: 12.5px; color: var(--muted); }
+
+/* ---------- üst çubuk ---------- */
+.appbar { position: sticky; top: 0; z-index: 40; background: var(--appbar); backdrop-filter: saturate(160%) blur(14px); -webkit-backdrop-filter: saturate(160%) blur(14px); border-bottom: 1px solid var(--border); }
+.bar { display: flex; align-items: center; gap: 14px; height: 60px; }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; min-width: 0; }
+.logo { width: 34px; height: 34px; border-radius: 10px; background: var(--sel); color: var(--sel-fg); display: grid; place-items: center; font-weight: 800; font-size: 14px; letter-spacing: -.02em; flex: none; }
+.brand b { display: block; font-size: 15px; letter-spacing: -.01em; }
+.brand small { display: block; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 42vw; }
+.nav { display: flex; gap: 2px; background: var(--surface-2); padding: 3px; border-radius: 999px; margin-left: auto; }
+.nav button { border: 0; background: none; border-radius: 999px; padding: 6px 14px; font-weight: 600; font-size: 14px; color: var(--fg-2); }
+.nav button[aria-selected="true"] { background: var(--surface); color: var(--fg); box-shadow: var(--shadow-1); }
+.baractions { display: flex; gap: 8px; align-items: center; }
+.iconbtn { width: 36px; height: 36px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); display: grid; place-items: center; }
+.conn { border: 1px solid var(--border); background: var(--surface); border-radius: 999px; padding: 7px 12px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.conn .cdot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); margin-right: 6px; vertical-align: 1px; }
+.conn.on .cdot { background: var(--good); }
+.bottomnav { display: none; }
+
+/* ---------- ilanlar üst alanı ---------- */
+.toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 16px 0 10px; }
+.search { flex: 1 1 260px; display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 0 14px; height: 42px; box-shadow: var(--shadow-1); }
+.search input { border: 0; outline: 0; background: transparent; width: 100%; height: 100%; font-size: 14.5px; }
+.search svg { flex: none; color: var(--muted); }
+.btn { border: 1px solid var(--border); background: var(--surface); border-radius: 999px; height: 42px; padding: 0 16px; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; box-shadow: var(--shadow-1); white-space: nowrap; text-decoration: none; }
+.btn.primary { background: var(--sel); color: var(--sel-fg); border-color: var(--sel); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn .badge { background: var(--sel); color: var(--sel-fg); border-radius: 999px; font-size: 11.5px; padding: 1px 7px; }
+.btn.primary .badge { background: var(--sel-fg); color: var(--sel); }
+select.sel { height: 42px; border: 1px solid var(--border); background: var(--surface); border-radius: 999px; padding: 0 14px; font-weight: 600; font-size: 14px; box-shadow: var(--shadow-1); max-width: 100%; }
+.seg { display: inline-flex; background: var(--surface-2); border-radius: 999px; padding: 3px; }
+.seg button { border: 0; background: none; border-radius: 999px; padding: 7px 14px; font-size: 13.5px; font-weight: 600; color: var(--fg-2); }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--fg); box-shadow: var(--shadow-1); }
+.chiprow { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 10px; scrollbar-width: none; }
+.chiprow::-webkit-scrollbar { display: none; }
+.chip { border: 1px solid var(--border); background: var(--surface); border-radius: 999px; padding: 6px 13px; font-size: 13.5px; white-space: nowrap; line-height: 1.25; }
+.chip:hover { border-color: var(--border-2); }
+.chip[aria-pressed="true"] { background: var(--sel); color: var(--sel-fg); border-color: var(--sel); }
 
 /* hat şeridi */
-.linebox { position: sticky; top: 0; z-index: 20; background: var(--bg); padding: 8px 0 6px; border-bottom: 1px solid var(--border); }
-.line-scroll { overflow-x: auto; scrollbar-width: thin; -webkit-overflow-scrolling: touch; }
-.line { display: flex; position: relative; min-width: max-content; padding: 2px 4px 0; }
-.line::before { content: ""; position: absolute; left: 34px; right: 34px; top: 13px; height: 4px; background: var(--line); border-radius: 2px; opacity: .85; }
-.stn { position: relative; width: 78px; flex: 0 0 78px; text-align: center; background: none; border: 0; padding: 0 2px 4px; cursor: pointer; }
-.stn .dot { display: block; width: 16px; height: 16px; margin: 7px auto 4px; border-radius: 50%; background: var(--surface); border: 3px solid var(--line); position: relative; z-index: 1; }
-.stn.has .dot { background: var(--line); }
-.stn[aria-pressed="true"] .dot { box-shadow: 0 0 0 4px var(--accent-soft); background: var(--accent-fg); border-color: var(--accent); }
-.stn .nm { display: block; font-size: 11.5px; font-weight: 600; line-height: 1.15; min-height: 27px; }
-.stn .ct { display: block; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
-.stn[aria-pressed="true"] .nm { color: var(--accent); }
-.stn.none { opacity: .45; }
-.line-actions { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12.5px; color: var(--muted); padding-top: 4px; }
-.linkbtn { background: none; border: 0; color: var(--info); cursor: pointer; padding: 2px 0; font-size: 12.5px; }
+.linebox { position: sticky; top: 60px; z-index: 30; background: var(--appbar); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); }
+.line-scroll { overflow-x: auto; scrollbar-width: none; }
+.line-scroll::-webkit-scrollbar { display: none; }
+.line { display: flex; position: relative; min-width: max-content; padding: 8px 0 6px; }
+.line::before { content: ""; position: absolute; left: 41px; right: 41px; top: 17px; height: 3px; background: var(--fg); border-radius: 2px; opacity: .85; }
+.stn { position: relative; width: 82px; flex: 0 0 82px; text-align: center; background: none; border: 0; padding: 0 2px 2px; }
+.stn .dot { display: block; width: 14px; height: 14px; margin: 3px auto 5px; border-radius: 50%; background: var(--surface); border: 3px solid var(--fg); position: relative; z-index: 1; transition: transform .15s; }
+.stn.has .dot { background: var(--fg); }
+.stn:hover .dot { transform: scale(1.15); }
+.stn[aria-pressed="true"] .dot { background: var(--surface); box-shadow: 0 0 0 4px var(--fg); }
+.stn .nm { display: block; font-size: 11.5px; font-weight: 650; line-height: 1.15; min-height: 27px; }
+.stn .ct { display: block; font-size: 11px; color: var(--muted); }
+.stn.none { opacity: .4; }
+.linehint { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--muted); padding: 0 0 6px; }
+.linkbtn { background: none; border: 0; padding: 0; font-size: 12.5px; color: var(--fg); text-decoration: underline; text-underline-offset: 2px; }
 
-/* filtreler */
-details.filters { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin: 12px 0; box-shadow: var(--shadow); }
-details.filters > summary { cursor: pointer; padding: 12px 14px; font-weight: 600; list-style: none; display: flex; justify-content: space-between; align-items: center; }
-details.filters > summary::-webkit-details-marker { display: none; }
-details.filters > summary .sumtxt { font-weight: 400; color: var(--muted); font-size: 13px; margin-left: 8px; }
-.fgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px 22px; padding: 4px 14px 14px; }
-.fgroup h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 6px; font-weight: 600; }
-.chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.chips .chip { padding: 5px 10px; font-size: 13px; }
-.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.num { flex: 1 1 80px; min-width: 0; max-width: 130px; padding: 7px 9px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-2); }
-.txt { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-2); }
-input[type=range] { width: 100%; accent-color: var(--accent); }
-label.ck { display: flex; flex-wrap: wrap; column-gap: 8px; align-items: center; font-size: 13.5px; cursor: pointer; margin: 3px 0; }
-label.ck .small { flex-basis: 100%; padding-left: 24px; }
-label.ck input { accent-color: var(--accent); width: 16px; height: 16px; }
-select.sel { padding: 7px 9px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-2); max-width: 100%; }
-.small { font-size: 12px; color: var(--muted); }
+/* aktif filtreler */
+.active { display: flex; gap: 6px; flex-wrap: wrap; padding: 12px 0 0; }
+.apill { display: inline-flex; align-items: center; gap: 6px; background: var(--surface-2); border-radius: 999px; padding: 4px 6px 4px 11px; font-size: 13px; border: 0; }
+.apill span.x { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-3); font-size: 12px; line-height: 1; }
 
-/* araç çubuğu */
-.toolbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin: 6px 0 10px; }
-.count { font-weight: 600; }
-.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--surface); }
-.seg button { border: 0; background: none; padding: 7px 12px; cursor: pointer; font-size: 13.5px; }
-.seg button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+/* gösterge kutuları */
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(0, 1.6fr); gap: 10px; padding: 14px 0 4px; transition: opacity .2s; }
+.tile { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 12px 14px; box-shadow: var(--shadow-1); min-width: 0; }
+.tile .lab { font-size: 12.5px; color: var(--fg-2); }
+.tile .val { font-size: 24px; font-weight: 650; letter-spacing: -.02em; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tile .sub { font-size: 12px; color: var(--muted); }
+.split { display: flex; height: 10px; border-radius: 4px; overflow: hidden; gap: 2px; margin: 10px 0 8px; background: var(--surface); }
+.split i { display: block; height: 100%; min-width: 3px; border-radius: 2px; cursor: default; }
+.legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12.5px; color: var(--fg-2); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sdot { width: 9px; height: 9px; border-radius: 3px; display: inline-block; flex: none; }
+.sdot.he, i.he { background: var(--s-he); } .sdot.ej, i.ej { background: var(--s-ej); } .sdot.sb, i.sb { background: var(--s-sb); }
 
-/* sonuçlar */
-.group { margin: 18px 0 8px; }
-.ghead { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; border-bottom: 2px solid var(--line); padding-bottom: 6px; margin-bottom: 10px; }
-.ghead h2 { margin: 0; font-size: 18px; }
-.ghead .gstat { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
-.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.card.fav { border-color: var(--accent); }
-.card.dim { opacity: .55; }
-.ctop { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
-.price { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.price s { font-size: 13px; color: var(--muted); font-weight: 400; margin-left: 6px; }
-.badges { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
-.b { font-size: 11.5px; padding: 2px 7px; border-radius: 6px; font-weight: 600; white-space: nowrap; }
-.b.new { background: var(--info-soft); color: var(--info); }
-.b.drop { background: var(--ok-soft); color: var(--ok); }
-.b.nego { background: var(--warn-soft); color: var(--warn); }
-.b.out { background: var(--surface-2); color: var(--muted); }
-.ttl { font-weight: 600; text-decoration: none; overflow-wrap: anywhere; }
+/* sonuç başlığı */
+.reshead { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; padding: 12px 0 2px; }
+.reshead .count { font-weight: 650; font-size: 15px; }
+
+/* durak grupları */
+.group { margin: 22px 0 10px; }
+.ghead { display: grid; grid-template-columns: minmax(0, 1fr) minmax(200px, 420px); gap: 8px 20px; align-items: end; padding-bottom: 10px; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+.ghead h2 { margin: 0; font-size: 20px; letter-spacing: -.015em; }
+.ghead .gstat { font-size: 13px; color: var(--fg-2); margin-top: 2px; }
+.strip { position: relative; }
+.strip svg { display: block; width: 100%; height: auto; overflow: visible; }
+.strip .axis { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 2px; position: relative; }
+.strip .bud { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; }
+.tip { position: fixed; z-index: 60; pointer-events: none; background: var(--fg); color: var(--bg); border-radius: 10px; padding: 7px 10px; font-size: 12.5px; max-width: 260px; box-shadow: var(--shadow-2); }
+.tip b { display: block; font-size: 14px; }
+
+/* kartlar */
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; box-shadow: var(--shadow-1); display: flex; flex-direction: column; min-width: 0; transition: box-shadow .2s, transform .2s; content-visibility: auto; contain-intrinsic-size: 300px 460px; }
+.card:hover { box-shadow: var(--shadow-2); transform: translateY(-2px); }
+.card.dim { opacity: .5; }
+.media { position: relative; aspect-ratio: 4 / 3; background: var(--surface-2); overflow: hidden; }
+.media img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s; }
+.card:hover .media img { transform: scale(1.03); }
+.media.noimg { display: grid; place-items: center; background: linear-gradient(135deg, var(--surface-2), var(--surface-3)); }
+.media .ph { text-align: center; color: var(--muted); font-size: 12.5px; }
+.media .ph b { display: block; font-size: 30px; color: var(--fg-2); letter-spacing: -.02em; }
+.mtop { position: absolute; left: 10px; top: 10px; display: flex; gap: 6px; flex-wrap: wrap; max-width: calc(100% - 64px); }
+.mb { font-size: 11.5px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: rgba(255,255,255,.92); color: #111; backdrop-filter: blur(6px); }
+.mb.new { background: #111; color: #fff; }
+.mb.drop { background: var(--good); color: #fff; }
+.heart { position: absolute; right: 10px; top: 10px; width: 36px; height: 36px; border-radius: 50%; border: 0; background: rgba(255,255,255,.92); display: grid; place-items: center; box-shadow: 0 1px 4px rgba(0,0,0,.15); }
+.heart svg { width: 18px; height: 18px; fill: none; stroke: #222; stroke-width: 2; }
+.heart[aria-pressed="true"] svg { fill: var(--heart); stroke: var(--heart); }
+.mprice { position: absolute; left: 0; right: 0; bottom: 0; padding: 26px 12px 10px; background: linear-gradient(to top, rgba(0,0,0,.66), rgba(0,0,0,0)); color: #fff; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.mprice .p { font-size: 21px; font-weight: 700; letter-spacing: -.02em; }
+.mprice s { font-size: 13px; opacity: .8; }
+.mprice .tier { margin-left: auto; font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--warn); color: #241a00; }
+.mprice .tier.out { background: rgba(255,255,255,.85); color: #222; }
+.media.noimg .mprice { background: none; color: var(--fg); position: absolute; }
+.cbody { padding: 12px 14px 4px; display: flex; flex-direction: column; gap: 7px; flex: 1; }
+.ttl { font-weight: 650; text-decoration: none; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
 .ttl:hover { text-decoration: underline; }
-.spec, .loc, .com, .foot { font-size: 13.5px; color: var(--muted); overflow-wrap: anywhere; }
-.loc b, .com b { color: var(--fg); font-weight: 600; }
-.tags { display: flex; flex-wrap: wrap; gap: 4px; }
-.tag { font-size: 12px; padding: 2px 7px; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--border); }
-.tag.f-full { background: var(--ok-soft); border-color: transparent; color: var(--ok); }
-.tag.f-partial, .tag.f-either { background: var(--warn-soft); border-color: transparent; color: var(--warn); }
-.tag.warn { background: var(--bad-soft); border-color: transparent; color: var(--bad); }
-.tag.inc { background: var(--info-soft); border-color: transparent; color: var(--info); }
-.acts { display: flex; gap: 6px; margin-top: 2px; flex-wrap: wrap; }
-.acts button, .acts a { border: 1px solid var(--border); background: var(--surface-2); border-radius: 8px; padding: 4px 10px; font-size: 12.5px; cursor: pointer; text-decoration: none; }
-.acts button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
-.detail { border-top: 1px dashed var(--border); padding-top: 8px; font-size: 13.5px; display: flex; flex-direction: column; gap: 6px; }
-.detail .desc { color: var(--fg); white-space: pre-wrap; overflow-wrap: anywhere; }
-.detail dl { display: grid; grid-template-columns: max-content 1fr; gap: 2px 12px; margin: 0; }
+.specs { display: flex; gap: 6px; flex-wrap: wrap; }
+.spec { font-size: 12.5px; background: var(--surface-2); border-radius: 8px; padding: 3px 8px; color: var(--fg-2); }
+.loc { font-size: 13.5px; color: var(--fg-2); }
+.loc b { color: var(--fg); }
+.walk { display: inline-block; font-size: 12.5px; font-weight: 650; padding: 1px 8px; border-radius: 999px; background: var(--surface-2); color: var(--fg); margin-left: 2px; }
+.walk.unv { font-weight: 500; color: var(--muted); }
+.com { font-size: 12.5px; color: var(--muted); }
+.com b { color: var(--fg-2); font-weight: 650; }
+.tags { display: flex; gap: 5px; flex-wrap: wrap; }
+.tag { font-size: 11.5px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border); color: var(--fg-2); }
+.tag.f-full { background: var(--good-soft); border-color: transparent; color: var(--good-text); }
+.tag.f-partial, .tag.f-either { background: var(--warn-soft); border-color: transparent; color: var(--warn-text); }
+.tag.warn { background: var(--crit-soft); border-color: transparent; color: var(--crit-text); }
+.tag.inc { background: var(--surface-2); border-color: transparent; color: var(--fg); }
+.cfoot { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 14px 12px; font-size: 12.5px; color: var(--muted); }
+.cfoot .src { display: inline-flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.cfoot .src b { color: var(--fg-2); font-weight: 600; }
+.acts { display: flex; gap: 4px; flex: none; }
+.acts button, .acts a { border: 0; background: var(--surface-2); border-radius: 999px; padding: 5px 10px; font-size: 12.5px; font-weight: 600; color: var(--fg-2); text-decoration: none; }
+.acts button[aria-pressed="true"] { background: var(--sel); color: var(--sel-fg); }
+.detail { border-top: 1px solid var(--border); margin: 0 14px; padding: 10px 0 12px; font-size: 13.5px; display: flex; flex-direction: column; gap: 8px; }
+.detail .desc { color: var(--fg-2); white-space: pre-wrap; overflow-wrap: anywhere; max-height: 180px; overflow: auto; }
+.detail dl { display: grid; grid-template-columns: max-content 1fr; gap: 3px 12px; margin: 0; }
 .detail dt { color: var(--muted); }
 .detail dd { margin: 0; }
-.empty { text-align: center; color: var(--muted); padding: 40px 10px; }
-#map { height: 70vh; min-height: 380px; border-radius: var(--radius); border: 1px solid var(--border); }
-.note { font-size: 12.5px; color: var(--muted); margin: 18px 0 30px; }
-.more { display: block; margin: 12px auto; }
+.detail .acts { flex-wrap: wrap; }
+.empty { text-align: center; color: var(--muted); padding: 60px 10px; }
+.more { display: block; margin: 18px auto; }
+#map { height: 72vh; min-height: 420px; border-radius: var(--r); border: 1px solid var(--border); }
+.maplegend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12.5px; color: var(--fg-2); padding: 10px 2px; }
+.maplegend span { display: inline-flex; align-items: center; gap: 6px; }
+.maplegend i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--border-2); }
+.note { font-size: 12.5px; color: var(--muted); margin: 26px 0 40px; }
+
+/* iskelet (yalnız ilk yükleme) */
+.skel { background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-3) 37%, var(--surface-2) 63%); background-size: 400% 100%; animation: sh 1.3s ease infinite; border-radius: var(--r); }
+@keyframes sh { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+@media (prefers-reduced-motion: reduce) { .skel { animation: none; } .card, .media img, .stn .dot { transition: none; } }
+
+/* filtre çekmecesi */
+.drawer { position: fixed; inset: 0; z-index: 70; background: rgba(0,0,0,.4); display: flex; justify-content: flex-end; }
+.dpanel { width: min(440px, 100vw); height: 100%; background: var(--surface); display: flex; flex-direction: column; box-shadow: var(--shadow-2); animation: din .2s ease; }
+@keyframes din { from { transform: translateX(24px); opacity: .6; } to { transform: none; opacity: 1; } }
+.dpanel header { display: flex; justify-content: space-between; align-items: center; padding: 16px 18px; border-bottom: 1px solid var(--border); }
+.dpanel header h2 { margin: 0; font-size: 18px; }
+.dbody { overflow: auto; padding: 6px 18px 18px; flex: 1; }
+.dpanel footer { display: flex; gap: 10px; padding: 12px 18px calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid var(--border); }
+.dpanel footer .btn { flex: 1; justify-content: center; }
+.fgroup { padding: 14px 0; border-bottom: 1px solid var(--border); }
+.fgroup:last-child { border-bottom: 0; }
+.fgroup h3 { font-size: 13px; margin: 0 0 8px; font-weight: 650; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips .chip { padding: 5px 11px; font-size: 13px; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.num { flex: 1 1 90px; min-width: 0; height: 40px; padding: 0 12px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface-2); }
+.txt { width: 100%; height: 40px; padding: 0 12px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface-2); }
+input[type=range] { width: 100%; accent-color: var(--fg); }
+label.ck { display: flex; flex-wrap: wrap; column-gap: 10px; align-items: center; font-size: 14px; margin: 6px 0; }
+label.ck .small { flex-basis: 100%; padding-left: 28px; }
+label.ck input { accent-color: var(--fg); width: 18px; height: 18px; margin: 0; }
+.selbox { height: 40px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface-2); padding: 0 10px; }
 
 /* ayarlar + durum */
-.panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin: 14px 0; box-shadow: var(--shadow); }
-.panel h2 { font-size: 17px; margin: 0 0 4px; }
-.panel > .small { margin-bottom: 10px; display: block; }
-.sgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px 24px; }
-.nblist { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 2px 16px; }
-.savebar { position: sticky; bottom: 0; background: var(--bg); border-top: 1px solid var(--border); padding: 10px 0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; z-index: 15; }
-.banner { border-radius: 10px; padding: 10px 12px; margin: 12px 0; font-size: 13.5px; }
-.banner.info { background: var(--info-soft); color: var(--info); }
-.banner.warn { background: var(--warn-soft); color: var(--warn); }
-.banner.ok { background: var(--ok-soft); color: var(--ok); }
-.scards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
-.scard { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; box-shadow: var(--shadow); }
-.scard h3 { margin: 0 0 6px; font-size: 15px; display: flex; justify-content: space-between; gap: 8px; align-items: center; }
-.dotst { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-.dotst.ok { background: var(--ok); } .dotst.warn { background: var(--warn); } .dotst.bad { background: var(--bad); }
-.kv { font-size: 13.5px; color: var(--muted); margin: 2px 0; }
-.kv b { color: var(--fg); font-weight: 600; }
-table.runs { width: 100%; border-collapse: collapse; font-size: 13.5px; }
-table.runs td, table.runs th { text-align: left; padding: 6px 6px; border-bottom: 1px solid var(--border); }
-table.runs th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+.page { padding: 20px 0 100px; }
+.page h1 { font-size: 24px; letter-spacing: -.02em; margin: 0 0 4px; }
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 16px 18px; margin: 14px 0; box-shadow: var(--shadow-1); }
+.panel h2 { font-size: 16px; margin: 0 0 2px; }
+.panel > .small { margin-bottom: 12px; display: block; }
+.sgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px 28px; }
+.sgrid .fgroup { border: 0; padding: 0; }
+.nblist { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0 18px; }
+.savebar { position: sticky; bottom: 0; background: var(--appbar); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-top: 1px solid var(--border); padding: 12px 0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; z-index: 15; }
+.banner { border-radius: var(--r-sm); padding: 10px 14px; margin: 12px 0; font-size: 13.5px; background: var(--surface-2); border: 1px solid var(--border); }
+.banner.warn { background: var(--warn-soft); border-color: transparent; color: var(--warn-text); }
+.scards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+.scard { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 14px 16px; box-shadow: var(--shadow-1); }
+.scard h3 { margin: 0 0 8px; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+.st { margin-left: auto; font-size: 12px; font-weight: 650; display: inline-flex; align-items: center; gap: 5px; }
+.st i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.st.ok { color: var(--good-text); } .st.ok i { background: var(--good); }
+.st.warn { color: var(--warn-text); } .st.warn i { background: var(--warn); }
+.st.bad { color: var(--crit-text); } .st.bad i { background: var(--crit); }
+.kv { font-size: 13.5px; color: var(--fg-2); margin: 3px 0; }
+.kv b { color: var(--fg); font-weight: 650; }
+table.runs { width: 100%; border-collapse: collapse; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+table.runs td, table.runs th { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--border); }
+table.runs th { color: var(--muted); font-weight: 600; font-size: 12px; }
 .runs-wrap { overflow-x: auto; }
-dialog { border: 1px solid var(--border); border-radius: 14px; background: var(--surface); color: var(--fg); max-width: min(560px, calc(100vw - 32px)); padding: 18px; }
+dialog { border: 1px solid var(--border); border-radius: 20px; background: var(--surface); color: var(--fg); max-width: min(560px, calc(100vw - 32px)); padding: 20px; box-shadow: var(--shadow-2); }
 dialog::backdrop { background: rgba(0,0,0,.45); }
-dialog ol { padding-left: 20px; margin: 8px 0; font-size: 14px; }
-dialog li { margin: 3px 0; }
-.toast { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-size: 14px; z-index: 100; max-width: calc(100vw - 32px); box-shadow: 0 4px 16px rgba(0,0,0,.25); }
-[hidden] { display: none !important; }
-@media (max-width: 640px) {
+dialog ol { padding-left: 20px; margin: 10px 0; font-size: 14px; }
+dialog li { margin: 4px 0; }
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 11px 18px; border-radius: 999px; font-size: 14px; z-index: 100; max-width: calc(100vw - 32px); box-shadow: var(--shadow-2); }
+.pending { position: fixed; left: 50%; top: 72px; transform: translateX(-50%); z-index: 45; background: var(--fg); color: var(--bg); border-radius: 999px; padding: 8px 16px; font-size: 13px; box-shadow: var(--shadow-2); }
+
+/* ---------- mobil ---------- */
+@media (max-width: 760px) {
+  .nav { display: none; }
+  .brand small { max-width: 52vw; }
+  .bottomnav { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; background: var(--appbar); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-top: 1px solid var(--border); padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); justify-content: space-around; }
+  .bottomnav button { border: 0; background: none; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11.5px; font-weight: 600; color: var(--muted); padding: 4px 14px; border-radius: 12px; }
+  .bottomnav button svg { width: 22px; height: 22px; }
+  .bottomnav button[aria-selected="true"] { color: var(--fg); }
+  body { padding-bottom: 72px; }
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .kpis .tile.wide { grid-column: 1 / -1; }
+  .tile .val { font-size: 21px; }
+  .ghead { grid-template-columns: 1fr; }
   .cards { grid-template-columns: 1fr; }
-  .stn { width: 70px; flex-basis: 70px; }
-  h1 { font-size: 20px; }
-  .tab { padding: 8px 10px; }
+  .toolbar .sel, .toolbar .seg { flex: 1 1 auto; }
+  .conn .ctext { display: none; }
+  .conn { padding: 7px 10px; }
+  .conn .cdot { margin-right: 0; }
+  .savebar { bottom: 64px; }
+  .pending { top: 64px; }
+}
+@media (min-width: 761px) and (max-width: 1080px) {
+  .kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .kpis .tile.wide { grid-column: 1 / -1; }
 }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header class="top">
-    <div class="toprow">
-      <div><h1 id="title">M2 Kiralık</h1><div class="meta" id="meta">Yükleniyor…</div></div>
-      <button class="conn" id="connbtn" type="button">GitHub'a bağlan</button>
-    </div>
-    <nav class="tabs" role="tablist" aria-label="Bölümler">
-      <button class="tab" role="tab" data-tab="ilan" type="button">İlanlar</button>
-      <button class="tab" role="tab" data-tab="ayar" type="button">Ayarlar</button>
-      <button class="tab" role="tab" data-tab="durum" type="button">Durum</button>
+<header class="appbar">
+  <div class="wrap bar">
+    <a class="brand" href="#tab=ilan" aria-label="M2 Kiralık ana sayfa"><span class="logo">M2</span><span><b id="title">M2 Kiralık</b><small id="meta">Yükleniyor…</small></span></a>
+    <nav class="nav" role="tablist" aria-label="Bölümler">
+      <button role="tab" data-tab="ilan" type="button">İlanlar</button>
+      <button role="tab" data-tab="ayar" type="button">Ayarlar</button>
+      <button role="tab" data-tab="durum" type="button">Durum</button>
     </nav>
-    <div id="pending"></div>
-  </header>
-</div>
+    <div class="baractions">
+      <button class="iconbtn" id="themebtn" type="button" aria-label="Tema"></button>
+      <button class="conn" id="connbtn" type="button"><span class="cdot"></span><span class="ctext">GitHub'a bağlan</span></button>
+    </div>
+  </div>
+</header>
+<div class="pending" id="pending" hidden role="status" aria-live="polite"></div>
 
 <section id="tab-ilan">
-  <div class="wrap"><div class="presets" id="presets" role="toolbar" aria-label="Hazır filtreler"></div></div>
+  <div class="wrap">
+    <div class="toolbar">
+      <label class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="q" type="search" placeholder="Ara: balkon, doğalgaz, Kızılay, ofis adı…" aria-label="İlanlarda ara"></label>
+      <button class="btn" id="openf" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>Filtreler <span class="badge" id="fcount" hidden></span></button>
+      <select class="sel" id="sort" aria-label="Sıralama"></select>
+      <div class="seg" id="views" role="group" aria-label="Görünüm"></div>
+    </div>
+    <div class="chiprow" id="presets" role="toolbar" aria-label="Hazır filtreler"></div>
+  </div>
   <div class="linebox">
     <div class="wrap">
       <div class="line-scroll"><div class="line" id="line" role="group" aria-label="M2 durakları"></div></div>
-      <div class="line-actions"><span id="linehint"></span><button class="linkbtn" id="allst" type="button">Tüm duraklar</button></div>
+      <div class="linehint"><span id="linehint"></span><button class="linkbtn" id="allst" type="button">Tüm duraklar</button></div>
     </div>
   </div>
   <div class="wrap">
-    <details class="filters" id="fbox">
-      <summary><span>Filtreler<span class="sumtxt" id="fsum"></span></span><span class="small">aç / kapa</span></summary>
-      <div class="fgrid" id="fgrid"></div>
-    </details>
-    <div class="toolbar">
-      <div><span class="count" id="count"></span> <span class="small" id="countsub"></span></div>
-      <div class="row">
-        <select class="sel" id="sort" aria-label="Sıralama"></select>
-        <div class="seg" id="views" role="group" aria-label="Görünüm"></div>
-      </div>
-    </div>
+    <div class="active" id="active"></div>
+    <div class="kpis" id="kpis"></div>
+    <div class="reshead"><span class="count" id="count"></span><span class="small" id="countsub"></span></div>
     <main id="results"></main>
     <p class="note" id="note"></p>
   </div>
 </section>
 
-<section id="tab-ayar" hidden><div class="wrap" id="ayar"></div></section>
-<section id="tab-durum" hidden><div class="wrap" id="durum"></div></section>
+<section id="tab-ayar" hidden><div class="wrap page" id="ayar"></div></section>
+<section id="tab-durum" hidden><div class="wrap page" id="durum"></div></section>
+
+<nav class="bottomnav" role="tablist" aria-label="Bölümler">
+  <button role="tab" data-tab="ilan" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>İlanlar</button>
+  <button role="tab" data-tab="harita" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg>Harita</button>
+  <button role="tab" data-tab="ayar" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>Ayarlar</button>
+  <button role="tab" data-tab="durum" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>Durum</button>
+</nav>
+
+<div class="drawer" id="drawer" hidden>
+  <div class="dpanel" role="dialog" aria-modal="true" aria-labelledby="dtitle">
+    <header><h2 id="dtitle">Filtreler</h2><button class="iconbtn" id="dclose" type="button" aria-label="Kapat">✕</button></header>
+    <div class="dbody" id="fgrid"></div>
+    <footer><button class="btn" id="freset" type="button">Sıfırla</button><button class="btn primary" id="dapply" type="button">Göster</button></footer>
+  </div>
+</div>
 
 <dialog id="conndlg" aria-labelledby="conntitle">
-  <h2 id="conntitle" style="margin:0 0 6px;font-size:18px">GitHub'a bağlan</h2>
+  <h2 id="conntitle" style="margin:0 0 6px;font-size:19px">GitHub'a bağlan</h2>
   <p class="small" style="font-size:13.5px">İlanları görmek ve filtrelemek için gerekmez. <b>Ayarları kaydetmek, tarama başlatmak,
     favori ve gizlediklerini cihazlar arasında eşitlemek</b> için bu tarayıcıya bir kez bir GitHub anahtarı tanıtılır.
     Anahtar yalnız bu tarayıcıda saklanır ve yalnızca <code id="dlgrepo">m2kira</code> reposuna yazabilir.</p>
@@ -229,7 +384,7 @@ dialog li { margin: 3px 0; }
     <li><b>Generate token</b> → çıkan anahtarı aşağı yapıştır.</li>
   </ol>
   <input class="txt" id="tokin" type="password" placeholder="github_pat_…" autocomplete="off" spellcheck="false">
-  <div class="row" style="margin-top:12px;justify-content:flex-end">
+  <div class="row" style="margin-top:14px;justify-content:flex-end">
     <button class="btn" type="button" id="tokdel" hidden>Bağlantıyı kaldır</button>
     <button class="btn" type="button" id="tokcancel">Vazgeç</button>
     <button class="btn primary" type="button" id="toksave">Bağlan</button>
@@ -237,12 +392,14 @@ dialog li { margin: 3px 0; }
   <p class="small" id="tokmsg"></p>
 </dialog>
 <div class="toast" id="toast" hidden role="status" aria-live="polite"></div>
+<div class="tip" id="tip" hidden role="tooltip"></div>
 
 <script>
 "use strict";
 const $ = (s) => document.querySelector(s);
 const NF = new Intl.NumberFormat("tr-TR");
 const TL = (n) => (n == null ? "—" : NF.format(n) + " TL");
+const kTL = (n) => (n == null ? "—" : (n >= 1000 ? NF.format(Math.round(n / 100) / 10) + "b" : NF.format(n)));
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const safeUrl = (u) => (/^https?:\/\//i.test(u || "") ? u : "#");
 const norm = (s) => String(s || "").toLocaleLowerCase("tr").replace(/ı/g, "i").replace(/ş/g, "s").replace(/ğ/g, "g").replace(/ü/g, "u").replace(/ö/g, "o").replace(/ç/g, "c").replace(/â/g, "a").replace(/î/g, "i");
@@ -284,53 +441,47 @@ const DEF = () => ({
 });
 let D = null, S = DEF(), PRESENT = new Set();
 let favs = new Set(store.get("m2k_favs", [])), hid = new Set(store.get("m2k_hidden", []));
-let hidMap = store.get("m2k_hidmap", {});        // siteden gizle/göster kararları (eşitlenecek)
-let visibleLimit = 120, openDetails = new Set();
-let SET = null;                                   // ayar formu durumu
-let remoteSha = null;
+let hidMap = store.get("m2k_hidmap", {});
+let visibleLimit = 90, openDetails = new Set();
+let SET = null, remoteSha = null;
 
 /* ---------------- yardımcılar ---------------- */
 function toast(msg, ms = 3500) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast._t); toast._t = setTimeout(() => { t.hidden = true; }, ms); }
 function debounce(fn, ms = 200) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
-function roomKey(r) {
-  if (!r) return ""; if (r === "1+0") return "1+0";
-  const n = parseFloat(r); if (isNaN(n)) return "";
-  if (n >= 4) return "4+"; if (n >= 3) return "3+1"; if (n >= 2) return "2+1"; return "1+1";
-}
+function roomKey(r) { if (!r) return ""; if (r === "1+0") return "1+0"; const n = parseFloat(r); if (isNaN(n)) return ""; if (n >= 4) return "4+"; if (n >= 3) return "3+1"; if (n >= 2) return "2+1"; return "1+1"; }
 function parseT(s) { if (!s) return NaN; return Date.parse(s.length <= 16 ? s + ":00Z" : s); }
 function ageHours(fs) { const t = parseT(fs); return isNaN(t) ? 1e9 : (Date.now() - t) / 36e5; }
 function tkeys() { return (D.targets || []).map((t) => t.short || t.name); }
 function tdat(i) { const t = (D.targets || [])[i] || {}; return t.dat || t.name || ""; }
-function commute(it, which) {
-  const ks = tkeys(), cm = it.cm || {};
-  if (which === "both") { const vals = ks.map((k) => cm[k]).filter((v) => v != null); return vals.length === ks.length && vals.length ? Math.max(...vals) : null; }
-  return cm[which] ?? null;
-}
+function commute(it, which) { const ks = tkeys(), cm = it.cm || {}; if (which === "both") { const v = ks.map((k) => cm[k]).filter((x) => x != null); return v.length === ks.length && v.length ? Math.max(...v) : null; } return cm[which] ?? null; }
 function median(arr) { if (!arr.length) return null; const s = [...arr].sort((a, b) => a - b); const m = s.length >> 1; return s.length % 2 ? s[m] : Math.round((s[m - 1] + s[m]) / 2); }
 function fmtDate(iso) { if (!iso) return ""; const d = new Date(iso.length <= 10 ? iso + "T00:00:00" : (iso.length <= 16 ? iso + ":00Z" : iso)); return isNaN(d) ? iso : d.toLocaleDateString("tr-TR", { day: "numeric", month: "short" }); }
 function fmtWhen(iso) { if (!iso) return "?"; const d = new Date(parseT(iso)); return isNaN(d) ? iso : d.toLocaleString("tr-TR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); }
 function ago(fs) { const h = ageHours(fs); if (h > 1e8) return ""; if (h < 1) return Math.max(1, Math.round(h * 60)) + " dk önce"; if (h < 24) return Math.round(h) + " sa önce"; return Math.round(h / 24) + " gün önce"; }
 function isHidden(it) { if (it.id in hidMap) return hidMap[it.id]; return it.hid || hid.has(it.id); }
+const ICON_HEART = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.4-9.4-9.1C1.3 8 3.4 4.5 7 4.5c2 0 3.6 1.1 5 2.9 1.4-1.8 3-2.9 5-2.9 3.6 0 5.7 3.5 4.4 6.9C19.5 16.1 12 20.5 12 20.5z"/></svg>';
+
+/* ---------------- tema ---------------- */
+const THEMES = ["auto", "light", "dark"];
+function applyTheme(t) {
+  if (t === "auto") document.documentElement.removeAttribute("data-theme"); else document.documentElement.setAttribute("data-theme", t);
+  const lab = { auto: "Tema: sistem", light: "Tema: açık", dark: "Tema: koyu" }[t];
+  const ic = { auto: "◐", light: "☀", dark: "☾" }[t];
+  const b = $("#themebtn"); b.textContent = ic; b.title = lab; b.setAttribute("aria-label", lab);
+}
+$("#themebtn").addEventListener("click", () => { const cur = store.get("m2k_theme", "auto"); const nx = THEMES[(THEMES.indexOf(cur) + 1) % 3]; store.set("m2k_theme", nx); applyTheme(nx); });
+applyTheme(store.get("m2k_theme", "auto"));
 
 /* ---------------- durum <-> adres çubuğu ---------------- */
 function encodeState(s) {
   const d = DEF(), p = new URLSearchParams();
-  for (const k of Object.keys(d)) {
-    const v = s[k], dv = d[k];
-    if (Array.isArray(dv)) { if (v.join(",") !== dv.join(",")) p.set(k, v.join(",")); }
-    else if (String(v) !== String(dv)) p.set(k, v);
-  }
+  for (const k of Object.keys(d)) { const v = s[k], dv = d[k]; if (Array.isArray(dv)) { if (v.join(",") !== dv.join(",")) p.set(k, v.join(",")); } else if (String(v) !== String(dv)) p.set(k, v); }
   return p.toString();
 }
 function decodeState(str) {
   const d = DEF(), p = new URLSearchParams(str || "");
-  for (const k of Object.keys(d)) {
-    if (!p.has(k)) continue;
-    const raw = p.get(k);
-    if (Array.isArray(d[k])) d[k] = raw ? raw.split(",") : [];
-    else if (typeof d[k] === "number") d[k] = Number(raw) || 0;
-    else d[k] = raw;
-  }
+  for (const k of Object.keys(d)) { if (!p.has(k)) continue; const raw = p.get(k); if (Array.isArray(d[k])) d[k] = raw ? raw.split(",") : []; else if (typeof d[k] === "number") d[k] = Number(raw) || 0; else d[k] = raw; }
+  if (d.tab === "harita") { d.tab = "ilan"; d.view = "map"; }
   return d;
 }
 function saveState() { const h = encodeState(S); history.replaceState(null, "", h ? "#" + h : location.pathname + location.search); store.set("m2k_state", h); }
@@ -343,7 +494,6 @@ const GH = {
     const headers = { Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" };
     if (auth && this.token()) headers.Authorization = "Bearer " + this.token();
     if (opts.body) headers["Content-Type"] = "application/json";
-    // GitHub API yanıtları tarayıcıda 60 sn önbelleklenir; eski sha 409 üretir -> önbelleksiz
     const r = await fetch("https://api.github.com/" + path, { cache: "no-store", ...opts, headers });
     if (r.status === 204) return null;
     const txt = await r.text();
@@ -351,61 +501,47 @@ const GH = {
     return txt ? JSON.parse(txt) : null;
   },
   b64enc(str) { const bytes = new TextEncoder().encode(str); let bin = ""; for (let i = 0; i < bytes.length; i += 8192) bin += String.fromCharCode(...bytes.subarray(i, i + 8192)); return btoa(bin); },
-  b64dec(b64) { const bin = atob(b64.replace(/\n/g, "")); const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0)); return new TextDecoder().decode(bytes); },
+  b64dec(b64) { const bin = atob(b64.replace(/\n/g, "")); return new TextDecoder().decode(Uint8Array.from(bin, (c) => c.charCodeAt(0))); },
   async readSettings() {
-    try {
-      const f = await this.api(`repos/${this.repo()}/contents/${D.repo.settings_path}?ref=${encodeURIComponent(D.repo.branch)}`, {}, !!this.token());
-      remoteSha = f.sha; return JSON.parse(this.b64dec(f.content));
-    } catch (e) { if (e.status === 404) { remoteSha = null; return null; } throw e; }
+    try { const f = await this.api(`repos/${this.repo()}/contents/${D.repo.settings_path}?ref=${encodeURIComponent(D.repo.branch)}`, {}, !!this.token()); remoteSha = f.sha; return JSON.parse(this.b64dec(f.content)); }
+    catch (e) { if (e.status === 404) { remoteSha = null; return null; } throw e; }
   },
   async writeSettings(obj, retry = true) {
     obj.updated = new Date().toISOString().replace(/\.\d+Z$/, "Z");
-    await this.readSettings().catch(() => null);  // güncel sha
+    await this.readSettings().catch(() => null);
     const body = { message: "site ayarları " + obj.updated, content: this.b64enc(JSON.stringify(obj, null, 1)), branch: D.repo.branch };
     if (remoteSha) body.sha = remoteSha;
-    try {
-      const res = await this.api(`repos/${this.repo()}/contents/${D.repo.settings_path}`, { method: "PUT", body: JSON.stringify(body) });
-      remoteSha = res && res.content ? res.content.sha : null;
-    } catch (e) {
-      if (retry && (e.status === 409 || e.status === 422)) { await new Promise((r) => setTimeout(r, 1500)); return this.writeSettings(obj, false); }
-      throw e;
-    }
+    try { const res = await this.api(`repos/${this.repo()}/contents/${D.repo.settings_path}`, { method: "PUT", body: JSON.stringify(body) }); remoteSha = res && res.content ? res.content.sha : null; }
+    catch (e) { if (retry && (e.status === 409 || e.status === 422)) { await new Promise((r) => setTimeout(r, 1500)); return this.writeSettings(obj, false); } throw e; }
     return obj.updated;
   },
-  async dispatch(sources = "") {
-    await this.api(`repos/${this.repo()}/actions/workflows/${D.repo.workflow}/dispatches`, { method: "POST", body: JSON.stringify({ ref: "main", inputs: { sources } }) });
-  },
+  async dispatch(sources = "") { await this.api(`repos/${this.repo()}/actions/workflows/${D.repo.workflow}/dispatches`, { method: "POST", body: JSON.stringify({ ref: "main", inputs: { sources } }) }); },
   async runs() { return this.api(`repos/${this.repo()}/actions/runs?per_page=6`, {}, !!this.token()); },
 };
 function connected() { return !!GH.token(); }
 function renderConn() {
-  const b = $("#connbtn");
-  b.textContent = connected() ? "● Bağlı" : "GitHub'a bağlan";
-  b.classList.toggle("on", connected());
+  const b = $("#connbtn"); b.classList.toggle("on", connected());
+  b.querySelector(".ctext").textContent = connected() ? "Bağlı" : "GitHub'a bağlan";
   b.title = connected() ? "Ayarlar, tarama ve eşitleme açık. Tıkla: bağlantıyı yönet" : "Ayar kaydetmek ve tarama başlatmak için bağlan";
 }
 function openConn() {
   $("#dlgrepo").textContent = GH.repo(); $("#dlgrepo2").textContent = GH.repo().split("/")[1];
   $("#tokin").value = ""; $("#tokmsg").textContent = connected() ? "Bu tarayıcı bağlı. Yeni anahtar girersen değiştirilir." : "";
-  $("#tokdel").hidden = !connected();
-  $("#conndlg").showModal();
+  $("#tokdel").hidden = !connected(); $("#conndlg").showModal();
 }
 async function saveToken() {
   const t = $("#tokin").value.trim();
   if (!t) { $("#tokmsg").textContent = "Anahtar boş."; return; }
   $("#tokmsg").textContent = "Deneniyor…";
   try {
-    const r = await fetch(`https://api.github.com/repos/${GH.repo()}`, { headers: { Accept: "application/vnd.github+json", Authorization: "Bearer " + t } });
+    const r = await fetch(`https://api.github.com/repos/${GH.repo()}`, { cache: "no-store", headers: { Accept: "application/vnd.github+json", Authorization: "Bearer " + t } });
     if (!r.ok) throw new Error(r.status === 401 ? "anahtar geçersiz" : "repo erişimi yok (" + r.status + ")");
-    store.set("m2k_gh", t);
-    $("#conndlg").close(); renderConn(); toast("Bağlandı. Ayarlar ve tarama düğmeleri açık.");
+    store.set("m2k_gh", t); $("#conndlg").close(); renderConn(); toast("Bağlandı. Ayarlar ve tarama düğmeleri açık.");
     await pullRemote(true); renderAll();
   } catch (e) { $("#tokmsg").textContent = "Olmadı: " + e.message; }
 }
 
 /* ---------------- eşitleme (favori + gizle) ---------------- */
-// Bağlıyken GitHub'daki kayıt esastır (bir cihazda kaldırılan favori diğerinde geri gelmesin).
-// mergeLocal: ilk bağlanışta bu cihazdaki favori/gizleme kararları kayda bir kez eklenir.
 async function pullRemote(mergeLocal = false) {
   if (!connected()) return;
   try {
@@ -413,8 +549,7 @@ async function pullRemote(mergeLocal = false) {
     if (rs) {
       const rf = new Set(rs.favorites || []), rh = Object.assign({}, rs.hidden || {});
       if (mergeLocal) { for (const f of favs) rf.add(f); Object.assign(rh, hidMap); }
-      favs = rf; hidMap = rh;
-      SET = Object.assign(SET || {}, pickSettings(rs));
+      favs = rf; hidMap = rh; SET = Object.assign(SET || {}, pickSettings(rs));
     }
     store.set("m2k_favs", [...favs]); store.set("m2k_hidmap", hidMap);
     if (mergeLocal) pushSync();
@@ -422,8 +557,7 @@ async function pullRemote(mergeLocal = false) {
 }
 const pushSync = debounce(async () => {
   if (!connected()) return;
-  try { await GH.writeSettings(settingsPayload()); toast("Favori/gizle eşitlendi"); }
-  catch (e) { toast("Eşitlenemedi: " + e.message, 6000); }
+  try { await GH.writeSettings(settingsPayload()); toast("Favori/gizle eşitlendi"); } catch (e) { toast("Eşitlenemedi: " + e.message, 6000); }
 }, 2500);
 
 /* ---------------- filtreleme ---------------- */
@@ -445,8 +579,7 @@ function pass(it, s, skipStation) {
   if (s.pmax !== "" && (it.p == null || it.p > +s.pmax)) return false;
   if (s.rooms.length && !s.rooms.includes(roomKey(it.r))) return false;
   if (s.fur.length && !s.fur.includes(it.fur)) return false;
-  if (!it.v) { if (!s.unv) return false; }
-  else if (s.wmax < WMAX && (it.wm == null || it.wm > s.wmax)) return false;
+  if (!it.v) { if (!s.unv) return false; } else if (s.wmax < WMAX && (it.wm == null || it.wm > s.wmax)) return false;
   if (s.ct && s.cmax < CMAX) { const m = commute(it, s.ct); if (m == null || m > s.cmax) return false; }
   if (s.src.length && !s.src.includes(it.src)) return false;
   if (excluded(it, s)) return false;
@@ -454,23 +587,16 @@ function pass(it, s, skipStation) {
   if (s.drop && !it.pp) return false;
   if (s.nw && ageHours(it.fs) > s.nw) return false;
   if (s.m2min !== "" && (it.m2 ?? 0) < +s.m2min) return false;
-  if (s.q) { const hay = norm([it.t, it.desc, it.d, it.of, it.st].join(" ")); if (!norm(s.q).split(/\s+/).filter(Boolean).every((w) => hay.includes(w))) return false; }
+  if (s.q) { const hay = norm([it.t, it.desc, it.d, it.of, it.st, it.src].join(" ")); if (!norm(s.q).split(/\s+/).filter(Boolean).every((w) => hay.includes(w))) return false; }
   return true;
 }
 function sorter(key) {
-  const big = 1e12, ks = tkeys();
-  const tr = (i) => (i.tier === "uygun" ? 0 : i.tier === "pazarlikla" ? 1 : 2);
-  const c = (i, k) => commute(i, k) ?? big;
+  const big = 1e12, ks = tkeys(); const tr = (i) => (i.tier === "uygun" ? 0 : i.tier === "pazarlikla" ? 1 : 2); const c = (i, k) => commute(i, k) ?? big;
   return {
-    rec: (a, b) => tr(a) - tr(b) || (a.p ?? big) - (b.p ?? big),
-    price: (a, b) => (a.p ?? big) - (b.p ?? big),
-    price_d: (a, b) => (b.p ?? -1) - (a.p ?? -1),
-    new: (a, b) => ageHours(a.fs) - ageHours(b.fs) || (a.p ?? big) - (b.p ?? big),
-    walk: (a, b) => (b.v - a.v) || (a.wm ?? big) - (b.wm ?? big),
-    c0: (a, b) => c(a, ks[0]) - c(b, ks[0]) || (a.p ?? big) - (b.p ?? big),
-    c1: (a, b) => c(a, ks[1]) - c(b, ks[1]) || (a.p ?? big) - (b.p ?? big),
-    cmax: (a, b) => c(a, "both") - c(b, "both") || (a.p ?? big) - (b.p ?? big),
-    m2: (a, b) => (b.m2 ?? -1) - (a.m2 ?? -1),
+    rec: (a, b) => tr(a) - tr(b) || (a.p ?? big) - (b.p ?? big), price: (a, b) => (a.p ?? big) - (b.p ?? big), price_d: (a, b) => (b.p ?? -1) - (a.p ?? -1),
+    new: (a, b) => ageHours(a.fs) - ageHours(b.fs) || (a.p ?? big) - (b.p ?? big), walk: (a, b) => (b.v - a.v) || (a.wm ?? big) - (b.wm ?? big),
+    c0: (a, b) => c(a, ks[0]) - c(b, ks[0]) || (a.p ?? big) - (b.p ?? big), c1: (a, b) => c(a, ks[1]) - c(b, ks[1]) || (a.p ?? big) - (b.p ?? big),
+    cmax: (a, b) => c(a, "both") - c(b, "both") || (a.p ?? big) - (b.p ?? big), m2: (a, b) => (b.m2 ?? -1) - (a.m2 ?? -1),
     ppm: (a, b) => ((a.p && a.m2) ? a.p / a.m2 : big) - ((b.p && b.m2) ? b.p / b.m2 : big),
   }[key] || (() => 0);
 }
@@ -482,20 +608,15 @@ function presets() {
   if (t0) P.push([`${tdat(0)} yakın`, () => ({ ct: ks[0], cmax: 25, sort: "c0" })]);
   if (t1) P.push([`${t1.name} rotası`, () => ({ ct: ks[1], cmax: 45, sort: "c1" })]);
   if (t0 && t1) P.push(["İki hedefe de yakın", () => ({ ct: "both", cmax: 45, sort: "cmax", view: "list" })]);
-  P.push(
-    ["En ucuz 1+1", () => ({ rooms: ["1+1"], sort: "price", view: "list" })],
-    ["Yürüme ≤ 8 dk", () => ({ wmax: 8, unv: 0, sort: "walk" })],
-    ["Faturalar dahil", () => ({ inc: 1, sort: "price" })],
-    ["Pazarlıkla", () => ({ tier: "pazarlikla", sort: "price", view: "list" })],
-    ["Favoriler", () => ({ fav: 1, ok: 0, ex: [], view: "list" })],
-    ["Tümü (filtresiz)", () => ({ ok: 0, ex: [], view: "list", sort: "price" })],
-  );
+  P.push(["En ucuz 1+1", () => ({ rooms: ["1+1"], sort: "price", view: "list" })], ["Yürüme ≤ 8 dk", () => ({ wmax: 8, unv: 0, sort: "walk" })],
+    ["Faturalar dahil", () => ({ inc: 1, sort: "price" })], ["Pazarlıkla", () => ({ tier: "pazarlikla", sort: "price", view: "list" })],
+    ["Favoriler", () => ({ fav: 1, ok: 0, ex: [], view: "list" })], ["Tümü (filtresiz)", () => ({ ok: 0, ex: [], view: "list", sort: "price" })]);
   return P;
 }
-function applyPreset(fn) { S = Object.assign(DEF(), fn()); visibleLimit = 120; renderAll(); }
-function presetMatches(fn) { return encodeState(Object.assign(DEF(), fn())) === encodeState(S); }
+function applyPreset(fn) { const keep = S.view === "map" ? "map" : null; S = Object.assign(DEF(), fn()); if (keep && !fn().view) S.view = keep; visibleLimit = 90; renderAll(); }
+function presetMatches(fn) { return encodeState(Object.assign(DEF(), fn(), { view: S.view })) === encodeState(Object.assign({}, S)); }
 
-/* ---------------- filtre paneli ---------------- */
+/* ---------------- filtre çekmecesi ---------------- */
 function chipGroup(title, opts, getArr, setArr, multi = true) {
   const g = document.createElement("div"); g.className = "fgroup";
   g.innerHTML = `<h3>${esc(title)}</h3><div class="chips"></div>`;
@@ -503,162 +624,240 @@ function chipGroup(title, opts, getArr, setArr, multi = true) {
   for (const [v, label] of opts) {
     const b = document.createElement("button"); b.className = "chip"; b.type = "button"; b.textContent = label;
     b.setAttribute("aria-pressed", String(getArr().includes(v)));
-    b.onclick = () => {
-      const set = new Set(getArr());
-      set.has(v) ? set.delete(v) : (multi ? set.add(v) : (set.clear(), set.add(v)));
-      setArr([...set]); b.setAttribute("aria-pressed", String(set.has(v)));
-    };
+    b.onclick = () => { const set = new Set(getArr()); set.has(v) ? set.delete(v) : (multi ? set.add(v) : (set.clear(), set.add(v))); setArr([...set]); b.setAttribute("aria-pressed", String(set.has(v))); };
     box.appendChild(b);
   }
   return g;
 }
 function buildFilters() {
   const grid = $("#fgrid"); grid.innerHTML = "";
-  const cap = Math.ceil(D.budget * (1 + D.tol / 100) / 500) * 500;
-  const ks = tkeys();
-  const upd = (k) => (v) => { S[k] = v; renderAll(false); };
+  const cap = Math.ceil(D.budget * (1 + D.tol / 100) / 500) * 500, ks = tkeys();
+  const upd = (k) => (v) => { S[k] = v; renderAll(false, true); };
   const g1 = document.createElement("div"); g1.className = "fgroup";
   g1.innerHTML = `<h3>Kapsam</h3>
-    <label class="ck"><input type="checkbox" id="f-ok" ${S.ok ? "checked" : ""}> Yalnız kriterlere uyanlar <span class="small">(bütçe ${esc(TL(D.budget))} +%${D.tol}, eşya, yürüme — Ayarlar sekmesinden)</span></label>
+    <label class="ck"><input type="checkbox" id="f-ok" ${S.ok ? "checked" : ""}> Yalnız kriterlere uyanlar <span class="small">bütçe ${esc(TL(D.budget))} +%${D.tol}, eşya, yürüme — Ayarlar'dan değişir</span></label>
     <label class="ck"><input type="checkbox" id="f-hidden" ${S.hidden ? "checked" : ""}> Gizlediklerimi de göster</label>
-    <div class="row" style="margin-top:6px"><span class="small">Yeni:</span> <select class="sel" id="f-nw">${NEW_OPTS.map(([v, l]) => `<option value="${v}" ${+S.nw === v ? "selected" : ""}>${l}</option>`).join("")}</select></div>`;
+    <div class="row" style="margin-top:8px"><span class="small">Yeni</span><select class="selbox" id="f-nw">${NEW_OPTS.map(([v, l]) => `<option value="${v}" ${+S.nw === v ? "selected" : ""}>${l}</option>`).join("")}</select></div>`;
   grid.appendChild(g1);
   const g2 = document.createElement("div"); g2.className = "fgroup";
-  g2.innerHTML = `<h3>Fiyat (TL/ay)</h3><div class="row">
-    <input class="num" id="f-pmin" type="number" inputmode="numeric" step="500" min="0" placeholder="en az" value="${esc(S.pmin)}"><span>–</span>
-    <input class="num" id="f-pmax" type="number" inputmode="numeric" step="500" min="0" placeholder="${esc(NF.format(cap))}" value="${esc(S.pmax)}"></div>
-    <div class="row" style="margin-top:8px"><span class="small">m² en az</span><input class="num" id="f-m2" type="number" inputmode="numeric" step="5" min="0" placeholder="—" value="${esc(S.m2min)}"></div>
-    <label class="ck" style="margin-top:6px"><input type="checkbox" id="f-inc" ${S.inc ? "checked" : ""}> Faturalar / aidat dahil olanlar</label>
+  g2.innerHTML = `<h3>Fiyat (TL / ay)</h3><div class="row">
+    <input class="num" id="f-pmin" type="number" inputmode="numeric" step="500" min="0" placeholder="en az" value="${esc(S.pmin)}" aria-label="En az fiyat"><span class="muted">–</span>
+    <input class="num" id="f-pmax" type="number" inputmode="numeric" step="500" min="0" placeholder="${esc(NF.format(cap))}" value="${esc(S.pmax)}" aria-label="En fazla fiyat"></div>
+    <div class="row" style="margin-top:10px"><span class="small">m² en az</span><input class="num" id="f-m2" type="number" inputmode="numeric" step="5" min="0" placeholder="—" value="${esc(S.m2min)}" aria-label="En az metrekare"></div>
+    <label class="ck" style="margin-top:8px"><input type="checkbox" id="f-inc" ${S.inc ? "checked" : ""}> Faturalar / aidat dahil olanlar</label>
     <label class="ck"><input type="checkbox" id="f-drop" ${S.drop ? "checked" : ""}> Yalnız fiyatı düşenler</label>`;
   grid.appendChild(g2);
   grid.appendChild(chipGroup("Oda", ROOMS, () => S.rooms, upd("rooms")));
   grid.appendChild(chipGroup("Eşya", FUR, () => S.fur, upd("fur")));
   const g3 = document.createElement("div"); g3.className = "fgroup";
-  g3.innerHTML = `<h3>Durağa yürüme</h3>
-    <div class="row"><input type="range" id="f-wmax" min="3" max="${WMAX}" step="1" value="${S.wmax}" aria-label="En fazla yürüme dakikası"></div>
+  g3.innerHTML = `<h3>Durağa yürüme</h3><input type="range" id="f-wmax" min="3" max="${WMAX}" step="1" value="${S.wmax}" aria-label="En fazla yürüme dakikası">
     <div class="small" id="f-wlabel"></div>
-    <label class="ck"><input type="checkbox" id="f-unv" ${S.unv ? "checked" : ""}> Mesafesi doğrulanmamışları da göster <span class="small">(ilanda konum yok)</span></label>`;
+    <label class="ck"><input type="checkbox" id="f-unv" ${S.unv ? "checked" : ""}> Konumu bilinmeyenleri de göster</label>`;
   grid.appendChild(g3);
   if (ks.length) {
     const g4 = document.createElement("div"); g4.className = "fgroup";
-    const opts = [["", "Kapalı"], ...D.targets.map((t, i) => [ks[i], t.name])];
-    if (ks.length > 1) opts.push(["both", "İkisi de"]);
-    g4.innerHTML = `<h3>İşe ulaşım (kapıdan kapıya, tahmini)</h3>
-      <div class="row"><select class="sel" id="f-ct">${opts.map(([v, l]) => `<option value="${esc(v)}" ${S.ct === v ? "selected" : ""}>${esc(l)}</option>`).join("")}</select></div>
-      <div class="row" style="margin-top:6px"><input type="range" id="f-cmax" min="10" max="${CMAX}" step="5" value="${S.cmax}" aria-label="En fazla ulaşım dakikası" ${S.ct ? "" : "disabled"}></div>
+    const opts = [["", "Kapalı"], ...D.targets.map((t, i) => [ks[i], t.name])]; if (ks.length > 1) opts.push(["both", "İkisi de"]);
+    g4.innerHTML = `<h3>İşe ulaşım (tahmini, kapıdan kapıya)</h3>
+      <select class="selbox" id="f-ct" aria-label="Hedef">${opts.map(([v, l]) => `<option value="${esc(v)}" ${S.ct === v ? "selected" : ""}>${esc(l)}</option>`).join("")}</select>
+      <input type="range" id="f-cmax" min="10" max="${CMAX}" step="5" value="${S.cmax}" aria-label="En fazla ulaşım dakikası" ${S.ct ? "" : "disabled"} style="margin-top:10px">
       <div class="small" id="f-clabel"></div>`;
     grid.appendChild(g4);
   }
   grid.appendChild(chipGroup("Kaynak", SRCS, () => S.src, upd("src")));
-  grid.appendChild(chipGroup("Gizle (uyarılı ilanlar)", EXCL.map((e) => [e[0], e[1]]), () => S.ex, upd("ex")));
-  const g5 = document.createElement("div"); g5.className = "fgroup";
-  g5.innerHTML = `<h3>Metin ara</h3><input class="txt" id="f-q" type="search" placeholder="ör. balkon, doğalgaz, asansör" value="${esc(S.q)}">
-    <div class="row" style="margin-top:10px"><button class="chip" type="button" id="f-reset">Filtreleri sıfırla</button></div>`;
-  grid.appendChild(g5);
+  grid.appendChild(chipGroup("Uyarılı ilanları gizle", EXCL.map((e) => [e[0], e[1]]), () => S.ex, upd("ex")));
   const on = (id, ev, fn) => { const el = $(id); if (el) el.addEventListener(ev, fn); };
-  on("#f-ok", "change", (e) => { S.ok = e.target.checked ? 1 : 0; renderAll(false); });
-  on("#f-hidden", "change", (e) => { S.hidden = e.target.checked ? 1 : 0; renderAll(false); });
-  on("#f-nw", "change", (e) => { S.nw = +e.target.value; renderAll(false); });
+  on("#f-ok", "change", (e) => { S.ok = e.target.checked ? 1 : 0; renderAll(false, true); });
+  on("#f-hidden", "change", (e) => { S.hidden = e.target.checked ? 1 : 0; renderAll(false, true); });
+  on("#f-nw", "change", (e) => { S.nw = +e.target.value; renderAll(false, true); });
   on("#f-pmin", "input", debounce((e) => { S.pmin = e.target.value; renderAll(false, true); }));
   on("#f-pmax", "input", debounce((e) => { S.pmax = e.target.value; renderAll(false, true); }));
   on("#f-m2", "input", debounce((e) => { S.m2min = e.target.value; renderAll(false, true); }));
-  on("#f-inc", "change", (e) => { S.inc = e.target.checked ? 1 : 0; renderAll(false); });
-  on("#f-drop", "change", (e) => { S.drop = e.target.checked ? 1 : 0; renderAll(false); });
+  on("#f-inc", "change", (e) => { S.inc = e.target.checked ? 1 : 0; renderAll(false, true); });
+  on("#f-drop", "change", (e) => { S.drop = e.target.checked ? 1 : 0; renderAll(false, true); });
   on("#f-wmax", "input", (e) => { S.wmax = +e.target.value; wLabel(); renderAll(false, true); });
-  on("#f-unv", "change", (e) => { S.unv = e.target.checked ? 1 : 0; renderAll(false); });
-  on("#f-ct", "change", (e) => { S.ct = e.target.value; if (S.ct && S.cmax >= CMAX) S.cmax = 40; renderAll(false); });
+  on("#f-unv", "change", (e) => { S.unv = e.target.checked ? 1 : 0; renderAll(false, true); });
+  on("#f-ct", "change", (e) => { S.ct = e.target.value; if (S.ct && S.cmax >= CMAX) S.cmax = 40; const r = $("#f-cmax"); r.disabled = !S.ct; r.value = S.cmax; cLabel(); renderAll(false, true); });
   on("#f-cmax", "input", (e) => { S.cmax = +e.target.value; cLabel(); renderAll(false, true); });
-  on("#f-q", "input", debounce((e) => { S.q = e.target.value.trim(); renderAll(false, true); }, 250));
-  on("#f-reset", "click", () => { const v = S.view; S = DEF(); S.view = v; renderAll(); });
   wLabel(); cLabel();
 }
 function wLabel() { const el = $("#f-wlabel"); if (el) el.textContent = S.wmax >= WMAX ? "Sınır yok" : `En fazla ${S.wmax} dk (~${Math.round(S.wmax * 64)} m kuş uçuşu)`; }
 function cLabel() { const el = $("#f-clabel"); if (el) el.textContent = !S.ct ? "Hedef seçince süre sınırı açılır" : (S.cmax >= CMAX ? "Sınır yok" : `En fazla ${S.cmax} dk`); }
-function filterSummary() {
-  const parts = [];
-  if (!S.ok) parts.push("tüm ilanlar"); if (S.tier) parts.push("pazarlıkla");
-  if (S.st.length) parts.push(S.st.length === 1 ? S.st[0] : S.st.length + " durak");
-  if (S.pmin !== "" || S.pmax !== "") parts.push(`${S.pmin ? NF.format(S.pmin) : "0"}–${S.pmax ? NF.format(S.pmax) : "∞"} TL`);
-  if (S.rooms.length) parts.push(S.rooms.join(", "));
-  if (S.fur.length) parts.push(S.fur.map((f) => (FUR.find((x) => x[0] === f) || [f, f])[1]).join("/"));
-  if (S.wmax < WMAX) parts.push(`≤${S.wmax} dk yürüme`); if (!S.unv) parts.push("konumu doğrulanmış");
-  if (S.ct && S.cmax < CMAX) parts.push(`ulaşım ≤${S.cmax} dk`);
-  if (S.src.length) parts.push(S.src.join("/"));
-  if (S.inc) parts.push("faturalar dahil"); if (S.drop) parts.push("fiyatı düşen"); if (S.nw) parts.push(`son ${S.nw} sa`);
-  if (S.fav) parts.push("favoriler"); if (S.q) parts.push(`"${S.q}"`);
-  return parts.length ? "· " + parts.join(" · ") : "· varsayılan";
+function openDrawer() { buildFilters(); $("#drawer").hidden = false; document.body.style.overflow = "hidden"; setTimeout(() => $("#dclose").focus(), 30); }
+function closeDrawer() { $("#drawer").hidden = true; document.body.style.overflow = ""; $("#openf").focus(); }
+
+/* aktif filtre etiketleri (× ile kaldırılır) */
+function activePills() {
+  const d = DEF(), P = [];
+  const add = (label, reset) => P.push({ label, reset });
+  if (!S.ok) add("Tüm ilanlar", () => { S.ok = 1; });
+  if (S.tier) add("Pazarlıkla", () => { S.tier = ""; });
+  for (const st of S.st) add(st, () => { S.st = S.st.filter((x) => x !== st); });
+  if (S.pmin !== "" || S.pmax !== "") add(`${S.pmin ? kTL(+S.pmin) : "0"}–${S.pmax ? kTL(+S.pmax) : "∞"} TL`, () => { S.pmin = ""; S.pmax = ""; });
+  for (const r of S.rooms) add(r === "1+0" ? "Stüdyo" : r, () => { S.rooms = S.rooms.filter((x) => x !== r); });
+  for (const f of S.fur) add((FUR.find((x) => x[0] === f) || [f, f])[1], () => { S.fur = S.fur.filter((x) => x !== f); });
+  if (S.wmax < WMAX) add(`≤ ${S.wmax} dk yürüme`, () => { S.wmax = WMAX; });
+  if (!S.unv) add("Konumu bilinenler", () => { S.unv = 1; });
+  if (S.ct && S.cmax < CMAX) add(`Ulaşım ≤ ${S.cmax} dk`, () => { S.ct = ""; S.cmax = CMAX; });
+  for (const s of S.src) add(s, () => { S.src = S.src.filter((x) => x !== s); });
+  for (const e of S.ex) if (!d.ex.includes(e)) add("Gizle: " + (EXCL.find((x) => x[0] === e) || [e, e])[1], () => { S.ex = S.ex.filter((x) => x !== e); });
+  if (!S.ex.includes("kopya")) add("Kopyalar görünür", () => { S.ex = [...S.ex, "kopya"]; });
+  if (S.inc) add("Faturalar dahil", () => { S.inc = 0; });
+  if (S.drop) add("Fiyatı düşen", () => { S.drop = 0; });
+  if (S.nw) add(`Son ${S.nw} sa`, () => { S.nw = 0; });
+  if (S.m2min !== "") add(`≥ ${S.m2min} m²`, () => { S.m2min = ""; });
+  if (S.fav) add("Favoriler", () => { S.fav = 0; });
+  if (S.hidden) add("Gizliler dahil", () => { S.hidden = 0; });
+  if (S.q) add(`"${S.q}"`, () => { S.q = ""; $("#q").value = ""; });
+  return P;
+}
+function renderActive() {
+  const P = activePills(), box = $("#active"); box.innerHTML = "";
+  for (const p of P) {
+    const b = document.createElement("button"); b.type = "button"; b.className = "apill";
+    b.setAttribute("aria-label", p.label + " filtresini kaldır");
+    const t = document.createElement("span"); t.textContent = p.label; b.appendChild(t);
+    const x = document.createElement("span"); x.className = "x"; x.textContent = "✕"; b.appendChild(x);
+    b.onclick = () => { p.reset(); renderAll(); }; box.appendChild(b);
+  }
+  if (P.length > 1) { const c = document.createElement("button"); c.type = "button"; c.className = "linkbtn"; c.textContent = "Hepsini temizle"; c.onclick = () => { const v = S.view; S = DEF(); S.view = v; $("#q").value = ""; renderAll(); }; box.appendChild(c); }
+  const n = P.length; const fc = $("#fcount"); fc.hidden = !n; fc.textContent = n;
 }
 
 /* ---------------- hat şeridi ---------------- */
 function renderLine(base) {
   const box = $("#line"); box.innerHTML = "";
-  const by = {};
-  for (const it of base) (by[it.st || "?"] ||= []).push(it);
+  const by = {}; for (const it of base) (by[it.st || "?"] ||= []).push(it);
   for (const s of D.line) {
     const arr = by[s.name] || [], prices = arr.map((i) => i.p).filter(Boolean);
-    const b = document.createElement("button"); b.type = "button";
-    b.className = "stn" + (arr.length ? " has" : " none");
+    const b = document.createElement("button"); b.type = "button"; b.className = "stn" + (arr.length ? " has" : " none");
     b.setAttribute("aria-pressed", String(S.st.includes(s.name)));
-    b.title = arr.length ? `${s.name}: ${arr.length} ilan, en ucuz ${TL(Math.min(...prices))}` : `${s.name}: ilan yok`;
-    b.innerHTML = `<span class="dot"></span><span class="nm">${esc(s.name.replace("-Danıştay", ""))}</span><span class="ct">${arr.length ? arr.length + " · " + (prices.length ? Math.round(Math.min(...prices) / 1000) + "b" : "") : "—"}</span>`;
-    b.onclick = () => { const set = new Set(S.st); set.has(s.name) ? set.delete(s.name) : set.add(s.name); S.st = [...set]; visibleLimit = 120; renderAll(false); };
+    b.setAttribute("aria-label", arr.length ? `${s.name}: ${arr.length} ilan, en ucuz ${TL(Math.min(...prices))}` : `${s.name}: ilan yok`);
+    b.innerHTML = `<span class="dot"></span><span class="nm">${esc(s.name.replace("-Danıştay", ""))}</span><span class="ct">${arr.length ? arr.length + " · " + (prices.length ? kTL(Math.min(...prices)) : "") : "—"}</span>`;
+    b.onclick = () => { const set = new Set(S.st); set.has(s.name) ? set.delete(s.name) : set.add(s.name); S.st = [...set]; visibleLimit = 90; renderAll(); };
     box.appendChild(b);
   }
   const unk = (by["?"] || []).length;
-  $("#linehint").textContent = S.st.length ? `${S.st.length} durak seçili` + (unk ? ` · ${unk} ilanın durağı belirsiz` : "") : "Durağa dokun: seç / kaldır (birden çok seçilebilir)";
+  $("#linehint").textContent = S.st.length ? `${S.st.length} durak seçili` + (unk ? ` · ${unk} ilanın durağı belirsiz` : "") : "Durağa dokun: seç / kaldır — birden çok seçilebilir";
   $("#allst").style.visibility = S.st.length ? "visible" : "hidden";
 }
+
+/* ---------------- gösterge kutuları ---------------- */
+function renderKpis(list) {
+  const prices = list.map((i) => i.p).filter(Boolean);
+  const n24 = list.filter((i) => ageHours(i.fs) <= 24).length;
+  const drops = list.filter((i) => i.pp).length;
+  const bySrc = SRCS.map(([k]) => [k, list.filter((i) => i.src === k).length]);
+  const total = list.length || 1;
+  const tile = (lab, val, sub) => `<div class="tile"><div class="lab">${esc(lab)}</div><div class="val">${esc(val)}</div>${sub ? `<div class="sub">${esc(sub)}</div>` : ""}</div>`;
+  $("#kpis").innerHTML =
+    tile(S.ok ? "Uygun ilan" : "Listelenen ilan", NF.format(list.length), list.length ? `${list.filter((i) => i.v).length} tanesinin konumu belli` : "") +
+    tile("Son 24 saatte yeni", NF.format(n24), drops ? `${drops} ilanın fiyatı düştü` : "") +
+    tile("En ucuz", prices.length ? TL(Math.min(...prices)) : "—", prices.length ? `bütçe ${TL(D.budget)}` : "") +
+    tile("Medyan kira", prices.length ? TL(median(prices)) : "—", prices.length ? `${prices.filter((p) => p <= D.budget).length} ilan bütçe içinde` : "") +
+    `<div class="tile wide"><div class="lab">Kaynaklara göre</div>
+      <div class="split" role="img" aria-label="${esc(bySrc.map(([k, c]) => `${k} ${c}`).join(", "))}">${bySrc.filter(([, c]) => c).map(([k, c]) => `<i class="${SRC_SHORT[k]}" style="flex:${c}" data-tip="${esc(k)}|${c}|${Math.round(c * 100 / total)}"></i>`).join("")}</div>
+      <div class="legend">${bySrc.map(([k, c]) => `<span><i class="sdot ${SRC_SHORT[k]}"></i>${esc(k)} <b>${NF.format(c)}</b></span>`).join("")}</div></div>`;
+}
+
+/* ---------------- durak fiyat şeridi (nokta grafiği) ---------------- */
+let STRIP_SCALE = null;
+function stripSvg(arr, groupName) {
+  const sc = STRIP_SCALE; if (!sc) return "";
+  const W = 600, H = 30, padX = 8, y = 14;
+  const x = (p) => padX + (W - 2 * padX) * (p - sc.min) / Math.max(1, sc.max - sc.min);
+  const pts = arr.filter((i) => i.p).sort((a, b) => a.p - b.p);
+  const bx = D.budget >= sc.min && D.budget <= sc.max ? x(D.budget) : null;
+  const dots = pts.map((i) => `<circle cx="${x(i.p).toFixed(1)}" cy="${y}" r="5" fill="var(--dot)" stroke="var(--surface)" stroke-width="2" fill-opacity=".85"/>`).join("");
+  const budgetPct = bx != null ? (bx / W * 100).toFixed(2) : null;
+  return `<div class="strip" data-strip="${esc(groupName)}">
+    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(groupName)} fiyat dağılımı: ${pts.length} ilan, ${esc(TL(pts[0] ? pts[0].p : null))} – ${esc(TL(pts.length ? pts[pts.length - 1].p : null))}" tabindex="0">
+      <line x1="${padX}" x2="${W - padX}" y1="${y}" y2="${y}" stroke="var(--grid)" stroke-width="1"/>
+      ${bx != null ? `<line x1="${bx.toFixed(1)}" x2="${bx.toFixed(1)}" y1="2" y2="${H - 2}" stroke="var(--axis)" stroke-width="1"/>` : ""}
+      ${dots}
+    </svg>
+    <div class="axis"><span>${esc(kTL(sc.min))}</span>${budgetPct != null ? `<span class="bud" style="left:${budgetPct}%">bütçe</span>` : ""}<span>${esc(kTL(sc.max))}</span></div>
+  </div>`;
+}
+function bindStrips(groups) {
+  document.querySelectorAll("[data-strip]").forEach((el) => {
+    const name = el.dataset.strip, arr = (groups[name] || []).filter((i) => i.p).sort((a, b) => a.p - b.p);
+    const svg = el.querySelector("svg"); const sc = STRIP_SCALE;
+    const pick = (clientX) => {
+      const r = svg.getBoundingClientRect(); const W = 600, padX = 8;
+      const p = sc.min + ((clientX - r.left) / r.width * W - padX) / (W - 2 * padX) * (sc.max - sc.min);
+      let best = null, bd = Infinity; for (const i of arr) { const d = Math.abs(i.p - p); if (d < bd) { bd = d; best = i; } }
+      return best;
+    };
+    const show = (it, cx, cy) => {
+      if (!it) return hideTip();
+      const same = arr.filter((i) => i.p === it.p).length;
+      showTip(`<b>${esc(TL(it.p))}</b>${esc(it.r || "")}${it.m2 ? " · " + it.m2 + " m²" : ""}${same > 1 ? ` · ${same} ilan` : ""}<br>${esc(it.t.slice(0, 70))}`, cx, cy);
+    };
+    svg.addEventListener("pointermove", (e) => show(pick(e.clientX), e.clientX, e.clientY));
+    svg.addEventListener("pointerleave", hideTip);
+    svg.addEventListener("focus", () => { const r = svg.getBoundingClientRect(); show(arr[0], r.left + r.width / 2, r.top); });
+    svg.addEventListener("blur", hideTip);
+  });
+}
+function showTip(html, x, y) { const t = $("#tip"); t.innerHTML = html; t.hidden = false; const w = t.offsetWidth, h = t.offsetHeight; t.style.left = Math.min(window.innerWidth - w - 8, Math.max(8, x - w / 2)) + "px"; t.style.top = Math.max(8, y - h - 14) + "px"; }
+function hideTip() { $("#tip").hidden = true; }
+document.addEventListener("pointermove", (e) => {
+  const seg = e.target.closest && e.target.closest(".split i");
+  if (seg) { const [k, c, pct] = seg.dataset.tip.split("|"); showTip(`<b>${esc(NF.format(+c))} ilan</b>${esc(k)} · %${esc(pct)}`, e.clientX, e.clientY); }
+  else if (!(e.target.closest && e.target.closest("[data-strip]"))) hideTip();
+});
 
 /* ---------------- kartlar ---------------- */
 function detailHtml(it) {
   const st = D.line.find((s) => s.name === it.st);
   const rows = [
-    ["Kaynak / ilan", `${esc(it.src)}${it.of ? " · " + esc(it.of) : ""}`],
-    it.ld ? ["İlan tarihi", esc(fmtDate(it.ld))] : null,
-    ["İlk görülme", esc(fmtWhen(it.fs)) + " (" + esc(ago(it.fs)) + ")"],
-    it.ph ? ["Fiyat geçmişi", it.ph.map((p) => esc(TL(p))).join(" → ")] : null,
-    it.heat ? ["Isınma", esc(it.heat)] : null,
-    it.el != null ? ["Asansör", it.el ? "var" : "yok"] : null,
-    it.age ? ["Bina yaşı", esc(it.age)] : null,
-    it.aid ? ["Aidat", esc(TL(it.aid))] : null,
-    it.cat ? ["Tür", esc(it.cat)] : null,
-    (it.dup || []).length ? ["Muhtemel kopyası", esc(it.dup.join(", "))] : null,
+    ["Kaynak", `${esc(it.src)}${it.of ? " · " + esc(it.of) : ""}`], it.ld ? ["İlan tarihi", esc(fmtDate(it.ld))] : null,
+    ["İlk görülme", esc(fmtWhen(it.fs)) + " (" + esc(ago(it.fs)) + ")"], it.ph ? ["Fiyat geçmişi", it.ph.map((p) => esc(TL(p))).join(" → ")] : null,
+    it.heat ? ["Isınma", esc(it.heat)] : null, it.el != null ? ["Asansör", it.el ? "var" : "yok"] : null, it.age ? ["Bina yaşı", esc(it.age)] : null,
+    it.aid ? ["Aidat", esc(TL(it.aid))] : null, it.m2n ? ["Net m²", esc(it.m2n)] : null, (it.dup || []).length ? ["Muhtemel kopyası", esc(it.dup.join(", "))] : null,
   ].filter(Boolean);
-  const links = [];
+  const links = [`<a href="${esc(safeUrl(it.url))}" target="_blank" rel="noopener noreferrer">İlana git ↗</a>`];
   if (it.lat && it.lon) {
     links.push(`<a href="https://www.google.com/maps?q=${it.lat},${it.lon}" target="_blank" rel="noopener noreferrer">Haritada aç</a>`);
     if (st) links.push(`<a href="https://www.google.com/maps/dir/?api=1&origin=${it.lat},${it.lon}&destination=${st.lat},${st.lon}&travelmode=walking" target="_blank" rel="noopener noreferrer">${esc(st.name)} durağına yürüyüş</a>`);
   }
   return `<div class="detail">${it.desc ? `<div class="desc">${esc(it.desc)}${it.desc.length >= 400 ? "…" : ""}</div>` : ""}
-    <dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl>
-    ${links.length ? `<div class="acts">${links.join("")}</div>` : ""}</div>`;
+    <dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl><div class="acts">${links.join("")}</div></div>`;
 }
 function card(it) {
   const ks = tkeys(), cm = it.cm || {};
-  const badges = [];
-  if (ageHours(it.fs) <= 24) badges.push(`<span class="b new">YENİ</span>`);
-  if (it.pp) badges.push(`<span class="b drop">↓ ${esc(TL(it.pp - it.p))}</span>`);
-  if (it.tier === "pazarlikla") badges.push(`<span class="b nego">pazarlıkla</span>`);
-  if (!it.ok) badges.push(`<span class="b out">kriter dışı</span>`);
-  const spec = [it.r === "1+0" ? "Stüdyo" : it.r, it.m2 ? `${it.m2} m²${it.m2n ? ` (net ${it.m2n})` : ""}` : null, it.fl,
-    it.age && it.age !== "0" ? `bina ${it.age}` : null, it.aid ? `aidat ${NF.format(it.aid)}` : null, it.el === true ? "asansörlü" : null].filter(Boolean).map(esc).join(" · ");
-  const walk = it.v && it.wm != null ? `🚶 <b>${it.wm} dk</b> (${NF.format(it.dm)} m)` : `<span title="İlanda konum yok; mahallenin durağı varsayıldı">mesafe doğrulanmadı</span>`;
+  const isFav = favs.has(it.id), isHid = isHidden(it), open = openDetails.has(it.id);
+  const mt = [];
+  if (ageHours(it.fs) <= 24) mt.push(`<span class="mb new">YENİ</span>`);
+  if (it.pp) mt.push(`<span class="mb drop">↓ ${esc(kTL(it.pp - it.p))} TL</span>`);
+  const tier = it.tier === "pazarlikla" ? `<span class="tier">pazarlıkla</span>` : (!it.ok ? `<span class="tier out">kriter dışı</span>` : "");
+  const priceBar = `<div class="mprice"><span class="p">${esc(TL(it.p))}</span>${it.pp ? `<s>${esc(TL(it.pp))}</s>` : ""}${tier}</div>`;
+  const media = it.img
+    ? `<div class="media"><img src="${esc(it.img)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('noimg');this.remove()">`
+    : `<div class="media noimg"><div class="ph"><b>${esc((it.r || "").replace("1+0", "Stüdyo") || "—")}</b>fotoğraf yok</div>`;
+  const specs = [it.r === "1+0" ? "Stüdyo" : it.r, it.m2 ? `${it.m2} m²` : null, it.fl, it.age && it.age !== "0" ? `bina ${it.age}` : null, it.aid ? `aidat ${kTL(it.aid)}` : null]
+    .filter(Boolean).map((s) => `<span class="spec">${esc(s)}</span>`).join("");
+  const walk = it.v && it.wm != null ? `<span class="walk">🚶 ${it.wm} dk</span>` : `<span class="walk unv" title="İlanda konum yok; mahallenin durağı varsayıldı">konum yok</span>`;
   const com = ks.filter((k) => cm[k] != null).map((k) => `${esc((D.targets.find((t) => (t.short || t.name) === k) || {}).name || k)} <b>${it.v ? "" : "~"}${cm[k]} dk</b>`).join(" · ");
   const tags = [`<span class="tag f-${esc(it.fur)}">${esc(D.fur_labels[it.fur] || it.fur)}</span>`];
   const incTxt = { hepsi: "her şey dahil", faturalar: "faturalar dahil", aidat: "aidat dahil", internet: "internet dahil" };
   for (const i of it.inc || []) tags.push(`<span class="tag inc">${esc(incTxt[i] || i)}</span>`);
-  for (const f of it.fg) if (!["mesafe_dogrulanmadi", "esya_belirsiz", "pazarlikla"].includes(f)) tags.push(`<span class="tag warn">⚠ ${esc(D.flag_labels[f] || f)}</span>`);
+  const warn = it.fg.filter((f) => !["mesafe_dogrulanmadi", "esya_belirsiz", "pazarlikla"].includes(f));
+  for (const f of warn.slice(0, 3)) tags.push(`<span class="tag warn">⚠ ${esc(D.flag_labels[f] || f)}</span>`);
+  if (warn.length > 3) tags.push(`<span class="tag" title="${esc(warn.slice(3).map((f) => D.flag_labels[f] || f).join(", "))}">+${warn.length - 3}</span>`);
   if ((it.dup || []).length) tags.push(`<span class="tag" title="${esc(it.dup.join(", "))}">kopya olabilir</span>`);
-  const isFav = favs.has(it.id), isHid = isHidden(it), open = openDetails.has(it.id);
-  return `<article class="card${isFav ? " fav" : ""}${isHid ? " dim" : ""}" data-id="${esc(it.id)}">
-    <div class="ctop"><div class="price">${esc(TL(it.p))}${it.pp ? `<s>${esc(TL(it.pp))}</s>` : ""}</div><div class="badges">${badges.join("")}</div></div>
-    <a class="ttl" href="${esc(safeUrl(it.url))}" target="_blank" rel="noopener noreferrer">${esc(it.t)}</a>
-    <div class="spec">${spec || "&nbsp;"}</div>
-    <div class="loc">📍 ${esc(it.d || "?")} → <b>${esc(it.st || "durak belirsiz")}</b> · ${walk}</div>
-    ${com ? `<div class="com">🚇 ${com}</div>` : ""}
-    <div class="tags">${tags.join("")}</div>
-    <div class="foot">${esc(it.src)}${it.of ? " · " + esc(it.of) : ""} · ilk görülme ${esc(ago(it.fs))}</div>
-    <div class="acts"><button type="button" data-act="fav" aria-pressed="${isFav}">${isFav ? "★ Favori" : "☆ Favori"}</button><button type="button" data-act="hide" aria-pressed="${isHid}">${isHid ? "Göster" : "Gizle"}</button><button type="button" data-act="detail" aria-expanded="${open}">${open ? "Detayı kapat" : "Detay"}</button></div>
+  return `<article class="card${isHid ? " dim" : ""}" data-id="${esc(it.id)}">
+    ${media}<div class="mtop">${mt.join("")}</div>
+      <button class="heart" type="button" data-act="fav" aria-pressed="${isFav}" aria-label="${isFav ? "Favorilerden çıkar" : "Favorilere ekle"}">${ICON_HEART}</button>${priceBar}</div>
+    <div class="cbody">
+      <a class="ttl" href="${esc(safeUrl(it.url))}" target="_blank" rel="noopener noreferrer">${esc(it.t)}</a>
+      <div class="specs">${specs}</div>
+      <div class="loc">${esc(it.d || "?")} → <b>${esc(it.st || "durak belirsiz")}</b> ${walk}</div>
+      ${com ? `<div class="com">🚇 ${com}</div>` : ""}
+      <div class="tags">${tags.join("")}</div>
+    </div>
+    <div class="cfoot"><span class="src"><i class="sdot ${SRC_SHORT[it.src] || ""}"></i><b>${esc(it.src)}</b>${it.of ? " · " + esc(it.of) : ""} · ${esc(ago(it.fs))}</span>
+      <span class="acts"><button type="button" data-act="detail" aria-expanded="${open}">${open ? "Kapat" : "Detay"}</button><button type="button" data-act="hide" aria-pressed="${isHid}">${isHid ? "Göster" : "Gizle"}</button></span></div>
     ${open ? detailHtml(it) : ""}
   </article>`;
 }
@@ -666,183 +865,156 @@ function card(it) {
 /* ---------------- görünümler ---------------- */
 let map = null, mapLayer = null, leafletLoading = null;
 function loadLeaflet() {
-  if (window.L) return Promise.resolve();
-  if (leafletLoading) return leafletLoading;
+  if (window.L) return Promise.resolve(); if (leafletLoading) return leafletLoading;
   leafletLoading = new Promise((res, rej) => {
     const css = document.createElement("link"); css.rel = "stylesheet"; css.href = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"; document.head.appendChild(css);
     const js = document.createElement("script"); js.src = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"; js.onload = res; js.onerror = rej; document.head.appendChild(js);
   });
   return leafletLoading;
 }
+function cssVar(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
 function renderMap(list) {
   const res = $("#results");
-  if (!$("#map")) { res.innerHTML = `<div id="map" role="region" aria-label="Harita"></div><p class="small" id="mapnote"></p>`; map = null; }
+  if (!$("#map")) {
+    res.innerHTML = `<div id="map" role="region" aria-label="Harita"></div>
+      <div class="maplegend"><span><i style="background:${cssVar("--good")}"></i>Uygun</span><span><i style="background:${cssVar("--warn")}"></i>Pazarlıkla</span><span><i style="background:#8f8d86"></i>Kriter dışı</span><span><i style="background:${cssVar("--heart")}"></i>Favori</span><span><i style="background:${cssVar("--fg")}"></i>M2 durağı (1 km halka)</span></div>
+      <p class="small" id="mapnote"></p>`; map = null;
+  }
   const withPos = list.filter((i) => i.lat && i.lon);
   $("#mapnote").textContent = `${withPos.length} ilan haritada · ${list.length - withPos.length} ilanın konumu yok (Liste görünümünde).`;
   loadLeaflet().then(() => {
+    const ink = cssVar("--fg") || "#111";
     if (!map) {
       map = L.map("map", { scrollWheelZoom: true });
       map.fitBounds(L.latLngBounds(D.line.map((s) => [s.lat, s.lon])), { padding: [30, 30] });
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap" }).addTo(map);
-      L.polyline(D.line.map((s) => [s.lat, s.lon]), { color: "#c2410c", weight: 5, opacity: .7 }).addTo(map);
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", { maxZoom: 19, subdomains: "abcd", attribution: "© OpenStreetMap, © CARTO" }).addTo(map);
+      L.polyline(D.line.map((s) => [s.lat, s.lon]), { color: ink, weight: 4, opacity: .8 }).addTo(map);
       for (const s of D.line) {
-        L.circle([s.lat, s.lon], { radius: D.max_walk_m || 1000, color: "#c2410c", weight: 1, fillOpacity: .04, interactive: false }).addTo(map);
-        L.circleMarker([s.lat, s.lon], { radius: 6, color: "#fff", weight: 2, fillColor: "#c2410c", fillOpacity: 1 }).bindTooltip(s.name).addTo(map);
+        L.circle([s.lat, s.lon], { radius: D.max_walk_m || 1000, color: ink, weight: 1, opacity: .35, fillOpacity: .03, interactive: false }).addTo(map);
+        L.circleMarker([s.lat, s.lon], { radius: 6, color: "#fff", weight: 2, fillColor: ink, fillOpacity: 1 }).bindTooltip(s.name).addTo(map);
       }
     }
-    if (mapLayer) mapLayer.remove();
-    mapLayer = L.layerGroup().addTo(map);
+    if (mapLayer) mapLayer.remove(); mapLayer = L.layerGroup().addTo(map);
     for (const it of withPos) {
-      const col = favs.has(it.id) ? "#c2410c" : it.tier === "uygun" ? "#15803d" : it.tier === "pazarlikla" ? "#ca8a04" : "#6b7280";
-      L.circleMarker([it.lat, it.lon], { radius: 7, color: "#fff", weight: 1.5, fillColor: col, fillOpacity: .95 })
-        .bindPopup(`<b>${esc(TL(it.p))}</b> · ${esc(it.r || "")} · ${esc(it.m2 ? it.m2 + " m²" : "")}<br><a href="${esc(safeUrl(it.url))}" target="_blank" rel="noopener noreferrer">${esc(it.t)}</a><br>${esc(it.st || "")}${it.wm != null ? " · " + it.wm + " dk yürüme" : ""}`)
+      const col = favs.has(it.id) ? cssVar("--heart") : it.tier === "uygun" ? cssVar("--good") : it.tier === "pazarlikla" ? cssVar("--warn") : "#8f8d86";
+      const img = it.img ? `<img src="${esc(it.img)}" alt="" referrerpolicy="no-referrer" style="width:220px;height:140px;object-fit:cover;border-radius:8px;display:block;margin-bottom:6px">` : "";
+      L.circleMarker([it.lat, it.lon], { radius: 7, color: "#fff", weight: 2, fillColor: col, fillOpacity: 1 })
+        .bindPopup(`${img}<b>${esc(TL(it.p))}</b> · ${esc(it.r || "")}${it.m2 ? " · " + it.m2 + " m²" : ""}<br><a href="${esc(safeUrl(it.url))}" target="_blank" rel="noopener noreferrer">${esc(it.t)}</a><br><span style="color:#666">${esc(it.src)} · ${esc(it.st || "")}${it.wm != null ? " · " + it.wm + " dk yürüme" : ""}</span>`, { maxWidth: 240 })
         .addTo(mapLayer);
     }
-    setTimeout(() => map.invalidateSize(), 50);
+    setTimeout(() => map.invalidateSize(), 60);
   }).catch(() => { $("#map").innerHTML = `<p class="empty">Harita kütüphanesi yüklenemedi (internet bağlantısını kontrol edin).</p>`; });
 }
 function renderResults(list) {
   const res = $("#results");
   if (S.view === "map") { renderMap(list); return; }
   map = null; mapLayer = null;
-  if (!list.length) { res.innerHTML = `<div class="empty">Bu filtrelerle ilan yok. <button class="linkbtn" id="clr" type="button">Filtreleri gevşet</button></div>`; $("#clr").onclick = () => { const v = S.view; S = DEF(); S.view = v; renderAll(); }; return; }
+  if (!list.length) { res.innerHTML = `<div class="empty">Bu filtrelerle ilan yok.<br><button class="linkbtn" id="clr" type="button">Filtreleri temizle</button></div>`; $("#clr").onclick = () => { const v = S.view; S = DEF(); S.view = v; renderAll(); }; return; }
   if (S.view === "list") {
     const shown = list.slice(0, visibleLimit);
-    res.innerHTML = `<div class="cards">${shown.map(card).join("")}</div>` + (list.length > shown.length ? `<button class="chip more" id="more" type="button">+${list.length - shown.length} ilan daha göster</button>` : "");
+    res.innerHTML = `<div class="cards">${shown.map(card).join("")}</div>` + (list.length > shown.length ? `<button class="btn more" id="more" type="button">+${list.length - shown.length} ilan daha</button>` : "");
   } else {
-    const groups = {};
-    for (const it of list) (groups[it.st || "?"] ||= []).push(it);
+    const groups = {}; for (const it of list) (groups[it.st || "?"] ||= []).push(it);
     const order = D.line.map((s) => s.name).concat(["?"]), ks = tkeys();
+    const all = list.map((i) => i.p).filter(Boolean);
+    STRIP_SCALE = all.length ? { min: Math.min(...all, D.budget), max: Math.max(...all, D.budget) } : null;
     let html = "";
     for (const name of order) {
       const arr = groups[name]; if (!arr) continue;
       const prices = arr.map((i) => i.p).filter(Boolean);
       const stCom = ks.map((k) => { const t = D.targets.find((x) => (x.short || x.name) === k); const own = arr.filter((i) => i.cm && i.cm[k] != null).map((i) => i.cm[k]); return own.length ? `${esc(t.name)} ~${median(own)} dk` : ""; }).filter(Boolean).join(" · ");
-      html += `<section class="group"><div class="ghead"><h2>${esc(name === "?" ? "Durağı belirsiz" : name)}</h2>
-        <span class="gstat">${arr.length} ilan · en ucuz ${esc(TL(Math.min(...prices)))} · medyan ${esc(TL(median(prices)))}${stCom ? " · " + stCom : ""}</span></div>
+      html += `<section class="group"><div class="ghead"><div><h2>${esc(name === "?" ? "Durağı belirsiz" : name)}</h2>
+        <div class="gstat">${arr.length} ilan · en ucuz ${esc(TL(Math.min(...prices)))} · medyan ${esc(TL(median(prices)))}${stCom ? " · " + stCom : ""}</div></div>
+        ${prices.length > 1 ? stripSvg(arr, name) : "<div></div>"}</div>
         <div class="cards">${arr.map(card).join("")}</div></section>`;
     }
     res.innerHTML = html;
+    bindStrips(groups);
   }
-  const more = $("#more"); if (more) more.onclick = () => { visibleLimit += 120; renderResults(list); };
+  const more = $("#more"); if (more) more.onclick = () => { visibleLimit += 90; renderResults(list); };
 }
 
-/* ---------------- ayarlar sekmesi ---------------- */
+/* ---------------- ayarlar ---------------- */
 function pickSettings(src) {
-  const keys = ["budget", "budget_tolerance_pct", "rooms_allowed", "furnished_accept", "include_unknown_furnished", "max_walk_m",
-    "walk_tolerance_m", "exclude_flags", "notify_removed", "notify_stations", "disabled_neighborhoods"];
+  const keys = ["budget", "budget_tolerance_pct", "rooms_allowed", "furnished_accept", "include_unknown_furnished", "max_walk_m", "walk_tolerance_m", "exclude_flags", "notify_removed", "notify_stations", "disabled_neighborhoods"];
   const o = {}; for (const k of keys) if (src && k in src) o[k] = JSON.parse(JSON.stringify(src[k])); return o;
 }
-function settingsPayload() {
-  const o = pickSettings(SET);
-  o.favorites = [...favs];
-  o.hidden = hidMap;
-  return o;
-}
+function settingsPayload() { const o = pickSettings(SET); o.favorites = [...favs]; o.hidden = hidMap; return o; }
 function renderSettings() {
-  const box = $("#ayar"); const s = SET; const flagKeys = D.flag_keys || [];
-  const lab = (f) => (D.flag_labels && D.flag_labels[f]) || f;
+  const box = $("#ayar"), s = SET, flagKeys = D.flag_keys || [], lab = (f) => (D.flag_labels && D.flag_labels[f]) || f;
   const disabled = new Set(s.disabled_neighborhoods || []);
-  box.innerHTML = `
-  ${connected() ? "" : `<div class="banner warn">Ayarları kaydetmek için sağ üstten <b>GitHub'a bağlan</b>. Bağlanmadan da değerleri görebilir, deneyebilirsin.</div>`}
-  ${D.settings.updated ? `<p class="small">Son kaydedilen site ayarı: ${esc(fmtWhen(D.settings.updated))}. Değişiklikler kayıttan sonraki çalıştırmada uygulanır; "Kaydet ve uygula" bunu hemen başlatır (~2 dk).</p>` : `<p class="small">Bu ayarlar bildirimleri ve "kriterlere uyan" listesini belirler. "Kaydet ve uygula" GitHub'da kısa bir çalıştırma başlatır (~2 dk), sayfa kendiliğinden yenilenir.</p>`}
+  box.innerHTML = `<h1>Ayarlar</h1>
+  <p class="small">Bildirimleri ve "kriterlere uyan" listesini belirler. "Kaydet ve uygula" GitHub'da kısa bir çalıştırma başlatır (~1 dk), sayfa kendiliğinden yenilenir.${D.settings.updated ? ` Son kayıt: ${esc(fmtWhen(D.settings.updated))}.` : ""}</p>
+  ${connected() ? "" : `<div class="banner warn">Kaydetmek için sağ üstten <b>GitHub'a bağlan</b>. Bağlanmadan da değerleri görebilir, deneyebilirsin.</div>`}
   <div class="panel"><h2>Bütçe</h2><span class="small">Bu tutara kadar "uygun", pazarlık payına kadar "pazarlıkla" sayılır.</span>
-    <div class="sgrid">
-      <div><div class="small">Aylık kira tavanı (TL)</div><input class="num" style="max-width:180px" id="s-budget" type="number" inputmode="numeric" step="500" min="1000" value="${esc(s.budget)}"></div>
-      <div><div class="small">Pazarlık payı (%)</div><input class="num" id="s-tol" type="number" inputmode="numeric" step="1" min="0" max="50" value="${esc(s.budget_tolerance_pct)}"></div>
-    </div></div>
-  <div class="panel"><h2>Daire</h2><span class="small">Hiç oda seçilmezse her oda tipi kabul.</span>
-    <div class="sgrid"><div id="s-rooms"></div><div id="s-fur"></div></div></div>
-  <div class="panel"><h2>Metroya yürüme</h2><span class="small">Konumu bilinen ilanlarda en yakın M2 durağına kuş uçuşu mesafe. Sınırın üstü "sınırda" (bildirilir), sınır + tolerans üstü "uzak" (bildirilmez).</span>
-    <div class="sgrid">
-      <div><div class="small">Sınır (m)</div><input class="num" id="s-walk" type="number" inputmode="numeric" step="50" min="200" max="5000" value="${esc(s.max_walk_m)}"> <span class="small" id="s-walkmin"></span></div>
-      <div><div class="small">Tolerans (m)</div><input class="num" id="s-walktol" type="number" inputmode="numeric" step="50" min="0" max="3000" value="${esc(s.walk_tolerance_m)}"></div>
-    </div></div>
+    <div class="sgrid"><div><div class="small">Aylık kira tavanı (TL)</div><input class="num" style="max-width:200px" id="s-budget" type="number" inputmode="numeric" step="500" min="1000" value="${esc(s.budget)}"></div>
+      <div><div class="small">Pazarlık payı (%)</div><input class="num" style="max-width:120px" id="s-tol" type="number" inputmode="numeric" step="1" min="0" max="50" value="${esc(s.budget_tolerance_pct)}"></div></div></div>
+  <div class="panel"><h2>Daire</h2><span class="small">Hiç oda seçilmezse her oda tipi kabul.</span><div class="sgrid"><div id="s-rooms"></div><div id="s-fur"></div></div></div>
+  <div class="panel"><h2>Metroya yürüme</h2><span class="small">En yakın M2 durağına kuş uçuşu. Sınırın üstü "sınırda" (bildirilir), sınır + tolerans üstü "uzak" (bildirilmez).</span>
+    <div class="sgrid"><div><div class="small">Sınır (m)</div><input class="num" style="max-width:140px" id="s-walk" type="number" inputmode="numeric" step="50" min="200" max="5000" value="${esc(s.max_walk_m)}"> <span class="small" id="s-walkmin"></span></div>
+      <div><div class="small">Tolerans (m)</div><input class="num" style="max-width:140px" id="s-walktol" type="number" inputmode="numeric" step="50" min="0" max="3000" value="${esc(s.walk_tolerance_m)}"></div></div></div>
   <div class="panel"><h2>Bildirim</h2><span class="small">Telegram'a hangi ilanların gideceği. Favori ilanların fiyat düşüşü ve yayından kalkması her zaman bildirilir.</span>
     <div class="sgrid"><div id="s-excl"></div><div id="s-stations"></div></div>
-    <label class="ck" style="margin-top:10px"><input type="checkbox" id="s-removed" ${s.notify_removed ? "checked" : ""}> Daha önce bildirilen ilan yayından kalkınca haber ver</label></div>
-  <div class="panel"><h2>Mahalleler</h2><span class="small">İşaretsiz mahalleler taranmaz (hepsiemlak ve emlakjet). sahibinden kayıtlı aramasını sahibinden.com'dan düzenle.</span>
-    <div class="nblist">${(D.neighborhoods || []).map((n) => `<label class="ck"><input type="checkbox" data-nb="${esc(n.key)}" ${disabled.has(n.key) ? "" : "checked"}> ${esc(n.name)} <span class="small" style="flex-basis:auto;padding:0">→ ${esc(n.station || "?")}</span></label>`).join("")}</div></div>
-  <div class="savebar">
-    <button class="btn primary" type="button" id="s-apply" ${connected() ? "" : "disabled"}>Kaydet ve uygula</button>
-    <button class="btn" type="button" id="s-save" ${connected() ? "" : "disabled"}>Yalnız kaydet</button>
-    <button class="btn" type="button" id="s-reset">Değişiklikleri geri al</button>
-    <span class="small" id="s-msg"></span>
-  </div>`;
-  const rooms = chipGroup("Oda tipleri", ROOMS_SET, () => s.rooms_allowed || [], (v) => { s.rooms_allowed = v; });
-  $("#s-rooms").replaceWith(rooms);
-  const fur = chipGroup("Kabul edilen eşya durumu", FUR, () => s.furnished_accept || [], (v) => { s.furnished_accept = v; s.include_unknown_furnished = v.includes("unknown"); });
-  $("#s-fur").replaceWith(fur);
-  const ex = chipGroup("Bildirilmeyecek uyarılar", flagKeys.map((f) => [f, lab(f)]), () => s.exclude_flags || [], (v) => { s.exclude_flags = v; });
-  $("#s-excl").replaceWith(ex);
-  const sts = chipGroup("Yalnız bu duraklar (hiçbiri = hepsi)", D.line.map((x) => [x.name, x.name.replace("-Danıştay", "")]), () => s.notify_stations || [], (v) => { s.notify_stations = v; });
-  $("#s-stations").replaceWith(sts);
+    <label class="ck" style="margin-top:12px"><input type="checkbox" id="s-removed" ${s.notify_removed ? "checked" : ""}> Daha önce bildirilen ilan yayından kalkınca haber ver</label></div>
+  <div class="panel"><h2>Mahalleler</h2><span class="small">İşaretsiz mahalleler taranmaz (hepsiemlak, emlakjet). sahibinden kayıtlı aramasını sahibinden.com'dan düzenle.</span>
+    <div class="nblist">${(D.neighborhoods || []).map((n) => `<label class="ck"><input type="checkbox" data-nb="${esc(n.key)}" ${disabled.has(n.key) ? "" : "checked"}> ${esc(n.name)} <span class="muted" style="font-size:12px">→ ${esc(n.station || "?")}</span></label>`).join("")}</div></div>
+  <div class="savebar"><button class="btn primary" type="button" id="s-apply" ${connected() ? "" : "disabled"}>Kaydet ve uygula</button>
+    <button class="btn" type="button" id="s-save" ${connected() ? "" : "disabled"}>Yalnız kaydet</button><button class="btn" type="button" id="s-reset">Geri al</button><span class="small" id="s-msg"></span></div>`;
+  $("#s-rooms").replaceWith(chipGroup("Oda tipleri", ROOMS_SET, () => s.rooms_allowed || [], (v) => { s.rooms_allowed = v; }));
+  $("#s-fur").replaceWith(chipGroup("Kabul edilen eşya durumu", FUR, () => s.furnished_accept || [], (v) => { s.furnished_accept = v; s.include_unknown_furnished = v.includes("unknown"); }));
+  $("#s-excl").replaceWith(chipGroup("Bildirilmeyecek uyarılar", flagKeys.map((f) => [f, lab(f)]), () => s.exclude_flags || [], (v) => { s.exclude_flags = v; }));
+  $("#s-stations").replaceWith(chipGroup("Yalnız bu duraklar (hiçbiri = hepsi)", D.line.map((x) => [x.name, x.name.replace("-Danıştay", "")]), () => s.notify_stations || [], (v) => { s.notify_stations = v; }));
   const walkMin = () => { const el = $("#s-walkmin"); if (el) el.textContent = `≈ ${Math.round((+$("#s-walk").value || 0) * 1.25 / 80)} dk yürüme`; };
   $("#s-budget").oninput = (e) => { s.budget = +e.target.value || s.budget; };
   $("#s-tol").oninput = (e) => { s.budget_tolerance_pct = +e.target.value || 0; };
   $("#s-walk").oninput = (e) => { s.max_walk_m = +e.target.value || s.max_walk_m; walkMin(); };
   $("#s-walktol").oninput = (e) => { s.walk_tolerance_m = +e.target.value || 0; };
   $("#s-removed").onchange = (e) => { s.notify_removed = e.target.checked; };
-  box.querySelectorAll("[data-nb]").forEach((cb) => cb.addEventListener("change", () => {
-    const set = new Set(s.disabled_neighborhoods || []); cb.checked ? set.delete(cb.dataset.nb) : set.add(cb.dataset.nb); s.disabled_neighborhoods = [...set];
-  }));
+  box.querySelectorAll("[data-nb]").forEach((cb) => cb.addEventListener("change", () => { const set = new Set(s.disabled_neighborhoods || []); cb.checked ? set.delete(cb.dataset.nb) : set.add(cb.dataset.nb); s.disabled_neighborhoods = [...set]; }));
   $("#s-reset").onclick = () => { SET = pickSettings(D.settings); renderSettings(); toast("Geri alındı"); };
-  $("#s-save").onclick = () => saveSettings(false);
-  $("#s-apply").onclick = () => saveSettings(true);
+  $("#s-save").onclick = () => saveSettings(false); $("#s-apply").onclick = () => saveSettings(true);
   walkMin();
 }
 async function saveSettings(apply) {
   if (!connected()) { openConn(); return; }
-  const msg = $("#s-msg"); msg.textContent = "Kaydediliyor…";
-  $("#s-apply").disabled = $("#s-save").disabled = true;
+  const msg = $("#s-msg"); msg.textContent = "Kaydediliyor…"; $("#s-apply").disabled = $("#s-save").disabled = true;
   try {
     if (!SET.furnished_accept || !SET.furnished_accept.length) throw new Error("en az bir eşya durumu seçilmeli");
     await GH.writeSettings(settingsPayload());
-    if (apply) { await GH.dispatch("none"); startPending("Ayarlar uygulanıyor"); msg.textContent = "Kaydedildi, uygulanıyor (~2 dk)."; }
-    else msg.textContent = "Kaydedildi. Bir sonraki taramada uygulanacak.";
+    if (apply) { await GH.dispatch("none"); startPending("Ayarlar uygulanıyor"); msg.textContent = "Kaydedildi, uygulanıyor (~1 dk)."; } else msg.textContent = "Kaydedildi. Bir sonraki taramada uygulanacak.";
     toast("Ayarlar kaydedildi");
   } catch (e) { msg.textContent = "Kaydedilemedi: " + e.message; }
   finally { $("#s-apply").disabled = $("#s-save").disabled = false; }
 }
 
-/* ---------------- durum sekmesi ---------------- */
-function srcCard(title, sub, st, extraHtml, level) {
-  return `<div class="scard"><h3><span>${title}</span><span class="dotst ${level}" title="${level === "ok" ? "çalışıyor" : level === "warn" ? "dikkat" : "sorun"}"></span></h3>
-    <div class="kv">${sub}</div>${st ? `<div class="kv">Son tarama: <b>${esc(fmtWhen(st.last))}</b> (${esc(ago(st.last))})</div>
-    <div class="kv">Aktif <b>${st.active}</b> ilan · uygun <b>${st.matching}</b></div>
-    ${st.errors && st.error_texts.length ? `<div class="kv">Son hata: ${esc(st.error_texts[0])}</div>` : ""}` : ""}${extraHtml || ""}</div>`;
+/* ---------------- durum ---------------- */
+function stBadge(level) { const t = { ok: "çalışıyor", warn: "dikkat", bad: "sorun" }[level]; return `<span class="st ${level}"><i></i>${t}</span>`; }
+function srcCard(key, title, sub, st, extra, level) {
+  return `<div class="scard"><h3><i class="sdot ${SRC_SHORT[key] || ""}"></i>${title}${stBadge(level)}</h3><div class="kv">${sub}</div>
+    ${st ? `<div class="kv">Son işlenen tarama: <b>${esc(fmtWhen(st.last_ok || st.last))}</b> (${esc(ago(st.last_ok || st.last))})</div>
+      <div class="kv">Aktif <b>${st.active}</b> ilan · uygun <b>${st.matching}</b></div>
+      ${st.errors && st.error_texts.length ? `<div class="kv">Son not: ${esc(st.error_texts[0])}</div>` : ""}` : ""}${extra || ""}</div>`;
 }
 function renderStatus() {
-  const box = $("#durum"); const st = D.status || {};
-  const feedAge = D.feed_generated ? ageHours(D.feed_generated) : null;
-  const feedOk = feedAge != null && feedAge <= (D.feed_max_age_hours || 3);
-  const ejLevel = st.emlakjet ? (st.emlakjet.errors > 2 || ageHours(st.emlakjet.last) > 5 ? "warn" : "ok") : "bad";
+  const box = $("#durum"), st = D.status || {}, fg = D.feed_generated || {};
+  const feedAge = (k) => (fg[k] ? ageHours(fg[k]) : null);
+  const feedOk = (k) => feedAge(k) != null && feedAge(k) <= (D.feed_max_age_hours || 3);
+  const ejLevel = st.emlakjet ? (ageHours(st.emlakjet.last) > 5 ? "warn" : "ok") : "bad";
+  const feedLine = (k) => `<div class="kv">Son PC gönderimi: <b>${esc(fg[k] ? fmtWhen(fg[k]) : "yok")}</b>${fg[k] ? " (" + esc(ago(fg[k])) + ")" : ""}</div>${feedOk(k) ? "" : `<div class="kv">PC kapalıyken güncellenmez; mevcut ilanlar sitede kalır.</div>`}`;
   const tg = D.telegram_bot ? `<a href="https://t.me/${esc(D.telegram_bot)}" target="_blank" rel="noopener noreferrer">@${esc(D.telegram_bot)}</a>` : "Telegram botu";
-  box.innerHTML = `
-  <div class="panel"><h2>Genel</h2>
-    <div class="kv">Son çalıştırma: <b>${esc(fmtWhen(D.last_scan || D.generated))}</b> · sayfa üretildi ${esc(ago(D.generated))}</div>
-    <div class="kv">Zamanlama: her <b>${D.schedule ? D.schedule.every_hours : 2} saatte</b> bir tarama, her gün <b>${esc(D.schedule ? D.schedule.summary : "09:00")}</b> özet · bildirimler ${tg}</div>
-    <div class="kv">Kriterlere uyan aktif ilan: <b>${D.items.filter((i) => i.ok && !isHidden(i)).length}</b> · son 24 saatte yeni uygun: <b>${D.new24 ?? "?"}</b> · bütçe <b>${esc(TL(D.budget))}</b></div>
-    <div class="row" style="margin-top:12px">
-      <button class="btn primary" type="button" id="d-scan">Şimdi tara</button>
-      <button class="btn" type="button" id="d-refresh">Sayfayı yenile</button>
-      <a class="btn" href="https://github.com/${esc(GH.repo())}/actions" target="_blank" rel="noopener noreferrer">GitHub Actions</a>
-    </div>
+  box.innerHTML = `<h1>Durum</h1>
+  <div class="panel"><div class="kv">Sayfa üretildi <b>${esc(fmtWhen(D.generated))}</b> (${esc(ago(D.generated))}) · her <b>${D.schedule ? D.schedule.every_hours : 2} saatte</b> bir tarama, her gün <b>${esc(D.schedule ? D.schedule.summary : "09:00")}</b> özet · bildirimler ${tg}</div>
+    <div class="kv">Kriterlere uyan aktif ilan <b>${D.items.filter((i) => i.ok && !isHidden(i)).length}</b> · son 24 saatte yeni uygun <b>${D.new24 ?? "?"}</b> · bütçe <b>${esc(TL(D.budget))}</b></div>
+    <div class="row" style="margin-top:14px"><button class="btn primary" type="button" id="d-scan">Şimdi tara</button><button class="btn" type="button" id="d-refresh">Sayfayı yenile</button>
+      <a class="btn" href="https://github.com/${esc(GH.repo())}/actions" target="_blank" rel="noopener noreferrer">GitHub Actions ↗</a></div>
     <p class="small" id="d-msg">${connected() ? "" : "Tarama başlatmak için sağ üstten GitHub'a bağlan."}</p></div>
   <div class="scards">
-    ${srcCard("emlakjet", "GitHub'da, her 2 saatte bir", st.emlakjet, "", ejLevel)}
-    ${srcCard("hepsiemlak", "PC açıkken, Görev Zamanlayıcı ile 2 saatte bir → GitHub'a besleme", st.hepsiemlak,
-      `<div class="kv">Son PC beslemesi: <b>${esc(D.feed_generated ? fmtWhen(D.feed_generated) : "yok")}</b>${D.feed_generated ? " (" + esc(ago(D.feed_generated)) + ")" : ""}</div>
-       ${feedOk ? "" : `<div class="kv">PC kapalıyken hepsiemlak güncellenmez; mevcut ilanlar sayfada kalır.</div>`}`, feedOk ? "ok" : "warn")}
-    ${srcCard("sahibinden", "sahibinden'in kendi kayıtlı araması: <b>M2 eşyalı 39bin altı</b> — bildirimler sahibinden uygulamasına ve e-postana gelir", st.sahibinden || null,
-      `<div class="kv"><a href="https://banaozel.sahibinden.com/favori-aramalarim" target="_blank" rel="noopener noreferrer">Favori aramalarımı aç</a></div>`, "ok")}
+    ${srcCard("emlakjet", "emlakjet", "GitHub'da, her 2 saatte bir (PC'den bağımsız)", st.emlakjet, "", ejLevel)}
+    ${srcCard("hepsiemlak", "hepsiemlak", "PC açıkken 2 saatte bir → GitHub (Cloudflare GitHub'ı engelliyor)", st.hepsiemlak, feedLine("hepsiemlak"), feedOk("hepsiemlak") ? "ok" : "warn")}
+    ${srcCard("sahibinden", "sahibinden", "PC açıkken, giriş yapılmış Chrome profilinle görünmez tarama → GitHub · ayrıca kayıtlı arama bildirimi uygulamada", st.sahibinden, feedLine("sahibinden") + `<div class="kv"><a href="https://banaozel.sahibinden.com/favori-aramalarim" target="_blank" rel="noopener noreferrer">Kayıtlı aramalarım ↗</a></div>`, feedOk("sahibinden") ? "ok" : (fg.sahibinden ? "warn" : "bad"))}
   </div>
   <div class="panel"><h2>Son çalıştırmalar</h2><div class="runs-wrap" id="d-runs"><p class="small">Yükleniyor…</p></div></div>`;
-  $("#d-scan").onclick = async () => {
-    if (!connected()) { openConn(); return; }
-    try { await GH.dispatch(""); $("#d-msg").textContent = "Tarama başlatıldı (~3-5 dk)."; startPending("Tarama sürüyor"); setTimeout(loadRuns, 4000); }
-    catch (e) { $("#d-msg").textContent = "Başlatılamadı: " + e.message; }
-  };
+  $("#d-scan").onclick = async () => { if (!connected()) { openConn(); return; } try { await GH.dispatch(""); $("#d-msg").textContent = "Tarama başlatıldı (~3-5 dk)."; startPending("Tarama sürüyor"); setTimeout(loadRuns, 4000); } catch (e) { $("#d-msg").textContent = "Başlatılamadı: " + e.message; } };
   $("#d-refresh").onclick = () => reloadData(true);
   loadRuns();
 }
@@ -851,39 +1023,34 @@ async function loadRuns() {
   try {
     const r = await GH.runs();
     const rows = (r.workflow_runs || []).map((w) => {
-      const state = w.status === "completed" ? (w.conclusion === "success" ? "✅ tamam" : w.conclusion === "cancelled" ? "⏹ iptal" : "⚠️ " + w.conclusion) : "⏳ sürüyor";
-      const ev = w.event === "schedule" ? "zamanlanmış" : w.event === "workflow_dispatch" ? "elle / PC / site" : w.event;
-      return `<tr><td>${esc(fmtWhen(w.created_at))}</td><td>${esc(ev)}</td><td>${esc(state)}</td><td><a href="${esc(safeUrl(w.html_url))}" target="_blank" rel="noopener noreferrer">kayıt</a></td></tr>`;
+      const state = w.status === "completed" ? (w.conclusion === "success" ? "✓ tamam" : w.conclusion === "cancelled" ? "iptal" : "⚠ " + w.conclusion) : "… sürüyor";
+      const ev = w.event === "schedule" ? "zamanlanmış" : w.event === "workflow_dispatch" ? "PC / site / elle" : w.event;
+      return `<tr><td>${esc(fmtWhen(w.created_at))}</td><td>${esc(ev)}</td><td>${esc(state)}</td><td><a href="${esc(safeUrl(w.html_url))}" target="_blank" rel="noopener noreferrer">kayıt ↗</a></td></tr>`;
     }).join("");
     box.innerHTML = `<table class="runs"><thead><tr><th>Zaman</th><th>Tetikleyen</th><th>Sonuç</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
   } catch (e) { box.innerHTML = `<p class="small">Çalıştırma listesi alınamadı (${esc(e.message)}).</p>`; }
 }
 
-/* ---------------- bekleyen işlem (yeni veri gelince yenile) ---------------- */
-function startPending(label) {
-  const until = Date.now() + 8 * 60 * 1000, base = D.generated;
-  store.set("m2k_pending", { label, until, base });
-  pollPending();
-}
+/* ---------------- bekleyen işlem ---------------- */
+function startPending(label) { store.set("m2k_pending", { label, until: Date.now() + 8 * 60 * 1000, base: D.generated }); pollPending(); }
 async function pollPending() {
   const p = store.get("m2k_pending", null), box = $("#pending");
-  if (!p || Date.now() > p.until) { store.del("m2k_pending"); box.innerHTML = ""; return; }
-  box.innerHTML = `<div class="banner info">⏳ ${esc(p.label)}… Bitince sayfa kendiliğinden yenilenecek.</div>`;
-  try {
-    const r = await fetch("data.json?t=" + Date.now(), { cache: "no-store" });
-    const d = await r.json();
-    if (d.generated !== p.base) { store.del("m2k_pending"); box.innerHTML = ""; applyData(d); toast("Yeni veriler yüklendi"); return; }
-  } catch (e) {}
+  if (!p || Date.now() > p.until) { store.del("m2k_pending"); box.hidden = true; return; }
+  box.textContent = "⏳ " + p.label + "… bitince sayfa kendiliğinden yenilenecek"; box.hidden = false;
+  try { const r = await fetch("data.json?t=" + Date.now(), { cache: "no-store" }); const d = await r.json(); if (d.generated !== p.base) { store.del("m2k_pending"); box.hidden = true; applyData(d); toast("Yeni veriler yüklendi"); return; } } catch (e) {}
   setTimeout(pollPending, 20000);
 }
 async function reloadData(showToast) {
+  $("#kpis").style.opacity = .5; $("#results").style.opacity = .5;   // yenilemede çerçeve korunur
   try { const r = await fetch("data.json?t=" + Date.now(), { cache: "no-store" }); applyData(await r.json()); if (showToast) toast("Güncel veriler yüklendi"); }
   catch (e) { toast("Veri alınamadı: " + e.message); }
+  finally { $("#kpis").style.opacity = ""; $("#results").style.opacity = ""; }
 }
 
 /* ---------------- ana çizim ---------------- */
 function renderTabs() {
-  for (const b of document.querySelectorAll(".tab")) b.setAttribute("aria-selected", String(b.dataset.tab === S.tab));
+  const t = S.tab === "ilan" && S.view === "map" ? "harita" : S.tab;
+  for (const b of document.querySelectorAll("[data-tab]")) b.setAttribute("aria-selected", String(b.dataset.tab === t || (b.dataset.tab === "ilan" && t === "harita" && b.closest(".nav"))));
   $("#tab-ilan").hidden = S.tab !== "ilan"; $("#tab-ayar").hidden = S.tab !== "ayar"; $("#tab-durum").hidden = S.tab !== "durum";
 }
 function renderAll(rebuildFilters = true, keepFocus = false) {
@@ -892,41 +1059,44 @@ function renderAll(rebuildFilters = true, keepFocus = false) {
   if (S.tab === "durum") { renderStatus(); return; }
   const base = D.items.filter((it) => pass(it, S, true));
   const list = base.filter((it) => pass(it, S, false)).sort(sorter(S.sort));
-  renderLine(base);
-  if (!keepFocus) buildFilters();
-  $("#fsum").textContent = filterSummary();
-  $("#count").textContent = `${list.length} ilan`;
-  $("#countsub").textContent = list.length ? `· ${list.filter((i) => i.v).length} tanesinin konumu doğrulanmış` : "";
+  renderLine(base); renderActive(); renderKpis(list);
+  if (!$("#drawer").hidden && !keepFocus) buildFilters();
+  $("#dapply").textContent = `${NF.format(list.length)} ilanı göster`;
+  $("#count").textContent = S.view === "map" ? "Harita" : `${NF.format(list.length)} ilan`;
+  $("#countsub").textContent = { rec: "önerilen sıra", price: "ucuzdan pahalıya", price_d: "pahalıdan ucuza", new: "en yeni önce", walk: "yürümesi kısa önce", c0: tdat(0) + " en kısa", c1: tdat(1) + " en kısa", cmax: "iki hedefe en yakın", m2: "büyükten küçüğe", ppm: "TL/m² düşük önce" }[S.sort] || "";
   const pbox = $("#presets"); pbox.innerHTML = "";
-  for (const [label, fn] of presets()) {
-    const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.textContent = label;
-    b.setAttribute("aria-pressed", String(presetMatches(fn))); b.onclick = () => applyPreset(fn); pbox.appendChild(b);
-  }
+  for (const [label, fn] of presets()) { const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.textContent = label; b.setAttribute("aria-pressed", String(presetMatches(fn))); b.onclick = () => applyPreset(fn); pbox.appendChild(b); }
   const ks = tkeys();
-  $("#sort").innerHTML = SORTS.filter(([k]) => (k === "c0" ? ks[0] : k === "c1" ? ks[1] : k === "cmax" ? ks.length > 1 : true))
-    .map(([k, l]) => `<option value="${k}" ${S.sort === k ? "selected" : ""}>${esc(l.replace("1. hedefe", tdat(0)).replace("2. hedefe", tdat(1)))}</option>`).join("");
+  $("#sort").innerHTML = SORTS.filter(([k]) => (k === "c0" ? ks[0] : k === "c1" ? ks[1] : k === "cmax" ? ks.length > 1 : true)).map(([k, l]) => `<option value="${k}" ${S.sort === k ? "selected" : ""}>${esc(l.replace("1. hedefe", tdat(0)).replace("2. hedefe", tdat(1)))}</option>`).join("");
   $("#views").innerHTML = VIEWS.map(([k, l]) => `<button type="button" data-view="${k}" aria-pressed="${S.view === k}">${l}</button>`).join("");
+  if ($("#q") !== document.activeElement) $("#q").value = S.q;
   renderResults(list);
 }
 
 /* ---------------- olaylar ---------------- */
 document.addEventListener("click", (e) => {
   const t = e.target.closest("[data-tab]");
-  if (t) { S.tab = t.dataset.tab; renderAll(); window.scrollTo({ top: 0 }); return; }
+  if (t) { if (t.dataset.tab === "harita") { S.tab = "ilan"; S.view = "map"; } else { S.tab = t.dataset.tab; if (t.dataset.tab === "ilan" && t.closest(".bottomnav") && S.view === "map") S.view = "st"; } renderAll(); window.scrollTo({ top: 0 }); return; }
   const v = e.target.closest("[data-view]");
-  if (v) { S.view = v.dataset.view; visibleLimit = 120; renderAll(false); return; }
+  if (v) { S.view = v.dataset.view; visibleLimit = 90; renderAll(); return; }
   const a = e.target.closest("[data-act]");
   if (a) {
     const id = a.closest(".card").dataset.id;
     if (a.dataset.act === "detail") { openDetails.has(id) ? openDetails.delete(id) : openDetails.add(id); renderAll(false, true); return; }
     if (a.dataset.act === "fav") { favs.has(id) ? favs.delete(id) : favs.add(id); store.set("m2k_favs", [...favs]); }
-    else { const it = D.items.find((x) => x.id === id); const now = !isHidden(it); hidMap[id] = now; store.set("m2k_hidmap", hidMap); }
-    pushSync();
-    renderAll(false, true);
+    else { const it = D.items.find((x) => x.id === id); hidMap[id] = !isHidden(it); store.set("m2k_hidmap", hidMap); }
+    pushSync(); renderAll(false, true);
   }
 });
+$("#q").addEventListener("input", debounce((e) => { S.q = e.target.value.trim(); visibleLimit = 90; renderAll(false, true); }, 220));
 $("#sort").addEventListener("change", (e) => { S.sort = e.target.value; renderAll(false, true); });
-$("#allst").addEventListener("click", () => { S.st = []; renderAll(false); });
+$("#allst").addEventListener("click", () => { S.st = []; renderAll(); });
+$("#openf").addEventListener("click", openDrawer);
+$("#dclose").addEventListener("click", closeDrawer);
+$("#dapply").addEventListener("click", closeDrawer);
+$("#freset").addEventListener("click", () => { const v = S.view, q = S.q; S = DEF(); S.view = v; S.q = q; buildFilters(); renderAll(false, true); });
+$("#drawer").addEventListener("click", (e) => { if (e.target.id === "drawer") closeDrawer(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("#drawer").hidden) closeDrawer(); });
 $("#connbtn").addEventListener("click", openConn);
 $("#toksave").addEventListener("click", saveToken);
 $("#tokin").addEventListener("keydown", (e) => { if (e.key === "Enter") saveToken(); });
@@ -935,33 +1105,31 @@ $("#tokdel").addEventListener("click", () => { store.del("m2k_gh"); $("#conndlg"
 window.addEventListener("hashchange", () => { const h = location.hash.slice(1); if (h !== encodeState(S)) { S = decodeState(h); renderAll(); } });
 
 /* ---------------- başlat ---------------- */
+function skeleton() {
+  $("#kpis").innerHTML = Array.from({ length: 5 }, (_, i) => `<div class="skel${i === 4 ? " tile wide" : ""}" style="height:84px"></div>`).join("");
+  $("#results").innerHTML = `<div class="cards">${Array.from({ length: 6 }, () => `<div class="skel" style="height:380px"></div>`).join("")}</div>`;
+}
 function applyData(data) {
-  D = data;
-  PRESENT = new Set(D.items.map((i) => i.id));
-  if (!connected()) {   // bağlı değilken: eşitlenmiş favorileri salt-okunur göster
-    for (const f of (D.settings && D.settings.favorites) || []) favs.add(f);
-    store.set("m2k_favs", [...favs]);
-  }
+  D = data; PRESENT = new Set(D.items.map((i) => i.id));
+  if (!connected()) { for (const f of (D.settings && D.settings.favorites) || []) favs.add(f); store.set("m2k_favs", [...favs]); }
   SET = pickSettings(D.settings || {});
-  document.title = D.title || "M2 Kiralık";
-  $("#title").textContent = D.title || "M2 Kiralık";
+  document.title = D.title || "M2 Kiralık"; $("#title").textContent = D.title || "M2 Kiralık";
   const okN = D.items.filter((i) => i.ok && !isHidden(i)).length;
-  $("#meta").textContent = `Son tarama ${fmtWhen(D.last_scan || D.generated)} · ${okN} uygun / ${D.items.length} aktif ilan · bütçe ${TL(D.budget)}`;
+  const srcN = new Set(D.items.map((i) => i.src)).size;
+  $("#meta").textContent = `${okN} uygun · ${D.items.length} aktif · ${srcN} kaynak · ${fmtWhen(D.last_scan || D.generated)}`;
   const t = D.targets || [];
   $("#note").innerHTML = "Ulaşım süreleri tahminidir: yürüme (konum yoksa ~" + (D.unknown_walk_min || 10) + " dk) + bekleme + durak başına ~" + String(D.ride_min_per_stop || 2.2).replace(".", ",") + " dk" +
     (t.filter((x) => x.note).length ? " · " + t.filter((x) => x.note).map((x) => esc(x.name + ": " + x.note)).join(" · ") : "") +
-    ". Favori ve gizledikler bu tarayıcıda saklanır; GitHub'a bağlıysan tüm cihazlarda eşitlenir ve gizlenen ilanlar bildirim üretmez.";
+    ". Fotoğraflar ilan sitelerinden gelir. Favori ve gizledikler bu tarayıcıda saklanır; GitHub'a bağlıysan tüm cihazlarda eşitlenir ve gizlenen ilanlar bildirim üretmez.";
   renderAll();
 }
+skeleton();
 fetch("data.json", { cache: "no-cache" }).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(async (data) => {
-  const h = location.hash.slice(1) || store.get("m2k_state", "");
-  S = decodeState(h);
-  $("#fbox").open = !!store.get("m2k_fopen", false);
-  $("#fbox").addEventListener("toggle", () => store.set("m2k_fopen", $("#fbox").open));
+  S = decodeState(location.hash.slice(1) || store.get("m2k_state", ""));
   applyData(data);
   if (connected()) { await pullRemote(); renderAll(); }
   pollPending();
-}).catch((err) => { $("#meta").textContent = "Veri yüklenemedi: " + err; });
+}).catch((err) => { $("#meta").textContent = "Veri yüklenemedi: " + err; $("#results").innerHTML = `<p class="empty">Veri yüklenemedi.</p>`; });
 </script>
 </body>
 </html>
