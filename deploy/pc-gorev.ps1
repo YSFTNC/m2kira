@@ -6,6 +6,9 @@ m2kira — PC görevi: hepsiemlak ve sahibinden'i PC açıkken 2 saatte bir tara
   powershell -ExecutionPolicy Bypass -File deploy\pc-gorev.ps1 -Kaldir    # kaldır
 
 Görev yalnızca oturum açıkken çalışır, pencere açmaz (pythonw), kaçırılan çalışmayı PC açılınca yapar.
+Bilgisayar uykudaysa (kapak kapalı) görev onu uyandırır, tarar, sonra Windows yeniden uyutur. Windows'un
+"uyandırma zamanlayıcılarına izin ver" ayarı şarjda açık, pilde kapalı olduğundan yalnız şarja takılıyken uyanır.
+Tam kapatılan (Kapat) bilgisayarı hiçbir şey uyandıramaz.
 Kayıt: data\m2kira.log
 #>
 param([switch]$Kaldir, [int]$Saat = 2)
@@ -27,7 +30,7 @@ if (-not (Test-Path $pyw)) { Write-Host "pythonw.exe bulunamadı" -ForegroundCol
 $action = New-ScheduledTaskAction -Execute $pyw -Argument ('"' + (Join-Path $root "main.py") + '" feed-push') -WorkingDirectory $root
 $t1 = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(10) -RepetitionInterval (New-TimeSpan -Hours $Saat) -RepetitionDuration (New-TimeSpan -Days 3650)
 $t2 = New-ScheduledTaskTrigger -AtLogOn -User "$env:USERDOMAIN\$env:USERNAME"
-$set = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `
+$set = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -WakeToRun `
         -ExecutionTimeLimit (New-TimeSpan -Minutes 90) -MultipleInstances IgnoreNew
 $pr = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -LogonType Interactive -RunLevel Limited
 Register-ScheduledTask -TaskName $name -Action $action -Trigger @($t1, $t2) -Settings $set -Principal $pr `

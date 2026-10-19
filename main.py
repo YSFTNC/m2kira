@@ -96,9 +96,12 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "feed-push":
         import json as _json
         from m2kira import feed
+        from m2kira.power import keep_awake
         feed.sync_budget_from_web(cfg, db)
         wanted = [args.only] if args.only else [s for s in feed.FEED_SOURCES if cfg.source_enabled(f"{s}_feed")]
         rc = 0
+        awake = keep_awake()          # uykudan uyandırıldıysa tarama bitene kadar uyanık kal
+        awake.__enter__()
         for source in wanted:
             if source == "hepsiemlak":
                 payload = feed.collect_hepsiemlak(cfg, db)
@@ -126,6 +129,7 @@ def main(argv: list[str] | None = None) -> int:
             # (GitHub tarafı aynı concurrency grubunda sıraya alır; her besleme bir kez işlenir)
             if feed.trigger(cfg, f"{source}_feed"):
                 log.info("GitHub işi tetiklendi (%s_feed)", source)
+        awake.__exit__(None, None, None)
         db.close()
         return rc
 

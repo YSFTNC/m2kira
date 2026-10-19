@@ -51,8 +51,8 @@ verisi zaten herkese açık; token, kişisel bilgi ya da sahibinden oturumu içe
 | Kaynak | Nerede çalışır | Bildirim |
 |---|---|---|
 | emlakjet | GitHub Actions, her 2 saatte (PC'den bağımsız) | Telegram kartı, 09:00 özet, filtre sayfası |
-| hepsiemlak | **PC açıkken** Görev Zamanlayıcı ile 2 saatte bir (pencere açmaz) → GitHub'a besleme | aynı Telegram kartları ve site; PC kapalıyken son bilinen hali kalır |
-| sahibinden | **PC açıkken** aynı görev, giriş yapılmış Chrome profilinle görünmez tarar → GitHub'a besleme. Ayrıca sahibinden'in kendi kayıtlı araması **"M2 eşyalı 39bin altı"** | Telegram kartları ve site (fotoğraf, konum, harita); PC kapalıyken sahibinden uygulaması bildirir |
+| hepsiemlak | **PC açıkken ya da uykudayken** (şarjda) Görev Zamanlayıcı ile 2 saatte bir (pencere açmaz) → GitHub'a besleme | aynı Telegram kartları ve site; PC tamamen kapalıyken son bilinen hali kalır |
+| sahibinden | **PC açıkken ya da uykudayken** (şarjda) aynı görev, giriş yapılmış Chrome profilinle görünmez tarar → GitHub'a besleme. Ayrıca sahibinden'in kendi kayıtlı araması **"M2 eşyalı 39bin altı"** | Telegram kartları ve site (fotoğraf, konum, harita); PC kapalıyken sahibinden uygulaması bildirir |
 
 sahibinden arama sonuçları üye girişi ve gerçek tarayıcı istediği için GitHub sunucusundan taranamıyor;
 bu yüzden PC açıkken PC'deki görev tarayıp siteye gönderir, PC kapalıyken sahibinden'in kendi bildirim
@@ -102,6 +102,14 @@ gerçek Chrome'u ayrı bir profille açar; orada bir kez giriş yaptıktan sonra
 ve ilan detaylarından koordinatla yürüme mesafesini hesaplar.
 
 ### PC beslemesi: hepsiemlak + sahibinden
+
+hepsiemlak ve sahibinden bulut sunucularını (GitHub dahil) robot doğrulamasında durduruyor; 20.10.2026'da
+GitHub'dan Cloudflare WARP üzerinden de denendi, ikisi de "Bir dakika lütfen" sayfasında kaldı. Bu yüzden bu
+iki kaynak evdeki bilgisayardan taranır. **Bilgisayarı kapatma, uyut:** kapağı kapat ya da Başlat → Uyku, şarja
+takılı bırak. Görev 2 saatte bir bilgisayarı uyandırır (ekran açılmaz), tarar, gönderir; Windows sonra yeniden
+uyutur. Uyandırma yalnız şarjdayken olur (Windows'un "uyandırma zamanlayıcılarına izin ver" ayarı şarjda açık,
+pilde kapalı). "Kapat" ile tamamen kapatılan bilgisayarı hiçbir şey uyandıramaz; o sürede sahibinden'in kendi
+uygulama bildirimi ve emlakjet (GitHub) çalışmaya devam eder.
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File deploy\pc-gorev.ps1          # Görev Zamanlayıcı görevini kur

@@ -85,7 +85,7 @@ sources:
     path: feed/sahibinden.json
     max_age_hours: 3
     headless: true         # gerçek Chrome --headless=new: sahibinden'in korumasını geçti (19.10.2026)
-    max_detail_fetch: 15   # tarama başına en fazla yeni ilan detayı (konum için); detaylar önbellekte kalır
+    max_detail_fetch: 20   # tarama başına en fazla yeni ilan detayı (konum için); detaylar önbellekte kalır
   emlakjet:
     enabled: true
     fast_categories: [kiralik-daire]
