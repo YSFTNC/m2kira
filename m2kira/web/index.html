@@ -343,7 +343,8 @@ const GH = {
     const headers = { Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" };
     if (auth && this.token()) headers.Authorization = "Bearer " + this.token();
     if (opts.body) headers["Content-Type"] = "application/json";
-    const r = await fetch("https://api.github.com/" + path, { ...opts, headers });
+    // GitHub API yanıtları tarayıcıda 60 sn önbelleklenir; eski sha 409 üretir -> önbelleksiz
+    const r = await fetch("https://api.github.com/" + path, { cache: "no-store", ...opts, headers });
     if (r.status === 204) return null;
     const txt = await r.text();
     if (!r.ok) { const e = new Error(r.status + ": " + (txt.slice(0, 160) || r.statusText)); e.status = r.status; throw e; }
@@ -357,13 +358,18 @@ const GH = {
       remoteSha = f.sha; return JSON.parse(this.b64dec(f.content));
     } catch (e) { if (e.status === 404) { remoteSha = null; return null; } throw e; }
   },
-  async writeSettings(obj) {
+  async writeSettings(obj, retry = true) {
     obj.updated = new Date().toISOString().replace(/\.\d+Z$/, "Z");
-    const cur = await this.readSettings().catch(() => null);  // güncel sha
+    await this.readSettings().catch(() => null);  // güncel sha
     const body = { message: "site ayarları " + obj.updated, content: this.b64enc(JSON.stringify(obj, null, 1)), branch: D.repo.branch };
     if (remoteSha) body.sha = remoteSha;
-    const res = await this.api(`repos/${this.repo()}/contents/${D.repo.settings_path}`, { method: "PUT", body: JSON.stringify(body) });
-    remoteSha = res && res.content ? res.content.sha : null;
+    try {
+      const res = await this.api(`repos/${this.repo()}/contents/${D.repo.settings_path}`, { method: "PUT", body: JSON.stringify(body) });
+      remoteSha = res && res.content ? res.content.sha : null;
+    } catch (e) {
+      if (retry && (e.status === 409 || e.status === 422)) { await new Promise((r) => setTimeout(r, 1500)); return this.writeSettings(obj, false); }
+      throw e;
+    }
     return obj.updated;
   },
   async dispatch(sources = "") {
@@ -393,21 +399,25 @@ async function saveToken() {
     if (!r.ok) throw new Error(r.status === 401 ? "anahtar geçersiz" : "repo erişimi yok (" + r.status + ")");
     store.set("m2k_gh", t);
     $("#conndlg").close(); renderConn(); toast("Bağlandı. Ayarlar ve tarama düğmeleri açık.");
-    await pullRemote(); renderAll();
+    await pullRemote(true); renderAll();
   } catch (e) { $("#tokmsg").textContent = "Olmadı: " + e.message; }
 }
 
 /* ---------------- eşitleme (favori + gizle) ---------------- */
-async function pullRemote() {
+// Bağlıyken GitHub'daki kayıt esastır (bir cihazda kaldırılan favori diğerinde geri gelmesin).
+// mergeLocal: ilk bağlanışta bu cihazdaki favori/gizleme kararları kayda bir kez eklenir.
+async function pullRemote(mergeLocal = false) {
   if (!connected()) return;
   try {
     const rs = await GH.readSettings();
     if (rs) {
-      for (const f of rs.favorites || []) favs.add(f);
-      for (const [k, v] of Object.entries(rs.hidden || {})) if (!(k in hidMap)) hidMap[k] = v;
-      store.set("m2k_favs", [...favs]); store.set("m2k_hidmap", hidMap);
+      const rf = new Set(rs.favorites || []), rh = Object.assign({}, rs.hidden || {});
+      if (mergeLocal) { for (const f of favs) rf.add(f); Object.assign(rh, hidMap); }
+      favs = rf; hidMap = rh;
       SET = Object.assign(SET || {}, pickSettings(rs));
     }
+    store.set("m2k_favs", [...favs]); store.set("m2k_hidmap", hidMap);
+    if (mergeLocal) pushSync();
   } catch (e) { console.warn("ayarlar okunamadı", e); }
 }
 const pushSync = debounce(async () => {
@@ -928,8 +938,10 @@ window.addEventListener("hashchange", () => { const h = location.hash.slice(1); 
 function applyData(data) {
   D = data;
   PRESENT = new Set(D.items.map((i) => i.id));
-  for (const f of (D.settings && D.settings.favorites) || []) favs.add(f);
-  store.set("m2k_favs", [...favs]);
+  if (!connected()) {   // bağlı değilken: eşitlenmiş favorileri salt-okunur göster
+    for (const f of (D.settings && D.settings.favorites) || []) favs.add(f);
+    store.set("m2k_favs", [...favs]);
+  }
   SET = pickSettings(D.settings || {});
   document.title = D.title || "M2 Kiralık";
   $("#title").textContent = D.title || "M2 Kiralık";
