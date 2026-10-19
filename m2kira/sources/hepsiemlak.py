@@ -15,6 +15,7 @@ Detay URL: https://www.hepsiemlak.com/ankara-cankaya-<mahalle>-kiralik/daire/<of
 from __future__ import annotations
 
 import logging
+import os
 from typing import Any, Optional
 
 from ..browser import BrowserFetcher
@@ -201,7 +202,10 @@ class HepsiemlakSource(Source):
             profile_dir=profiles,
             cache_dir=cfg.data_dir / "cache" / "hepsiemlak",
             min_interval=max(float(cfg.get("request_interval_sec", default=5)), float(self.scfg.get("min_interval_sec", 15))),
-            headless=bool(self.scfg.get("headless", True)),
+            # M2KIRA_HEADLESS=0 -> görünür tarayıcı (GitHub Actions'ta xvfb-run ile sanal ekranda).
+            # Veri merkezi IP'lerinde Cloudflare headless tarayıcıyı doğrulamada takıyor.
+            headless=(os.environ.get("M2KIRA_HEADLESS", "").strip() not in ("0", "false", "no")
+                      and bool(self.scfg.get("headless", True))),
             cooldown=float(self.scfg.get("cooldown_sec", 120)),
             block_resources=bool(self.scfg.get("block_resources", True)),
         )

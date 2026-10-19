@@ -42,6 +42,7 @@ jobs:
       # sahibinden tarayıcı modu sunucuda çalışmaz (giriş + bot koruması); e-posta kaynağı IMAP varsa devreye girer
       M2KIRA_SOURCES: hepsiemlak,emlakjet,sahibinden_mail
       M2KIRA_BROWSER_CHANNEL: chrome   # runner'da hazır kurulu Google Chrome
+      M2KIRA_HEADLESS: "0"             # görünür Chrome (xvfb sanal ekranında); headless Cloudflare'a takıldı
     steps:
       - uses: actions/checkout@v4
 
@@ -62,6 +63,7 @@ jobs:
         run: |
           pip install -r requirements.txt
           python -m playwright install chromium   # Chrome açılamazsa yedek
+          command -v xvfb-run >/dev/null || (sudo apt-get update -qq && sudo apt-get install -y -qq xvfb)
 
       - name: Günlük özet
         if: github.event.schedule == '0 6 * * *'
@@ -71,7 +73,7 @@ jobs:
         if: github.event.schedule != '0 6 * * *'
         run: |
           python main.py bot-once || true
-          python main.py scan
+          xvfb-run -a -s "-screen 0 1366x900x24" python main.py scan
           python main.py bot-once || true
 
       - name: Veritabanını kaydet
