@@ -1,0 +1,24 @@
+{
+ "budget": 37000,
+ "budget_tolerance_pct": 5,
+ "rooms_allowed": [],
+ "furnished_accept": [
+  "full",
+  "partial",
+  "either"
+ ],
+ "include_unknown_furnished": false,
+ "max_walk_m": 1000,
+ "walk_tolerance_m": 500,
+ "exclude_flags": [
+  "gunluk",
+  "oda",
+  "uzak"
+ ],
+ "notify_removed": true,
+ "notify_stations": [],
+ "disabled_neighborhoods": [],
+ "favorites": [],
+ "hidden": {},
+ "updated": "2026-10-19T20:20:48Z"
+}
