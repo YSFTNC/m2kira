@@ -1,0 +1,14 @@
+# Sunucu / Raspberry Pi: docker compose up -d --build
+# Tarayıcı gerektiren sahibinden modu sunucuda çalışmaz; M2KIRA_SOURCES ile dışarıda bırakılır.
+services:
+  m2kira:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - TZ=Europe/Istanbul
+      - M2KIRA_SOURCES=hepsiemlak,emlakjet,sahibinden_mail
+    volumes:
+      - ./data:/app/data
+      - ./config.yaml:/app/config.yaml:ro
+    shm_size: "512m"   # Chromium için

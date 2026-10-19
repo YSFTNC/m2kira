@@ -1,0 +1,76 @@
+# m2kira — PC kapalıyken de çalışan zamanlanmış tarama (GitHub Actions, ücretsiz).
+#  * Her 2 saatte: Telegram komutlarını işle -> hepsiemlak + emlakjet (+ varsa sahibinden e-postaları) tara -> bildir.
+#  * Her gün 09:00 (TR): günlük özet.
+#  * Veritabanı (data/m2kira.sqlite) çalıştırmalar arasında actions/cache ile taşınır.
+# Gerekli secrets: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID. İsteğe bağlı: IMAP_HOST, IMAP_USER, IMAP_PASSWORD.
+# Kurulum: deploy/kurulum.ps1 (gh CLI ile repo + secrets + ilk çalıştırma).
+# Not: GitHub zamanlanmış işleri birkaç dakika gecikmeli başlatabilir; public repoda 60 gün commit
+# olmazsa zamanlama otomatik durur (Actions sekmesinden tekrar açılır).
+name: m2kira
+
+on:
+  schedule:
+    - cron: "7 */2 * * *"   # her 2 saatte (UTC, :07'de — saat başı yoğunluğundan kaçınmak için)
+    - cron: "0 6 * * *"     # 09:00 Türkiye: günlük özet
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: m2kira
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    env:
+      TZ: Europe/Istanbul
+      PYTHONIOENCODING: utf-8
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      IMAP_HOST: ${{ secrets.IMAP_HOST }}
+      IMAP_USER: ${{ secrets.IMAP_USER }}
+      IMAP_PASSWORD: ${{ secrets.IMAP_PASSWORD }}
+      # sahibinden tarayıcı modu sunucuda çalışmaz (giriş + bot koruması); e-posta kaynağı IMAP varsa devreye girer
+      M2KIRA_SOURCES: hepsiemlak,emlakjet,sahibinden_mail
+      M2KIRA_BROWSER_CHANNEL: chrome   # runner'da hazır kurulu Google Chrome
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Veritabanını geri yükle
+        uses: actions/cache/restore@v4
+        with:
+          path: data/m2kira.sqlite
+          key: m2kira-db-${{ github.run_id }}
+          restore-keys: |
+            m2kira-db-
+
+      - name: Bağımlılıklar
+        run: |
+          pip install -r requirements.txt
+          python -m playwright install chromium   # Chrome açılamazsa yedek
+
+      - name: Günlük özet
+        if: github.event.schedule == '0 6 * * *'
+        run: python main.py summary
+
+      - name: Komutlar + tarama
+        if: github.event.schedule != '0 6 * * *'
+        run: |
+          python main.py bot-once || true
+          python main.py scan
+          python main.py bot-once || true
+
+      - name: Veritabanını kaydet
+        if: always() && hashFiles('data/m2kira.sqlite') != ''
+        uses: actions/cache/save@v4
+        with:
+          path: data/m2kira.sqlite
+          key: m2kira-db-${{ github.run_id }}

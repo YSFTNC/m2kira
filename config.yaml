@@ -1,0 +1,159 @@
+# m2kira yapılandırması — Ankara M2 hattı eşyalı kiralık takip
+# Sırlar (Telegram token vb.) .env dosyasında; bkz. .env.example
+
+budget: 37000              # TL/ay tavan (Telegram'da /butce ile de değiştirilebilir)
+budget_tolerance_pct: 5    # bu kadar aşanlar "pazarlıkla" etiketiyle gösterilir
+scan_interval_hours: 2
+daily_summary_time: "09:00"
+timezone: "Europe/Istanbul"
+scan_on_start: true        # `run` başlar başlamaz bir tarama yap
+
+max_walk_m: 1000           # istasyona kuş uçuşu ≤ 1000 m "uygun"
+walk_tolerance_m: 500      # 1000-1500 m arası "sınırda" (yine bildirilir), üstü "uzak" (bildirilmez)
+walk_speed_m_per_min: 80
+
+rooms_allowed: []          # boş = her oda tipi; ör. ["1+0", "1+1", "2+1", "3+1"]
+rooms_priority: ["1+1"]
+furnished_accept: ["full", "partial", "either"]   # bildirim için kabul edilen eşya durumları
+include_unknown_furnished: false                  # eşya durumu belirsiz ilanları da bildir
+exclude_flags: ["gunluk", "oda", "uzak"]          # bu bayraklı ilanlar bildirilmez (yine kaydedilir)
+cheap_ratio: 0.6                                  # bölge medyanının %40 altı -> ⚠️ fiyat_cok_dusuk
+missing_scans_before_removed: 2                   # ardışık kaç taramada görünmezse "yayından kalktı"
+block_cooldown_min: 45                            # bir kaynak engellenince (429/Cloudflare) bu kadar süre o kaynağa dokunma
+notify_removed: true                              # daha önce bildirilen ilan kalkınca haber ver
+compact_threshold: 12                             # tek taramada bundan fazla değişiklik varsa tek liste gönder
+
+request_interval_sec: 5    # aynı siteye ardışık istekler arası en az bekleme
+cache:
+  list_ttl_min: 20
+  detail_ttl_hours: 24
+data_dir: data             # sqlite, önbellek, tarayıcı profilleri, log
+
+notify:
+  channels: [telegram]     # telegram | email | ntfy | console (birden fazla olabilir)
+  email:
+    host: ""               # ya da SMTP_HOST .env'de
+    port: 587
+    from: ""
+    to: ""
+    tls: true
+  ntfy:
+    server: https://ntfy.sh
+    topic: ""              # ya da NTFY_TOPIC .env'de
+
+sources:
+  hepsiemlak:
+    enabled: true
+    # Her taramada yalnız "eşyalı daire" listeleri (hızlı geçiş: yeni ilan + fiyat düşüşü).
+    # Mahalle başına günde bir "tam geçiş": residence + filtresiz listeler (başlıkta eşyalı yazan ama
+    # site bayrağı olmayan ilanlar) + yayından kalkma tespiti. Taramada en çok 4 mahalle tam geçer.
+    fast_categories: [daire]
+    categories: [daire, residence]
+    full_scan_every_hours: 24
+    max_full_per_run: 4
+    scan_unfiltered: true
+    max_pages: 5
+    max_detail_fetch: 30   # tarama başına en fazla detay sayfası (eşya belirsiz / koordinatsız ilanlar; kalanı sonraki taramada)
+    detail_for_coords: true
+    headless: true
+    slug_prefix: "cankaya-"
+    min_interval_sec: 8    # 5 sn aralık + resim/JS yüklemesiyle ~25 sayfada HTTP 429 alındı; yalnız HTML ile 15 sn'de 109 sayfa sorunsuz
+    cooldown_sec: 120      # 429/doğrulama görülürse bu kadar bekleyip bir kez daha dene
+    block_resources: true  # sayfa başına yalnızca HTML'i yükle (resim/JS/XHR hız sınırına sayılıyor)
+  emlakjet:
+    enabled: true
+    fast_categories: [kiralik-daire]
+    categories: [kiralik-daire, kiralik-residence]
+    full_scan_every_hours: 6   # residence + yayından kalkma tespiti 6 saatte bir
+    max_pages: 5
+    max_detail_fetch: 60   # emlakjet listesinde eşya/koordinat yok; ilk taramalarda detay yükü buradan sınırlanır
+    detail_for_coords: true
+  sahibinden:               # PC açıkken: kullanıcının Chrome'u üzerinden tek birleşik arama (22 mahalle, 2-3 sayfa)
+    enabled: true           # PC kapalıyken: sahibinden'in kendi "M2 eşyalı 39bin altı" favori arama bildirimleri
+    mode: cdp               # cdp: kullanıcının kendi Chrome'una bağlan (python main.py sahibinden-chrome)
+                            # browser: Playwright Chromium (Cloudflare/PerimeterX doğrulaması döngüye girebiliyor)
+                            # mail: tarayıcı kullanma, yalnızca aşağıdaki e-posta kaynağı
+    cdp_url: http://127.0.0.1:9222
+    max_pages: 4
+    max_detail_fetch: 10
+    headless: false         # headless PerimeterX'e takılıyor; görünür Chromium kullanılır (browser modu)
+    offscreen: true         # görünür pencere ekran dışında açılır (taramada rahatsız etmez)
+    headed_fallback: true
+    price_filter: true      # ?price_max=<bütçe+%5>
+    min_interval_sec: 10
+    cooldown_sec: 90
+  sahibinden_mail:          # sahibinden "favori arama" e-posta bildirimlerini IMAP'ten oku (sunucuda da çalışır)
+    enabled: true           # IMAP_USER / IMAP_PASSWORD .env'de yoksa sessizce "tanımlı değil" der
+    host: imap.gmail.com
+    folder: INBOX
+    sender: sahibinden      # gönderen adresinde geçen metin
+    lookback_days: 2        # ilk çalıştırmada kaç günlük e-postaya bakılsın
+    assume_furnished: true  # kayıtlı aramada "Eşyalı" filtresi açık varsayılır
+
+# --- M2 istasyonları (OpenStreetMap, Ekim 2026) + Ankaray (uyarı için)
+stations:
+  - {name: "Kızılay", lat: 39.920537, lon: 32.853951, line: M2}
+  - {name: "Necatibey", lat: 39.915097, lon: 32.844386, line: M2}
+  - {name: "Milli Kütüphane", lat: 39.915230, lon: 32.827216, line: M2}
+  - {name: "Söğütözü", lat: 39.910638, lon: 32.808123, line: M2}
+  - {name: "MTA", lat: 39.908899, lon: 32.796332, line: M2}
+  - {name: "ODTÜ", lat: 39.908360, lon: 32.784569, line: M2}
+  - {name: "Bilkent", lat: 39.907552, lon: 32.765402, line: M2}
+  - {name: "Tarım Bakanlığı-Danıştay", lat: 39.906941, lon: 32.750084, line: M2}
+  - {name: "Beytepe", lat: 39.906221, lon: 32.733271, line: M2}
+  - {name: "Ümitköy", lat: 39.905349, lon: 32.707866, line: M2}
+  - {name: "Çayyolu", lat: 39.897829, lon: 32.691071, line: M2}
+  - {name: "Koru", lat: 39.886843, lon: 32.686313, line: M2}
+  # Koru sonrası uzantı (Konutkent/Yaşamkent...) açıldıysa line: M2 yapın
+  - {name: "Konutkent", lat: 39.878573, lon: 32.675464, line: M2EXT}
+  - {name: "Yaşamkent Giriş", lat: 39.872668, lon: 32.647961, line: M2EXT}
+  # Ankaray — ilan "metro yakını" dese de M2 değilse uyarı için
+  - {name: "AŞTİ", lat: 39.918247, lon: 32.814374, line: ANKARAY}
+  - {name: "Emek", lat: 39.923203, lon: 32.814899, line: ANKARAY}
+  - {name: "Bahçelievler", lat: 39.931126, lon: 32.819965, line: ANKARAY}
+  - {name: "Beşevler", lat: 39.932655, lon: 32.828878, line: ANKARAY}
+  - {name: "Anadolu", lat: 39.934729, lon: 32.837366, line: ANKARAY}
+  - {name: "Maltepe", lat: 39.932386, lon: 32.842667, line: ANKARAY}
+  - {name: "Demirtepe", lat: 39.925718, lon: 32.847687, line: ANKARAY}
+
+# --- izlenen mahalleler: name, varsayılan istasyon (koordinat yoksa), kaynak slug'ları
+# hepsiemlak: cankaya-<slug>-kiralik/daire ('/' içeren değer olduğu gibi kullanılır; bazı mahalleler sitede
+#   "cankaya-" öneki olmadan, ör. korkutreis-kiralik/daire — slug'lar sitenin kendi navigasyon verisinden alındı)
+# emlakjet:   kiralik-daire/ankara-cankaya-<slug>
+# Bir kaynakta mahalle yoksa `false` yazın. sahibinden: mahalle kimliği (address_quarter, /ajax/search/locationFacets'ten);
+#   tüm kimlikler tek aramada birleşir. Konutkent/Yaşamkent/Beytepe sahibinden aramasından çıkarıldı: oradaki
+#   ilanların hiçbiri istasyona 1,5 km'den yakın değildi ve sahibinden bildiriminde koordinat yok.
+# require_distance: true -> geniş mahallelerde koordinatı doğrulanmamış ilan bildirilmez (detay çekilince doğrulanır).
+neighborhoods:
+  # Kızılay / Necatibey
+  - {name: "Kızılay", station: "Kızılay", hepsiemlak: cankaya-kizilay-mah, emlakjet: kizilay-mahallesi, sahibinden: 3376, note: "hepsiemlak 'cankaya-kizilay' semt sayfası Namık Kemal/Kocatepe/Meşrutiyet'i de kapsar; mahalle sayfası kullanılıyor"}
+  - {name: "Meşrutiyet", station: "Kızılay", hepsiemlak: mesrutiyet, emlakjet: mesrutiyet-mahallesi, sahibinden: 3378}
+  - {name: "Kocatepe", station: "Kızılay", hepsiemlak: cankaya-kocatepe-mah, emlakjet: kocatepe-mahallesi, sahibinden: 52739, note: "hepsiemlak 'cankaya-kocatepe' semt sayfası Tınaztepe/Kültür/Kavaklıdere'yi de listeliyor"}
+  - {name: "Korkutreis", station: "Necatibey", hepsiemlak: "korkutreis-kiralik/daire", emlakjet: korkutreis-mahallesi, sahibinden: 3381}
+  - {name: "Namık Kemal", station: "Necatibey", hepsiemlak: namik-kemal, emlakjet: namik-kemal-mahallesi, sahibinden: 3467, note: "Bakanlıklar/Saraçoğlu"}
+  # Milli Kütüphane
+  - {name: "Emek", station: "Milli Kütüphane", hepsiemlak: emek, emlakjet: emek-mahallesi, sahibinden: 3380, note: "Eskişehir Yolu tarafı; 'metro' çoğu ilanda Ankaray"}
+  - {name: "Bahçelievler", station: "Milli Kütüphane", hepsiemlak: cankaya-bahcelievler-mah, emlakjet: bahcelievler-mahallesi, sahibinden: 3409}
+  - {name: "Yukarı Bahçelievler", station: "Milli Kütüphane", hepsiemlak: "yukari-bahcelievler-kiralik/daire", emlakjet: yukari-bahcelievler-mahallesi, sahibinden: 3410}
+  - {name: "Beşevler", station: "Milli Kütüphane", hepsiemlak: besevler, emlakjet: false, sahibinden: false}
+  # Söğütözü / MTA
+  - {name: "Nasuh Akar", station: "Söğütözü", hepsiemlak: "nasuh-akar-kiralik/daire", emlakjet: nasuh-akar-mahallesi, sahibinden: 3422}
+  - {name: "Balgat", station: "MTA", hepsiemlak: balgat, emlakjet: balgat-mahallesi, sahibinden: 3415}
+  - {name: "Oğuzlar", station: "Söğütözü", hepsiemlak: oguzlar, emlakjet: oguzlar-mahallesi, sahibinden: 3423}
+  - {name: "Ehlibeyt", station: "Söğütözü", hepsiemlak: "ehlibeyt-kiralik/daire", emlakjet: ehlibeyt-mahallesi, sahibinden: 3419}
+  - {name: "Söğütözü", station: "Söğütözü", hepsiemlak: sogutozu, emlakjet: sogutozu-mahallesi, sahibinden: 3425}
+  - {name: "Çukurambar", station: "Söğütözü", hepsiemlak: "cukurambar-mah-kiralik/daire", emlakjet: cukurambar-mahallesi, sahibinden: 51430}
+  - {name: "Kızılırmak", station: "Söğütözü", hepsiemlak: kizilirmak, emlakjet: kizilirmak-mahallesi, sahibinden: 3417}
+  - {name: "İşçi Blokları", station: "MTA", hepsiemlak: isci-bloklari, emlakjet: isci-bloklari-mahallesi, sahibinden: 3427, note: "100. Yıl İşçi Blokları (hepsiemlak semt sayfası: 100-yil-isci-bloklari-kiralik/daire)"}
+  # ODTÜ / Bilkent
+  - {name: "Mustafa Kemal", station: "ODTÜ", hepsiemlak: mustafa-kemal, emlakjet: mustafa-kemal-mahallesi, sahibinden: 3418}
+  - {name: "Üniversiteler", station: "Bilkent", hepsiemlak: false, emlakjet: universiteler-mahallesi, sahibinden: 3504, note: "hepsiemlak'ta hem 'universiteler-kiralik/daire' hem 'cankaya-universiteler' 404; Üniversiteler ilanları hepsiemlak Beytepe sayfasında çıkıyor"}
+  # Tarım Bakanlığı / Beytepe
+  - {name: "Beytepe", station: "Beytepe", hepsiemlak: beytepe, emlakjet: beytepe-mahallesi, sahibinden: false, require_distance: true, note: "mahalle çok geniş (Hacettepe kampüsüne kadar); koordinatsız ilan bildirilmez"}
+  # Ümitköy / Çayyolu / Koru
+  - {name: "Ümit", station: "Ümitköy", hepsiemlak: umit, emlakjet: umit-mahallesi, sahibinden: 3429}
+  - {name: "Mutlukent", station: "Ümitköy", hepsiemlak: "mutlukent-kiralik/daire", emlakjet: mutlukent-mahallesi, sahibinden: 3428}
+  - {name: "Çayyolu", station: "Çayyolu", hepsiemlak: "cayyolu-mah-kiralik/daire", emlakjet: cayyolu-mahallesi, sahibinden: 3794, note: "hepsiemlak'ta 'cayyolu-kiralik/daire' semt sayfası çok geniş; mahalle sayfası kullanılıyor"}
+  - {name: "Koru", station: "Koru", hepsiemlak: koru, emlakjet: koru-mahallesi, sahibinden: 3797}
+  - {name: "Konutkent", station: "Koru", hepsiemlak: konutkent, emlakjet: konutkent-mahallesi, sahibinden: false, require_distance: true}
+  - {name: "Yaşamkent", station: "Koru", hepsiemlak: yasamkent, emlakjet: yasamkent-mahallesi, sahibinden: false, require_distance: true, note: "yalnızca Koru'ya yakın kısmı; koordinat doğrulanmadan bildirilmez (detay sayfası çekilince doğrulanır)"}
