@@ -590,10 +590,27 @@ function pass(it, s, skipStation) {
   if (s.q) { const hay = norm([it.t, it.desc, it.d, it.of, it.st, it.src].join(" ")); if (!norm(s.q).split(/\s+/).filter(Boolean).every((w) => hay.includes(w))) return false; }
   return true;
 }
+// Önerilen sıra: önce bütçe katmanı, sonra puan (düşük = iyi). Risk bayrakları en ağır; handoff'a göre 1+1 öncelikli;
+// ardından eşya, yürüme, tazelik ve fiyat. En ucuz ilanlar çoğu zaman yurt / oda / şüpheli fiyat olduğu için fiyat yalnız hafif bir etken.
+const RISK_W = { fiyat_cok_dusuk: 14, kapora: 12, kisa_sureli: 12, kisit: 10, depozitosuz: 8, kot_bodrum: 8, acil: 6,
+  ankaray_uyari: 6, mesafe_gerekli: 6, esya_belirsiz: 5, mesafe_dogrulanmadi: 4, sinirda: 3, oda: 30, gunluk: 30, uzak: 20 };
+const ROOM_W = { "1+1": 0, "2+1": 3, "1+0": 4, "3+1": 6, "4+": 8 };
+const FUR_W = { full: 0, either: 2, partial: 4, unknown: 5, none: 12 };
+function recScore(it) {
+  let s = 0;
+  for (const f of it.fg || []) s += RISK_W[f] || 0;
+  s += ROOM_W[roomKey(it.r)] ?? 4;
+  s += FUR_W[it.fur] ?? 5;
+  s += it.wm != null ? Math.min(it.wm, 20) * 0.6 : 8;
+  s += Math.min(ageHours(it.fs) / 24, 14) * 0.5;
+  s += it.p ? Math.min(it.p / (D.budget || it.p), 1.2) * 8 : 6;
+  return s;
+}
 function sorter(key) {
   const big = 1e12, ks = tkeys(); const tr = (i) => (i.tier === "uygun" ? 0 : i.tier === "pazarlikla" ? 1 : 2); const c = (i, k) => commute(i, k) ?? big;
+  const rs = new Map(); const sc = (i) => { let v = rs.get(i.id); if (v === undefined) { v = recScore(i); rs.set(i.id, v); } return v; };
   return {
-    rec: (a, b) => tr(a) - tr(b) || (a.p ?? big) - (b.p ?? big), price: (a, b) => (a.p ?? big) - (b.p ?? big), price_d: (a, b) => (b.p ?? -1) - (a.p ?? -1),
+    rec: (a, b) => tr(a) - tr(b) || sc(a) - sc(b) || (a.p ?? big) - (b.p ?? big), price: (a, b) => (a.p ?? big) - (b.p ?? big), price_d: (a, b) => (b.p ?? -1) - (a.p ?? -1),
     new: (a, b) => ageHours(a.fs) - ageHours(b.fs) || (a.p ?? big) - (b.p ?? big), walk: (a, b) => (b.v - a.v) || (a.wm ?? big) - (b.wm ?? big),
     c0: (a, b) => c(a, ks[0]) - c(b, ks[0]) || (a.p ?? big) - (b.p ?? big), c1: (a, b) => c(a, ks[1]) - c(b, ks[1]) || (a.p ?? big) - (b.p ?? big),
     cmax: (a, b) => c(a, "both") - c(b, "both") || (a.p ?? big) - (b.p ?? big), m2: (a, b) => (b.m2 ?? -1) - (a.m2 ?? -1),
@@ -1064,7 +1081,7 @@ function renderAll(rebuildFilters = true, keepFocus = false) {
   if (!$("#drawer").hidden && !keepFocus) buildFilters();
   $("#dapply").textContent = `${NF.format(list.length)} ilanı göster`;
   $("#count").textContent = S.view === "map" ? "Harita" : `${NF.format(list.length)} ilan`;
-  $("#countsub").textContent = { rec: "önerilen sıra", price: "ucuzdan pahalıya", price_d: "pahalıdan ucuza", new: "en yeni önce", walk: "yürümesi kısa önce", c0: tdat(0) + " en kısa", c1: tdat(1) + " en kısa", cmax: "iki hedefe en yakın", m2: "büyükten küçüğe", ppm: "TL/m² düşük önce" }[S.sort] || "";
+  $("#countsub").textContent = { rec: "önerilen: risksiz, 1+1, yakın ve yeni önce", price: "ucuzdan pahalıya", price_d: "pahalıdan ucuza", new: "en yeni önce", walk: "yürümesi kısa önce", c0: tdat(0) + " en kısa", c1: tdat(1) + " en kısa", cmax: "iki hedefe en yakın", m2: "büyükten küçüğe", ppm: "TL/m² düşük önce" }[S.sort] || "";
   const pbox = $("#presets"); pbox.innerHTML = "";
   for (const [label, fn] of presets()) { const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.textContent = label; b.setAttribute("aria-pressed", String(presetMatches(fn))); b.onclick = () => applyPreset(fn); pbox.appendChild(b); }
   const ks = tkeys();
