@@ -11,19 +11,24 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 def build_sources(cfg: "Config") -> list[Source]:
-    """config.yaml'daki etkin kaynakları oluşturur. M2KIRA_SOURCES=hepsiemlak,emlakjet gibi bir
-    ortam değişkeni verilirse yalnızca o kaynaklar (sunucuda sahibinden tarayıcısını kapatmak için)."""
+    """config.yaml'daki etkin kaynakları oluşturur. M2KIRA_SOURCES=hepsiemlak_feed,emlakjet gibi bir
+    ortam değişkeni verilirse yalnızca o kaynaklar (seçim anahtarı: select_key ya da name)."""
     from .emlakjet import EmlakjetSource
     from .hepsiemlak import HepsiemlakSource
+    from .hepsiemlak_feed import HepsiemlakFeedSource
     from .sahibinden import SahibindenSource
     from .sahibinden_mail import SahibindenMailSource
 
     only = {s.strip() for s in (os.environ.get("M2KIRA_SOURCES") or "").split(",") if s.strip()}
     out: list[Source] = []
-    for cls in (HepsiemlakSource, EmlakjetSource, SahibindenSource, SahibindenMailSource):
-        if only and cls.name not in only:
-            continue
-        if not cfg.source_enabled(cls.name):
+    for cls in (HepsiemlakSource, HepsiemlakFeedSource, EmlakjetSource, SahibindenSource, SahibindenMailSource):
+        key = getattr(cls, "select_key", cls.name)
+        if only:
+            if key not in only:
+                continue
+        elif cls is HepsiemlakFeedSource:
+            continue  # besleme yalnızca açıkça istenince (GitHub Actions)
+        if not cfg.source_enabled(key):
             continue
         if cls is SahibindenSource and cfg.source_cfg(cls.name).get("mode", "cdp") == "mail":
             continue  # yalnızca e-posta kaynağı istenmiş

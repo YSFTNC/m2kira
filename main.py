@@ -60,6 +60,8 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("bot-once", help="birikmiş Telegram komutlarını bir kez işle (cron / GitHub Actions)")
     p_web = sub.add_parser("export-web", help="filtre sayfasını (index.html + data.json) üret")
     p_web.add_argument("--out", default="_site")
+    p_feed = sub.add_parser("feed-push", help="PC: hepsiemlak'ı tara, GitHub'a besleme olarak gönder, işi tetikle")
+    p_feed.add_argument("--no-push", action="store_true", help="yalnız tara, data/feed/hepsiemlak.json'a yaz")
     args = ap.parse_args(argv)
 
     cfg = load_config(args.config)
@@ -85,6 +87,32 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Chrome açıldı ({exe}). Bu pencerede doğrulamayı geçip sahibinden'e giriş yapın; pencereyi açık bırakın.\n"
               "config.yaml -> sources.sahibinden.mode: cdp olmalı. Deneme: python main.py scan --dry --source sahibinden --neighborhood Kızılay")
         return 0
+
+    if args.cmd == "feed-push":
+        import json as _json
+        from m2kira import feed
+        feed.sync_budget_from_web(cfg, db)
+        payload = feed.collect(cfg, db)
+        out = cfg.data_dir / "feed" / "hepsiemlak.json"
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(_json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+        log.info("hepsiemlak beslemesi: %d birim, %d ilan, %d hata -> %s", len(payload["units"]), payload["listings"],
+                 len(payload["errors"]), out)
+        rc = 0
+        if not payload["units"]:
+            log.warning("hiç birim taranamadı; gönderilmiyor (%s)", "; ".join(payload["errors"])[:300])
+            rc = 1
+        elif not args.no_push:
+            try:
+                where = feed.push(cfg, payload)
+                log.info("besleme gönderildi: %s", where)
+                if feed.trigger(cfg):
+                    log.info("GitHub işi tetiklendi (hepsiemlak_feed)")
+            except Exception as exc:  # noqa: BLE001
+                log.error("besleme gönderilemedi: %s", exc)
+                rc = 1
+        db.close()
+        return rc
 
     if args.cmd == "export-web":
         from m2kira.web import export_site

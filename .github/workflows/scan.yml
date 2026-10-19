@@ -1,10 +1,11 @@
 # m2kira — PC kapalıyken de çalışan zamanlanmış tarama (GitHub Actions, ücretsiz).
-#  * Her 2 saatte: Telegram komutlarını işle -> hepsiemlak + emlakjet (+ varsa sahibinden e-postaları) tara -> bildir.
-#  * Her gün 09:00 (TR): günlük özet.
-#  * Her çalıştırmada filtre sayfası (durak durak, harita, işe ulaşım) GitHub Pages'e yayınlanır.
+#  * Her 2 saatte: Telegram komutlarını işle -> emlakjet (+ varsa sahibinden e-postaları) + PC'den gelen
+#    hepsiemlak beslemesini işle -> bildir.
+#  * PC açıkken Görev Zamanlayıcı `python main.py feed-push` ile hepsiemlak'ı tarar, `feed` dalına yazar ve
+#    bu işi `sources=hepsiemlak_feed` ile hemen tetikler (hepsiemlak GitHub IP'lerini Cloudflare'da engelliyor).
+#  * Her gün 09:00 (TR): günlük özet.  * Her çalıştırmada filtre sayfası GitHub Pages'e yayınlanır.
 #  * Veritabanı (data/m2kira.sqlite) çalıştırmalar arasında actions/cache ile taşınır.
 # Gerekli secrets: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID. İsteğe bağlı: IMAP_HOST, IMAP_USER, IMAP_PASSWORD.
-# Kurulum: deploy/kurulum.ps1 (gh CLI ile repo + secrets + Pages + ilk çalıştırma).
 # Not: GitHub zamanlanmış işleri birkaç dakika gecikmeli başlatabilir; public repoda 60 gün commit
 # olmazsa zamanlama otomatik durur (Actions sekmesinden tekrar açılır).
 name: m2kira
@@ -14,6 +15,11 @@ on:
     - cron: "7 */2 * * *"   # her 2 saatte (UTC, :07'de — saat başı yoğunluğundan kaçınmak için)
     - cron: "0 6 * * *"     # 09:00 Türkiye: günlük özet
   workflow_dispatch:
+    inputs:
+      sources:
+        description: "Taranacak kaynaklar (boş = varsayılan). PC beslemesi: hepsiemlak_feed"
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -27,7 +33,7 @@ concurrency:
 jobs:
   run:
     runs-on: ubuntu-latest
-    timeout-minutes: 50
+    timeout-minutes: 40
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
@@ -39,10 +45,8 @@ jobs:
       IMAP_HOST: ${{ secrets.IMAP_HOST }}
       IMAP_USER: ${{ secrets.IMAP_USER }}
       IMAP_PASSWORD: ${{ secrets.IMAP_PASSWORD }}
-      # sahibinden tarayıcı modu sunucuda çalışmaz (giriş + bot koruması); e-posta kaynağı IMAP varsa devreye girer
-      M2KIRA_SOURCES: hepsiemlak,emlakjet,sahibinden_mail
-      M2KIRA_BROWSER_CHANNEL: chrome   # runner'da hazır kurulu Google Chrome
-      M2KIRA_HEADLESS: "0"             # görünür Chrome (xvfb sanal ekranında); headless Cloudflare'a takıldı
+      # hepsiemlak doğrudan değil PC beslemesinden; sahibinden tarayıcı modu sunucuda çalışmaz
+      M2KIRA_SOURCES: ${{ inputs.sources || 'hepsiemlak_feed,emlakjet,sahibinden_mail' }}
       M2KIRA_BLOCK_COOLDOWN_MIN: "0"   # her çalıştırma farklı IP: önceki engel yüzünden kaynağı atlama
     steps:
       - uses: actions/checkout@v4
@@ -61,10 +65,16 @@ jobs:
             m2kira-db-
 
       - name: Bağımlılıklar
+        run: pip install -r requirements.txt
+
+      - name: hepsiemlak beslemesi (PC'den)
         run: |
-          pip install -r requirements.txt
-          python -m playwright install chromium   # Chrome açılamazsa yedek
-          command -v xvfb-run >/dev/null || (sudo apt-get update -qq && sudo apt-get install -y -qq xvfb)
+          mkdir -p data/feed
+          if git fetch -q --depth=1 origin feed 2>/dev/null && git show FETCH_HEAD:feed/hepsiemlak.json > data/feed/hepsiemlak.json 2>/dev/null; then
+            python -c "import json; d=json.load(open('data/feed/hepsiemlak.json', encoding='utf-8')); print('besleme:', d['generated'], d['listings'], 'ilan')"
+          else
+            rm -f data/feed/hepsiemlak.json; echo "besleme yok"
+          fi
 
       - name: Günlük özet
         if: github.event.schedule == '0 6 * * *'
@@ -74,7 +84,7 @@ jobs:
         if: github.event.schedule != '0 6 * * *'
         run: |
           python main.py bot-once || true
-          xvfb-run -a -s "-screen 0 1366x900x24" python main.py scan
+          python main.py scan
           python main.py bot-once || true
 
       - name: Veritabanını kaydet

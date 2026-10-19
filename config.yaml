@@ -73,6 +73,12 @@ sources:
     min_interval_sec: 8    # 5 sn aralık + resim/JS yüklemesiyle ~25 sayfada HTTP 429 alındı; yalnız HTML ile 15 sn'de 109 sayfa sorunsuz
     cooldown_sec: 120      # 429/doğrulama görülürse bu kadar bekleyip bir kez daha dene
     block_resources: true  # sayfa başına yalnızca HTML'i yükle (resim/JS/XHR hız sınırına sayılıyor)
+  hepsiemlak_feed:         # GitHub tarafı: PC'nin `feed-push` ile gönderdiği hepsiemlak beslemesi
+    enabled: true          # (hepsiemlak GitHub'ın veri merkezi IP'lerini Cloudflare'da engelliyor)
+    repo: YSFTNC/m2kira
+    branch: feed
+    path: feed/hepsiemlak.json
+    max_age_hours: 3       # daha eski besleme işlenmez (PC kapalı): ilan silinmez, uyarı gitmez
   emlakjet:
     enabled: true
     fast_categories: [kiralik-daire]
