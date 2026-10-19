@@ -31,7 +31,9 @@ from .models import Listing
 log = logging.getLogger(__name__)
 DROP_FIELDS = {"matches", "match_tier", "flags", "nearest_station", "distance_m", "walk_minutes_est",
                "distance_verified", "furnished", "price_includes", "scan_key"}
-FEED_SOURCES = ("hepsiemlak", "sahibinden")
+# sahibinden önce: birkaç dakika sürer ve ilanları en hızlı kapılan kaynak; yavaş bir hepsiemlak geçişi
+# (429 beklemeleri) onu geciktirmesin ya da görev süre sınırında aç bırakmasın.
+FEED_SOURCES = ("sahibinden", "hepsiemlak")
 # sahibinden detayından saklanan alanlar (koordinat, açıklama, kat, ...)
 SB_DETAIL_FIELDS = ("lat", "lon", "description", "m2_gross", "m2_net", "floor", "floor_no", "building_age", "heating",
                     "elevator", "owner_type", "listed_date", "district", "furnished_src")

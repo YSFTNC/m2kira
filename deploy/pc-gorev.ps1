@@ -28,7 +28,7 @@ $action = New-ScheduledTaskAction -Execute $pyw -Argument ('"' + (Join-Path $roo
 $t1 = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(10) -RepetitionInterval (New-TimeSpan -Hours $Saat) -RepetitionDuration (New-TimeSpan -Days 3650)
 $t2 = New-ScheduledTaskTrigger -AtLogOn -User "$env:USERDOMAIN\$env:USERNAME"
 $set = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `
-        -ExecutionTimeLimit (New-TimeSpan -Minutes 40) -MultipleInstances IgnoreNew
+        -ExecutionTimeLimit (New-TimeSpan -Minutes 90) -MultipleInstances IgnoreNew
 $pr = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -LogonType Interactive -RunLevel Limited
 Register-ScheduledTask -TaskName $name -Action $action -Trigger @($t1, $t2) -Settings $set -Principal $pr `
     -Description "m2kira: hepsiemlak + sahibinden'i tarar, GitHub'a besleme gönderir (deploy\pc-gorev.ps1)" -Force | Out-Null

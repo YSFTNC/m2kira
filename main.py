@@ -98,7 +98,7 @@ def main(argv: list[str] | None = None) -> int:
         from m2kira import feed
         feed.sync_budget_from_web(cfg, db)
         wanted = [args.only] if args.only else [s for s in feed.FEED_SOURCES if cfg.source_enabled(f"{s}_feed")]
-        rc, pushed = 0, []
+        rc = 0
         for source in wanted:
             if source == "hepsiemlak":
                 payload = feed.collect_hepsiemlak(cfg, db)
@@ -118,12 +118,14 @@ def main(argv: list[str] | None = None) -> int:
                 continue
             try:
                 log.info("besleme gönderildi: %s", feed.push(cfg, payload))
-                pushed.append(f"{source}_feed")
             except Exception as exc:  # noqa: BLE001
                 log.error("%s beslemesi gönderilemedi: %s", source, exc)
                 rc = 1
-        if pushed and feed.trigger(cfg, ",".join(pushed)):
-            log.info("GitHub işi tetiklendi (%s)", ",".join(pushed))
+                continue
+            # her kaynak kendi işini hemen tetikler: bildirimler sonraki kaynağın taramasını beklemez
+            # (GitHub tarafı aynı concurrency grubunda sıraya alır; her besleme bir kez işlenir)
+            if feed.trigger(cfg, f"{source}_feed"):
+                log.info("GitHub işi tetiklendi (%s_feed)", source)
         db.close()
         return rc
 
