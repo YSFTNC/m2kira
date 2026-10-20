@@ -7,7 +7,7 @@ Ne yapar:
   3. Bu klasörü git deposu yapar, GitHub'da "m2kira" reposunu oluşturup kodu gönderir.
      .env, data/ (sahibinden oturumun dahil) asla gönderilmez (.gitignore).
   4. Telegram (ve varsa IMAP) bilgilerini repo "secrets" olarak kaydeder.
-  5. İlk taramayı başlatır. Sonrası her 2 saatte bir ve her sabah 09:00'da kendiliğinden çalışır.
+  5. İlk taramayı başlatır. Sonrası 30 dakikada bir ve her sabah 09:00'da kendiliğinden çalışır.
 
 Çalıştırma (proje klasöründe PowerShell):
   powershell -ExecutionPolicy Bypass -File deploy\kurulum.ps1            # public repo (sınırsız ücretsiz dakika)
@@ -160,6 +160,6 @@ gh workflow run scan.yml --repo "$login/$RepoName"
 if ($LASTEXITCODE -ne 0) { Write-Host "İlk çalıştırma tetiklenemedi; Actions sekmesinden 'Run workflow' ile başlat." -ForegroundColor Yellow }
 Write-Host ""
 Write-Host "Tamam. İlk tarama ~15-25 dk sürer; sonuçlar Telegram'a tek liste halinde gelir." -ForegroundColor Green
-Write-Host "Sonrası her 2 saatte bir (private: 5 saatte bir) ve her sabah 09:00'da özet. PC'nin açık olması gerekmez."
+Write-Host "Sonrası 30 dakikada bir ve her sabah 09:00'da özet. PC'nin açık olması gerekmez."
 Write-Host "İzleme: https://github.com/$login/$RepoName/actions"
 Write-Host "Filtre sayfası (ilk çalıştırmadan sonra): https://$($login.ToLower()).github.io/$RepoName/"

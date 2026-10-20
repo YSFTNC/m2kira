@@ -151,7 +151,7 @@ def build_payload(cfg: Config, db: DB, budget: Optional[int] = None) -> dict[str
                           for n in cfg.neighborhoods],
         "repo": {"name": str(fc.get("repo", "YSFTNC/m2kira")), "branch": str(fc.get("branch", "feed")),
                  "settings_path": "feed/settings.json", "workflow": "scan.yml"},
-        "schedule": {"every_hours": cfg.scan_interval_hours, "summary": str(cfg.get("daily_summary_time", default="09:00"))},
+        "schedule": {"every_hours": cfg.scan_interval_hours, "every_min": round(cfg.scan_interval_hours * 60), "summary": str(cfg.get("daily_summary_time", default="09:00"))},
         "telegram_bot": str(cfg.get("web", "telegram_bot", default="") or ""),
         "feed_max_age_hours": float(fc.get("max_age_hours", 3)),
         "flag_keys": ["gunluk", "oda", "uzak", "kisit", "kot_bodrum", "acil", "kapora", "depozitosuz",

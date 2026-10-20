@@ -50,8 +50,8 @@ verisi zaten herkese açık; token, kişisel bilgi ya da sahibinden oturumu içe
 
 | Kaynak | Nerede çalışır | Bildirim |
 |---|---|---|
-| emlakjet | GitHub Actions, her 2 saatte (PC'den bağımsız) | Telegram kartı, 09:00 özet, filtre sayfası |
-| hepsiemlak | **PC açıkken ya da uykudayken** (şarjda) Görev Zamanlayıcı ile 2 saatte bir (pencere açmaz) → GitHub'a besleme | aynı Telegram kartları ve site; PC tamamen kapalıyken son bilinen hali kalır |
+| emlakjet | GitHub Actions, 30 dakikada bir (PC'den bağımsız) | Telegram kartı, 09:00 özet, filtre sayfası |
+| hepsiemlak | **PC açıkken ya da uykudayken** (şarjda) Görev Zamanlayıcı ile 30 dakikada bir (pencere açmaz) → GitHub'a besleme | aynı Telegram kartları ve site; PC tamamen kapalıyken son bilinen hali kalır |
 | sahibinden | **PC açıkken ya da uykudayken** (şarjda) aynı görev, giriş yapılmış Chrome profilinle görünmez tarar → GitHub'a besleme. Ayrıca sahibinden'in kendi kayıtlı araması **"M2 eşyalı 39bin altı"** | Telegram kartları ve site (fotoğraf, konum, harita); PC kapalıyken sahibinden uygulaması bildirir |
 
 sahibinden arama sonuçları üye girişi ve gerçek tarayıcı istediği için GitHub sunucusundan taranamıyor;
@@ -106,7 +106,7 @@ ve ilan detaylarından koordinatla yürüme mesafesini hesaplar.
 hepsiemlak ve sahibinden bulut sunucularını (GitHub dahil) robot doğrulamasında durduruyor; 20.10.2026'da
 GitHub'dan Cloudflare WARP üzerinden de denendi, ikisi de "Bir dakika lütfen" sayfasında kaldı. Bu yüzden bu
 iki kaynak evdeki bilgisayardan taranır. **Bilgisayarı kapatma, uyut:** kapağı kapat ya da Başlat → Uyku, şarja
-takılı bırak. Görev 2 saatte bir bilgisayarı uyandırır (ekran açılmaz), tarar, gönderir; Windows sonra yeniden
+takılı bırak. Görev 30 dakikada bir bilgisayarı uyandırır (ekran açılmaz), tarar, gönderir; Windows sonra yeniden
 uyutur. Uyandırma yalnız şarjdayken olur (Windows'un "uyandırma zamanlayıcılarına izin ver" ayarı şarjda açık,
 pilde kapalı). "Kapat" ile tamamen kapatılan bilgisayarı hiçbir şey uyandıramaz; o sürede sahibinden'in kendi
 uygulama bildirimi ve emlakjet (GitHub) çalışmaya devam eder.
@@ -125,15 +125,15 @@ tarama için bırakılır, liste yine gönderilir. Oturum gerçekten düşerse P
 "🔑 sahibinden oturumu düştü" uyarısı gelir: `python main.py sahibinden-chrome` çalıştırıp açılan Chrome'da
 giriş yap, pencereyi kapat.
 
-Görev oturum açıkken 2 saatte bir ve oturum açılışında `python main.py feed-push` çalıştırır:
+Görev oturum açıkken 30 dakikada bir ve oturum açılışında `python main.py feed-push` çalıştırır:
 önce sahibinden (birkaç dakika), sonra hepsiemlak (hızlı geçiş + günde bir tam geçiş) taranır. Her kaynağın
 sonucu bittiği anda reponun `feed` dalına (`feed/sahibinden.json`, `feed/hepsiemlak.json`) yazılır ve
 GitHub işi varsayılan kaynaklarla hemen tetiklenir; yavaş bir hepsiemlak geçişi sahibinden bildirimlerini
 bekletmez. Her GitHub çalıştırması taze ve işlenmemiş tüm beslemeleri, vakti gelmişse emlakjet'i ve kaçan
 günlük özeti işler; bu yüzden GitHub'ın zamanlayıcısı bir çalıştırmayı düşürse ya da sıradaki bir iş iptal
-olsa da veri kaybolmaz. GitHub zamanlanmış çalıştırmaları sık düşürdüğü için iş 20 dakikada bir denenir;
-emlakjet yine de 110 dakikadan sık taranmaz (sitedeki "Şimdi tara" bu kuralı atlar), Telegram komutları en geç
-~20 dakikada yanıtlanır.
+olsa da veri kaybolmaz. Hedef 30 dakikada bir yenileme: GitHub zamanlanmış çalıştırmaları sık düşürdüğü için
+iş 15 dakikada bir denenir; emlakjet 25 dakikadan sık taranmaz (sitedeki "Şimdi tara" bu kuralı atlar).
+Site açık kaldıkça yeni sonuçları 5 dakikada bir kendiliğinden yükler.
 Bir kaynak üst üste iki çalıştırmada hiç taranamazsa PC Telegram'a çözüm önerisiyle haber verir.
 Tek kaynak: `python main.py feed-push --only sahibinden`.
 GitHub tarafı beslemeyi normal bir kaynak gibi işler: yeni ilan / fiyat düşüşü bildirimi, kopya
@@ -152,11 +152,11 @@ sekmesindeki "Son çalıştırmalar" listesinde saatlerce "zamanlanmış" satır
    token da olur).
 2. https://cron-job.org adresinde ücretsiz hesap aç → **Create cronjob**:
    - URL: `https://api.github.com/repos/YSFTNC/m2kira/actions/workflows/scan.yml/dispatches`
-   - Zamanlama: her 30 dakikada bir
+   - Zamanlama: her 30 dakikada bir (Every 30 minutes)
    - Advanced → Request method: **POST**, Request body: `{"ref":"main"}`
    - Headers: `Authorization: Bearer <token>`, `Accept: application/vnd.github+json`,
      `X-GitHub-Api-Version: 2022-11-28`
-3. Kaydet. Sık tetikleme sorun değil: emlakjet en az 110 dakika arayla taranır, beslemeler bir kez
+3. Kaydet. Sık tetikleme sorun değil: emlakjet en az 25 dakika arayla taranır, beslemeler bir kez
    işlenir, özet günde bir gider.
 
 ### Alternatif çalışma yerleri
@@ -175,7 +175,7 @@ copy .env.example .env                               # Telegram token'ı .env'e 
 ```
 
 ```bash
-python main.py run                 # zamanlayıcı (2 saatte bir tarama, 09:00 özet) + Telegram komutları
+python main.py run                 # zamanlayıcı (30 dakikada bir tarama, 09:00 özet) + Telegram komutları
 python main.py scan                # tek tarama (bildirim gönderir)
 python main.py scan --dry          # tek tarama, bildirimler konsola
 python main.py scan --source emlakjet --neighborhood Emek
@@ -342,6 +342,6 @@ m2kira/
   feed.py    sources/hepsiemlak_feed.py            PC -> GitHub hepsiemlak beslemesi
 tests/                  pytest + kayıtlı HTML/JSON fikstürleri
 deploy/                 kurulum.ps1 (GitHub Actions kurulumu), m2kira.service (systemd)
-.github/workflows/      scan.yml (2 saatte bir tarama + 09:00 özet)
+.github/workflows/      scan.yml (30 dakikada bir tarama + 09:00 özet)
 data/                   m2kira.sqlite, cache/, profiles/ (tarayıcı oturumları), m2kira.log
 ```

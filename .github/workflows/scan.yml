@@ -1,5 +1,5 @@
 # m2kira — PC kapalıyken de çalışan zamanlanmış tarama (GitHub Actions, ücretsiz).
-#  * Her 2 saatte: Telegram komutlarını işle -> emlakjet (+ varsa sahibinden e-postaları) + PC'den gelen
+#  * 30 dakikada bir: Telegram komutlarını işle -> emlakjet (+ varsa sahibinden e-postaları) + PC'den gelen
 #    hepsiemlak ve sahibinden beslemelerini işle -> bildir.
 #  * PC açıkken Görev Zamanlayıcı `python main.py feed-push` ile hepsiemlak'ı ve sahibinden'i tarar, `feed`
 #    dalına yazar ve bu işi `sources=hepsiemlak_feed,sahibinden_feed` ile hemen tetikler (hepsiemlak GitHub
@@ -13,10 +13,10 @@ name: m2kira
 
 on:
   schedule:
-    # GitHub zamanlanmış çalıştırmaları sık düşürüyor (20.10.2026 gecesi 10 saatte 6 zamanlamadan 1'i çalıştı).
-    # Bu yüzden 20 dakikada bir denenir; tarama sıklığını kod korur (emlakjet en az 110 dk arayla, beslemeler
-    # bir kez işlenir). Telegram komutları da böylece en geç ~20 dakikada yanıtlanır.
-    - cron: "13,33,53 * * * *"
+    # Hedef: 30 dakikada bir yenileme. GitHub zamanlanmış çalıştırmaları sık düşürüyor (20.10.2026: 10 saatte
+    # 6 zamanlamadan 1'i çalıştı), bu yüzden 15 dakikada bir denenir; tarama sıklığını kod korur (emlakjet en az
+    # 25 dk arayla, beslemeler bir kez işlenir). Güvenilir 30 dakika için README'deki dış tetikleyiciye bakın.
+    - cron: "8,23,38,53 * * * *"
     - cron: "0 6 * * *"     # 09:00 Türkiye: günlük özet
   workflow_dispatch:
     inputs:
@@ -56,8 +56,8 @@ jobs:
       # hepsiemlak doğrudan değil PC beslemesinden; sahibinden tarayıcı modu sunucuda çalışmaz
       M2KIRA_SOURCES: ${{ inputs.sources || 'hepsiemlak_feed,sahibinden_feed,emlakjet,sahibinden_mail' }}
       M2KIRA_BLOCK_COOLDOWN_MIN: "0"   # her çalıştırma farklı IP: önceki engel yüzünden kaynağı atlama
-      # 20 dakikalık zamanlama + PC tetiklemesi: siteyi 110 dakikadan sık tarama (sitedeki Şimdi tara hariç)
-      M2KIRA_MIN_INTERVAL_MIN: ${{ inputs.force == '1' && '0' || '110' }}
+      # zamanlama + PC tetiklemesi üst üste gelebilir: siteyi 25 dakikadan sık tarama (sitedeki Şimdi tara hariç)
+      M2KIRA_MIN_INTERVAL_MIN: ${{ inputs.force == '1' && '0' || '25' }}
       M2KIRA_SUMMARY_FALLBACK: "1"   # 09:00 zamanlaması düşerse özet sonraki ilk çalıştırmada gider
     steps:
       - uses: actions/checkout@v4

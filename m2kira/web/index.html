@@ -1019,17 +1019,17 @@ function renderStatus() {
   const feedAge = (k) => (fg[k] ? ageHours(fg[k]) : null);
   const feedOk = (k) => feedAge(k) != null && feedAge(k) <= (D.feed_max_age_hours || 3);
   const ejLevel = st.emlakjet ? (ageHours(st.emlakjet.last) > 5 ? "warn" : "ok") : "bad";
-  const feedLine = (k) => `<div class="kv">Son PC gönderimi: <b>${esc(fg[k] ? fmtWhen(fg[k]) : "yok")}</b>${fg[k] ? " (" + esc(ago(fg[k])) + ")" : ""}</div>${feedOk(k) ? "" : `<div class="kv">Bilgisayar kapalıyken güncellenmez; uyutup şarjda bırakırsan 2 saatte bir uyanıp tarar. Mevcut ilanlar sitede kalır.</div>`}`;
+  const feedLine = (k) => `<div class="kv">Son PC gönderimi: <b>${esc(fg[k] ? fmtWhen(fg[k]) : "yok")}</b>${fg[k] ? " (" + esc(ago(fg[k])) + ")" : ""}</div>${feedOk(k) ? "" : `<div class="kv">Bilgisayar kapalıyken güncellenmez; uyutup şarjda bırakırsan 30 dakikada bir uyanıp tarar. Mevcut ilanlar sitede kalır.</div>`}`;
   const tg = D.telegram_bot ? `<a href="https://t.me/${esc(D.telegram_bot)}" target="_blank" rel="noopener noreferrer">@${esc(D.telegram_bot)}</a>` : "Telegram botu";
   box.innerHTML = `<h1>Durum</h1>
-  <div class="panel"><div class="kv">Sayfa üretildi <b>${esc(fmtWhen(D.generated))}</b> (${esc(ago(D.generated))}) · her <b>${D.schedule ? D.schedule.every_hours : 2} saatte</b> bir tarama, her gün <b>${esc(D.schedule ? D.schedule.summary : "09:00")}</b> özet · bildirimler ${tg}</div>
+  <div class="panel"><div class="kv">Sayfa üretildi <b>${esc(fmtWhen(D.generated))}</b> (${esc(ago(D.generated))}) · her <b>${D.schedule && D.schedule.every_min ? D.schedule.every_min + " dakikada" : (D.schedule ? D.schedule.every_hours : 2) + " saatte"}</b> bir tarama, her gün <b>${esc(D.schedule ? D.schedule.summary : "09:00")}</b> özet · bildirimler ${tg}</div>
     <div class="kv">Kriterlere uyan aktif ilan <b>${D.items.filter((i) => i.ok && !isHidden(i)).length}</b> · son 24 saatte yeni uygun <b>${D.new24 ?? "?"}</b> · bütçe <b>${esc(TL(D.budget))}</b></div>
     <div class="row" style="margin-top:14px"><button class="btn primary" type="button" id="d-scan">Şimdi tara</button><button class="btn" type="button" id="d-refresh">Sayfayı yenile</button>
       <a class="btn" href="https://github.com/${esc(GH.repo())}/actions" target="_blank" rel="noopener noreferrer">GitHub Actions ↗</a></div>
     <p class="small" id="d-msg">${connected() ? "" : "Tarama başlatmak için sağ üstten GitHub'a bağlan."}</p></div>
   <div class="scards">
-    ${srcCard("emlakjet", "emlakjet", "GitHub'da, her 2 saatte bir (PC'den bağımsız)", st.emlakjet, "", ejLevel)}
-    ${srcCard("hepsiemlak", "hepsiemlak", "Evdeki bilgisayardan, açıkken ya da uykudayken (şarjda) 2 saatte bir; bulut sunucularını Cloudflare engelliyor", st.hepsiemlak, feedLine("hepsiemlak"), feedOk("hepsiemlak") ? "ok" : "warn")}
+    ${srcCard("emlakjet", "emlakjet", "GitHub'da, 30 dakikada bir (PC'den bağımsız)", st.emlakjet, "", ejLevel)}
+    ${srcCard("hepsiemlak", "hepsiemlak", "Evdeki bilgisayardan, açıkken ya da uykudayken (şarjda) 30 dakikada bir; bulut sunucularını Cloudflare engelliyor", st.hepsiemlak, feedLine("hepsiemlak"), feedOk("hepsiemlak") ? "ok" : "warn")}
     ${srcCard("sahibinden", "sahibinden", "Evdeki bilgisayardan, açıkken ya da uykudayken (şarjda), giriş yapılmış Chrome profilinle görünmez tarama · bilgisayar kapalıyken sahibinden uygulamasının kayıtlı arama bildirimi", st.sahibinden, feedLine("sahibinden") + `<div class="kv"><a href="https://banaozel.sahibinden.com/favori-aramalarim" target="_blank" rel="noopener noreferrer">Kayıtlı aramalarım ↗</a></div>`, feedOk("sahibinden") ? "ok" : (fg.sahibinden ? "warn" : "bad"))}
   </div>
   <div class="panel"><h2>Son çalıştırmalar</h2><div class="runs-wrap" id="d-runs"><p class="small">Yükleniyor…</p></div></div>`;
@@ -1059,6 +1059,17 @@ async function pollPending() {
   try { const r = await fetch("data.json?t=" + Date.now(), { cache: "no-store" }); const d = await r.json(); if (d.generated !== p.base) { store.del("m2k_pending"); box.hidden = true; applyData(d); toast("Yeni veriler yüklendi"); return; } } catch (e) {}
   setTimeout(pollPending, 20000);
 }
+// Sayfa açık kaldıkça yeni tarama sonucunu kendiliğinden yükler (5 dakikada bir ve sekmeye dönünce kontrol)
+async function autoRefresh() {
+  if (document.hidden || !D) return;
+  try {
+    const r = await fetch("data.json?t=" + Date.now(), { cache: "no-store" });
+    const d = await r.json();
+    if (d.generated && d.generated !== D.generated) { applyData(d); toast("Yeni tarama sonuçları yüklendi"); }
+  } catch (e) {}
+}
+setInterval(autoRefresh, 5 * 60 * 1000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) autoRefresh(); });
 async function reloadData(showToast) {
   $("#kpis").style.opacity = .5; $("#results").style.opacity = .5;   // yenilemede çerçeve korunur
   try { const r = await fetch("data.json?t=" + Date.now(), { cache: "no-store" }); applyData(await r.json()); if (showToast) toast("Güncel veriler yüklendi"); }
@@ -1080,7 +1091,7 @@ function renderFresh() {
   const seen = stale.filter((k) => fg[k]).map((k) => fg[k]).sort();
   const when = seen.length ? `en son ${ago(seen[0])} güncellendi` : "henüz gelmedi";
   box.innerHTML = `<b>${esc(stale.join(" ve "))}</b> ${when}. Bu kaynaklar evdeki bilgisayardan taranır ve bilgisayar kapalıyken durur. ` +
-    `Kapatmak yerine uyutup şarjda bırakırsan 2 saatte bir kendiliğinden uyanıp tarar. Sitedeki ilanları kalır; emlakjet her zaman güncellenir.`;
+    `Kapatmak yerine uyutup şarjda bırakırsan 30 dakikada bir kendiliğinden uyanıp tarar. Sitedeki ilanları kalır; emlakjet her zaman güncellenir.`;
   box.hidden = false;
 }
 function renderAll(rebuildFilters = true, keepFocus = false) {

@@ -3,7 +3,7 @@
 
 budget: 37000              # TL/ay tavan (Telegram'da /butce ile de değiştirilebilir)
 budget_tolerance_pct: 5    # bu kadar aşanlar "pazarlıkla" etiketiyle gösterilir
-scan_interval_hours: 2
+scan_interval_hours: 0.5      # 30 dakikada bir (PC görevi ve GitHub aralıkları buna göre)
 daily_summary_time: "09:00"
 timezone: "Europe/Istanbul"
 scan_on_start: true        # `run` başlar başlamaz bir tarama yap
@@ -64,10 +64,10 @@ sources:
     fast_categories: [daire]
     categories: [daire, residence]
     full_scan_every_hours: 24
-    max_full_per_run: 4
+    max_full_per_run: 2      # 30 dakikada bir taramada günde bir tam geçiş için yeterli
     scan_unfiltered: true
     max_pages: 5
-    max_detail_fetch: 30   # tarama başına en fazla detay sayfası (eşya belirsiz / koordinatsız ilanlar; kalanı sonraki taramada)
+    max_detail_fetch: 10   # (30 dk aralıkla) tarama başına en fazla detay sayfası (eşya belirsiz / koordinatsız ilanlar; kalanı sonraki taramada)
     detail_for_coords: true
     headless: true
     slug_prefix: "cankaya-"
@@ -86,7 +86,7 @@ sources:
     path: feed/sahibinden.json
     max_age_hours: 3
     headless: true         # gerçek Chrome --headless=new: sahibinden'in korumasını geçti (19.10.2026)
-    max_detail_fetch: 10   # tarama başına en fazla yeni ilan detayı (konum için); detaylar önbellekte kalır.
+    max_detail_fetch: 5    # tarama başına en fazla yeni ilan detayı (konum için; 30 dk aralıkla saatte ~10); önbellekte kalır.
                            # 20.10.2026: 11:55'te 20 detay, 13:10'da 4 detaydan sonra giriş duvarı -> ~24/saat sınırı var
   emlakjet:
     enabled: true
