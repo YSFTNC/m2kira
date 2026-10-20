@@ -229,3 +229,44 @@ def test_notify_feed_problem_streaks(cfg, tmp_path, monkeypatch):
     assert db.get_setting("feed_fail_streak:sahibinden") == 0
     feedmod.notify_feed_problem(cfg, db, "sahibinden", {"units": [], "errors": ["sahibinden oturum istiyor"]})
     assert len(sent) == 2 and "oturumu düştü" in sent[1]   # oturum: hemen
+
+
+def test_collect_hepsiemlak_resumes_where_blocked(cfg, tmp_path, monkeypatch):
+    """Hız sınırı gelen mahalle bir sonraki taramada ilk sırada taranır."""
+    import m2kira.sources.hepsiemlak as hmod
+    from m2kira import feed as feedmod
+    from m2kira.http import BlockedError
+    from m2kira.models import ScanResult
+    order, block_at = [], {"key": None}
+
+    class FakeHE:
+        def __init__(self, cfg):
+            self.db = None
+
+        def begin_run(self):
+            pass
+
+        def scan_neighborhood(self, nb):
+            if nb.key == block_at["key"]:
+                block_at["key"] = None
+                raise BlockedError("HTTP 429")
+            order.append(nb.key)
+            return ScanResult(source="hepsiemlak", neighborhood=nb.name, listings=[], pages=1, complete=True)
+
+        def mark_full_done(self, key):
+            pass
+
+        def close(self):
+            pass
+
+    monkeypatch.setattr(hmod, "HepsiemlakSource", FakeHE)
+    db = DB(tmp_path / "r.sqlite")
+    keys = [nb.key for nb in cfg.enabled_neighborhoods() if nb.slug_for("hepsiemlak")]
+    block_at["key"] = keys[-3]
+    p1 = feedmod.collect_hepsiemlak(cfg, db)
+    assert order == keys[:-3] and len(p1["errors"]) == 1
+    assert db.get_setting(feedmod.RESUME_KEY) == keys[-3]
+    order.clear()
+    feedmod.collect_hepsiemlak(cfg, db)
+    assert order[:3] == keys[-3:] and order[3] == keys[0] and len(order) == len(keys)
+    assert db.get_setting(feedmod.RESUME_KEY) is None

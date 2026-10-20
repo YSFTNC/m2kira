@@ -71,7 +71,8 @@ sources:
     detail_for_coords: true
     headless: true
     slug_prefix: "cankaya-"
-    min_interval_sec: 8    # 5 sn aralık + resim/JS yüklemesiyle ~25 sayfada HTTP 429 alındı; yalnız HTML ile 15 sn'de 109 sayfa sorunsuz
+    min_interval_sec: 15   # 5 sn aralık + resim/JS ile ~25 sayfada HTTP 429; yalnız HTML ile 15 sn'de 109 sayfa sorunsuz.
+                           # 20.10.2026: 8 sn'ye indirilince PC taramaları 21-24. sayfada 429 aldı -> yeniden 15
     cooldown_sec: 120      # 429/doğrulama görülürse bu kadar bekleyip bir kez daha dene
     block_resources: true  # sayfa başına yalnızca HTML'i yükle (resim/JS/XHR hız sınırına sayılıyor)
   hepsiemlak_feed:         # GitHub tarafı: PC'nin `feed-push` ile gönderdiği hepsiemlak beslemesi

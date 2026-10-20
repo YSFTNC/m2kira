@@ -83,6 +83,9 @@ def _payload(source: str, units: list[dict[str, Any]], errors: list[str]) -> dic
 
 
 # ------------------------------------------------------------------ hepsiemlak
+RESUME_KEY = "hepsiemlak_feed_resume"
+
+
 def collect_hepsiemlak(cfg: Config, db: DB) -> dict[str, Any]:
     """hepsiemlak'ı (hızlı/tam geçiş planıyla) tarar."""
     from .sources.hepsiemlak import HepsiemlakSource
@@ -91,15 +94,22 @@ def collect_hepsiemlak(cfg: Config, db: DB) -> dict[str, Any]:
     src.begin_run()
     units: list[dict[str, Any]] = []
     errors: list[str] = []
+    nbs = [nb for nb in cfg.enabled_neighborhoods() if nb.slug_for("hepsiemlak")]
+    # Hız sınırı gelirse tarama durur; sıra hep aynı olsaydı listenin sonundaki mahalleler (Çayyolu, Koru)
+    # her seferinde atlanırdı. Bir sonraki tarama, engelin geldiği mahalleden başlar.
+    resume = db.get_setting(RESUME_KEY)
+    if resume in [nb.key for nb in nbs]:
+        i = [nb.key for nb in nbs].index(resume)
+        nbs = nbs[i:] + nbs[:i]
+    stopped_at = None
     try:
-        for nb in cfg.enabled_neighborhoods():
-            if not nb.slug_for("hepsiemlak"):
-                continue
+        for nb in nbs:
             try:
                 res = src.scan_neighborhood(nb)
             except (BlockedError, LoginRequiredError) as exc:
                 errors.append(f"{nb.name}: {exc}")
                 log.warning("hepsiemlak engellendi, tarama durdu: %s", exc)
+                stopped_at = nb.key
                 break
             except Exception as exc:  # noqa: BLE001
                 errors.append(f"{nb.name}: {exc}")
@@ -111,6 +121,7 @@ def collect_hepsiemlak(cfg: Config, db: DB) -> dict[str, Any]:
                 src.mark_full_done(nb.key)
     finally:
         src.close()
+        db.set_setting(RESUME_KEY, stopped_at)
     return _payload("hepsiemlak", units, errors)
 
 
