@@ -514,7 +514,12 @@ class Pipeline:
         else:
             for l, evd in cards:
                 try:
-                    self.notifier.send(format_listing(l, evd, budget), subject=f"m2kira: {evd['kind']}")
+                    text = format_listing(l, evd, budget)
+                    img = str((l.get("extras") or {}).get("img") or "")
+                    if evd["kind"] != "removed" and img.startswith("https://"):
+                        self.notifier.send_photo(img, text, subject=f"m2kira: {evd['kind']}")
+                    else:
+                        self.notifier.send(text, subject=f"m2kira: {evd['kind']}")
                     sent += 1
                 except Exception as exc:  # noqa: BLE001
                     log.error("bildirim gönderilemedi (%s): %s", l.get("id"), exc)

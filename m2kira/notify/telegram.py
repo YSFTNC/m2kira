@@ -47,6 +47,21 @@ class TelegramNotifier(Notifier):
                     ok = False
         return ok
 
+    CAPTION_LIMIT = 1024   # Telegram: başlık, biçim etiketleri ayıklandıktan sonra en fazla 1024 karakter
+
+    def send_photo(self, photo_url: str, caption: str, subject: str = "m2kira", chat_id: Optional[str] = None) -> bool:
+        """İlan kartını fotoğrafla gönderir. Fotoğrafı Telegram'ın sunucusu indirir; indiremezse ya da başlık
+        sınırı aşılırsa kart her zamanki gibi düz mesaj olarak gider."""
+        chat = chat_id or self.chat_id
+        if not chat or not photo_url or len(strip_html(caption)) > self.CAPTION_LIMIT:
+            return self.send(caption, subject, chat_id=chat_id)
+        try:
+            self.call("sendPhoto", chat_id=chat, photo=photo_url, caption=caption, parse_mode="HTML")
+            return True
+        except Exception as exc:  # noqa: BLE001
+            log.info("fotoğraflı kart gönderilemedi (%s); düz mesaj gönderiliyor", exc)
+            return self.send(caption, subject, chat_id=chat_id)
+
     def get_updates(self, offset: Optional[int], timeout: int = 30) -> list[dict[str, Any]]:
         r = requests.get(f"{self.api}/getUpdates",
                          params={"offset": offset, "timeout": timeout, "allowed_updates": '["message"]'},

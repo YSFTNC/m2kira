@@ -19,6 +19,10 @@ class Notifier:
     def send(self, text: str, subject: str = "m2kira") -> bool:  # pragma: no cover
         raise NotImplementedError
 
+    def send_photo(self, photo_url: str, caption: str, subject: str = "m2kira") -> bool:
+        """Fotoğraflı kart; desteklemeyen kanallar yalnız metni gönderir."""
+        return self.send(caption, subject)
+
 
 class ConsoleNotifier(Notifier):
     name = "console"
@@ -43,6 +47,15 @@ class MultiNotifier(Notifier):
         for n in self.notifiers:
             try:
                 ok = n.send(text, subject) or ok
+            except Exception as exc:
+                log.error("bildirim (%s) başarısız: %s", n.name, exc)
+        return ok
+
+    def send_photo(self, photo_url: str, caption: str, subject: str = "m2kira") -> bool:
+        ok = False
+        for n in self.notifiers:
+            try:
+                ok = n.send_photo(photo_url, caption, subject) or ok
             except Exception as exc:
                 log.error("bildirim (%s) başarısız: %s", n.name, exc)
         return ok
