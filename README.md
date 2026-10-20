@@ -141,6 +141,24 @@ tespiti, filtre sayfası. 3 saatten eski besleme işlenmez (ilanlar silinmez, uy
 iki kez işlenmez. Bütçe, yayınlanan `data.json`'dan alınır (`/butce` değişikliği PC'ye de yansır).
 Kayıt: `data\m2kira.log`.
 
+### GitHub zamanlayıcısı çalışmazsa: dış tetikleyici (5 dakika, ücretsiz)
+
+GitHub zamanlanmış çalıştırmaları düşürebiliyor (20.10.2026 gecesi 10 saatte 6 zamanlamadan 1'i çalıştı).
+PC kapalıyken emlakjet, Telegram komutları ve 09:00 özeti bu çalıştırmalara bağlı. Sitenin Durum
+sekmesindeki "Son çalıştırmalar" listesinde saatlerce "zamanlanmış" satırı görünmüyorsa:
+
+1. GitHub → Settings → Developer settings → Fine-grained tokens → yalnız `YSFTNC/m2kira` deposu,
+   izin **Actions: Read and write** ile bir token oluştur (sitedeki "GitHub'a bağlan" için oluşturduğun
+   token da olur).
+2. https://cron-job.org adresinde ücretsiz hesap aç → **Create cronjob**:
+   - URL: `https://api.github.com/repos/YSFTNC/m2kira/actions/workflows/scan.yml/dispatches`
+   - Zamanlama: her 30 dakikada bir
+   - Advanced → Request method: **POST**, Request body: `{"ref":"main"}`
+   - Headers: `Authorization: Bearer <token>`, `Accept: application/vnd.github+json`,
+     `X-GitHub-Api-Version: 2022-11-28`
+3. Kaydet. Sık tetikleme sorun değil: emlakjet en az 110 dakika arayla taranır, beslemeler bir kez
+   işlenir, özet günde bir gider.
+
 ### Alternatif çalışma yerleri
 
 - **Raspberry Pi / VPS** (komutlar anında, ev IP'si Cloudflare için en rahatı): `docker compose up -d --build`
