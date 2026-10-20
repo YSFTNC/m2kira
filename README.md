@@ -131,7 +131,9 @@ sonucu bittiği anda reponun `feed` dalına (`feed/sahibinden.json`, `feed/hepsi
 GitHub işi varsayılan kaynaklarla hemen tetiklenir; yavaş bir hepsiemlak geçişi sahibinden bildirimlerini
 bekletmez. Her GitHub çalıştırması taze ve işlenmemiş tüm beslemeleri, vakti gelmişse emlakjet'i ve kaçan
 günlük özeti işler; bu yüzden GitHub'ın zamanlayıcısı bir çalıştırmayı düşürse ya da sıradaki bir iş iptal
-olsa da veri kaybolmaz. emlakjet 90 dakikadan sık taranmaz (sitedeki "Şimdi tara" bu kuralı atlar).
+olsa da veri kaybolmaz. GitHub zamanlanmış çalıştırmaları sık düşürdüğü için iş 20 dakikada bir denenir;
+emlakjet yine de 110 dakikadan sık taranmaz (sitedeki "Şimdi tara" bu kuralı atlar), Telegram komutları en geç
+~20 dakikada yanıtlanır.
 Bir kaynak üst üste iki çalıştırmada hiç taranamazsa PC Telegram'a çözüm önerisiyle haber verir.
 Tek kaynak: `python main.py feed-push --only sahibinden`.
 GitHub tarafı beslemeyi normal bir kaynak gibi işler: yeni ilan / fiyat düşüşü bildirimi, kopya
