@@ -172,6 +172,7 @@ def build_payload(cfg: Config, db: DB, budget: Optional[int] = None) -> dict[str
         "status": source_status(db),
         "feed_generated": {s: db.get_setting(f"feed_processed:{s}") for s in ("hepsiemlak", "sahibinden")},
         "pc": _pc_status(cfg),
+        "areas": [a for a in (cfg.get("areas", default=[]) or []) if isinstance(a, dict) and a.get("lat") and a.get("lon")],
         "neighborhoods": [{"name": n.name, "key": n.key, "station": n.station, "enabled": n.enabled}
                           for n in cfg.neighborhoods],
         "repo": {"name": str(fc.get("repo", "YSFTNC/m2kira")), "branch": str(fc.get("branch", "feed")),

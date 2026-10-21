@@ -394,6 +394,11 @@ input[type=range], label.ck input { accent-color: var(--accent); }
 .ncard .nmedia .ph svg { width: 24px; height: 24px; opacity: .5; }
 .ncard .nage { background: rgba(10,10,18,.68); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
 .newest .nhead h2 { font-size: 17px; font-weight: 800; letter-spacing: -.02em; }
+/* bölge sekmesi */
+.aline { font-size: 13px; color: var(--accent-ink); background: var(--accent-soft); border-radius: 10px; padding: 5px 10px; }
+.aline b { font-weight: 800; }
+.kpis.area { grid-template-columns: repeat(3, minmax(0, 1fr)); padding-top: 4px; }
+#bolge .cards { margin-top: 16px; }
 /* ilan sayfası (sahibinden açılmadığında da) */
 dialog.lsheet { width: min(760px, calc(100vw - 20px)); max-width: none; max-height: calc(100dvh - 20px); padding: 0; overflow: auto; border-radius: 22px; }
 .lsheet .lsmedia { position: relative; aspect-ratio: 16 / 9; background: linear-gradient(140deg, color-mix(in srgb, var(--src, var(--accent)) 24%, var(--surface-2)), var(--surface-3)); }
@@ -443,7 +448,9 @@ dialog.lsheet { width: min(760px, calc(100vw - 20px)); max-width: none; max-heig
   body { padding-bottom: 72px; }
   .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .kpis .tile.wide { grid-column: 1 / -1; }
-  .kpis.drops { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .kpis.drops, .kpis.area { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .kpis.area .tile:last-child { grid-column: 1 / -1; }
+  .bottomnav button { padding: 4px 6px; font-size: 11px; }
   .kpis.drops .tile:last-child { grid-column: 1 / -1; }
   .tile .val { font-size: 21px; }
   .ghead { grid-template-columns: 1fr; }
@@ -468,6 +475,7 @@ dialog.lsheet { width: min(760px, calc(100vw - 20px)); max-width: none; max-heig
     <nav class="nav" role="tablist" aria-label="Bölümler">
       <button role="tab" data-tab="ilan" type="button">İlanlar</button>
       <button role="tab" data-tab="dusen" type="button">Fiyatı düşenler</button>
+      <button role="tab" data-tab="bolge" type="button" class="areatab">Balgat</button>
       <button role="tab" data-tab="ayar" type="button">Ayarlar</button>
       <button role="tab" data-tab="durum" type="button">Durum</button>
     </nav>
@@ -510,6 +518,7 @@ dialog.lsheet { width: min(760px, calc(100vw - 20px)); max-width: none; max-heig
 </section>
 
 <section id="tab-dusen" hidden><div class="wrap page" id="dusen"></div></section>
+<section id="tab-bolge" hidden><div class="wrap page" id="bolge"></div></section>
 <section id="tab-ayar" hidden><div class="wrap page" id="ayar"></div></section>
 <section id="tab-durum" hidden><div class="wrap page" id="durum"></div></section>
 
@@ -517,6 +526,7 @@ dialog.lsheet { width: min(760px, calc(100vw - 20px)); max-width: none; max-heig
   <button role="tab" data-tab="ilan" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>İlanlar</button>
   <button role="tab" data-tab="harita" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg>Harita</button>
   <button role="tab" data-tab="dusen" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7l6 6 4-4 8 8"/><path d="M21 11v6h-6"/></svg>Düşenler</button>
+  <button role="tab" data-tab="bolge" type="button" class="areatab-m"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span class="lbl">Balgat</span></button>
   <button role="tab" data-tab="ayar" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>Ayarlar</button>
   <button role="tab" data-tab="durum" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>Durum</button>
 </nav>
@@ -1093,7 +1103,8 @@ function openListing(id) {
     wireGallery(dlg);
   });
 }
-function card(it) {
+function card(it, opt) {
+  opt = opt && typeof opt === "object" ? opt : {};
   const ks = tkeys(), cm = it.cm || {};
   const isFav = favs.has(it.id), isHid = isHidden(it), open = openDetails.has(it.id);
   const mt = [];
@@ -1122,6 +1133,7 @@ function card(it) {
       <button class="heart" type="button" data-act="fav" aria-pressed="${isFav}" aria-label="${isFav ? "Favorilerden çıkar" : "Favorilere ekle"}">${ICON_HEART}</button>${priceBar}</div>
     <div class="cbody">
       <a class="ttl" href="${esc(safeUrl(it.url))}" target="_blank" rel="noopener noreferrer" title="${esc(it.t)}" data-act="open">${esc(niceTitle(it.t))}</a>
+      ${opt.area ? `<div class="aline">📍 ${opt.dist != null ? `${esc(opt.area)}'a <b>${String(opt.dist.toFixed(1)).replace(".", ",")} km</b>` : `${esc(opt.area)} çevresi · konum belirsiz`}</div>` : ""}
       ${it.pp ? `<div class="dropline">↓ <b>${esc(TL(it.pp - it.p))}</b> (−%${Math.round((it.pp - it.p) / it.pp * 100)}) · ${esc(TL(it.pp))} → ${esc(TL(it.p))}${it.pdt ? " · " + esc(ago(it.pdt)) : ""}</div>` : ""}
       <div class="specline">${specs}</div>
       <div class="loc"><span class="mi">${ICON.metro}</span><span>${esc(it.d || "?")} → <b>${esc(it.st || "durak belirsiz")}</b></span>${walk}</div>
@@ -1341,7 +1353,7 @@ function renderTabs() {
   const t = S.tab === "ilan" && S.view === "map" ? "harita" : S.tab;
   for (const b of document.querySelectorAll("[data-tab]")) b.setAttribute("aria-selected", String(b.dataset.tab === t || (b.dataset.tab === "ilan" && t === "harita" && b.closest(".nav"))));
   $("#tab-ilan").hidden = S.tab !== "ilan"; $("#tab-ayar").hidden = S.tab !== "ayar"; $("#tab-durum").hidden = S.tab !== "durum";
-  $("#tab-dusen").hidden = S.tab !== "dusen";
+  $("#tab-dusen").hidden = S.tab !== "dusen"; $("#tab-bolge").hidden = S.tab !== "bolge";
 }
 // PC'den gelen kaynaklar (hepsiemlak, sahibinden) eskidiyse ilanlar sayfasında kısa bir uyarı
 function renderFresh() {
@@ -1401,6 +1413,63 @@ function renderHero() {
   box.innerHTML = `<h1>Ankara <em>M2 hattında</em> eşyalı kiralık</h1>
     <p><span class="live"><i></i>Canlı</span><span><b>${NF.format(ok)}</b> uygun ilan</span><span><b>${NF.format(D.items.length)}</b> aktif ilan</span>
       <span><b>${NF.format(n24)}</b> yeni (24 sa)</span><span>son güncelleme ${esc(fmtWhen(D.last_scan || D.generated))}</span></p>`;
+}
+// Bölge sekmesi (config.yaml -> areas): merkezin çevresindeki ilanlar; metroya uzaklık ölçüt değil
+function kmBetween(a1, o1, a2, o2) {
+  const R = 6371, t = Math.PI / 180, dA = (a2 - a1) * t, dO = (o2 - o1) * t;
+  const h = Math.sin(dA / 2) ** 2 + Math.cos(a1 * t) * Math.cos(a2 * t) * Math.sin(dO / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+const nbKey = (x) => norm(x || "").replace(/\b(mahallesi|mah|mh)\b\.?/g, "").replace(/\s+/g, " ").trim();
+function areaOk(it) {   // kriterler (bütçe, eşya, oda, hariç bayraklar) — metroya uzaklık hariç
+  const s = D.settings || {}, cap = D.budget * (1 + (D.tol || 0) / 100);
+  if (!it.p || it.p > cap) return false;
+  const acc = new Set(s.furnished_accept || ["full", "partial", "either"]); if (s.include_unknown_furnished) acc.add("unknown");
+  if (!acc.has(it.fur)) return false;
+  const rooms = s.rooms_allowed || [];
+  if (rooms.length && it.r && !rooms.includes(it.r)) return false;
+  const ex = new Set((s.exclude_flags || ["gunluk", "oda", "uzak"]).filter((f) => f !== "uzak"));
+  return !(it.fg || []).some((f) => ex.has(f));
+}
+const AREA_SORTS = [["dist", "Merkeze yakın"], ["price", "En ucuz"], ["new", "En yeni"]];
+function renderArea() {
+  const box = $("#bolge"), A = (D.areas || [])[0];
+  if (!A) { box.innerHTML = `<p class="empty">Bölge tanımlı değil (config.yaml → areas).</p>`; return; }
+  const r = +store.get("m2k_area_r", String(A.radius_km || 2));
+  const onlyOk = store.get("m2k_area_ok", "0") === "1", sort = store.get("m2k_area_sort", "dist");
+  const names = new Set((A.neighborhoods || []).map(nbKey));
+  const rows = [];
+  for (const it of D.items) {
+    if (isHidden(it)) continue;
+    let dist = null;
+    if (it.lat && it.lon) { dist = kmBetween(A.lat, A.lon, it.lat, it.lon); if (dist > r) continue; }
+    else if (!names.has(nbKey(it.d))) continue;
+    rows.push({ it, dist, ok: areaOk(it) });
+  }
+  const list = rows.filter((x) => !onlyOk || x.ok);
+  const cmp = { dist: (a, b) => (a.dist ?? 99) - (b.dist ?? 99), price: (a, b) => (a.it.p || 1e12) - (b.it.p || 1e12),
+    new: (a, b) => ageHours(a.it.fs) - ageHours(b.it.fs) }[sort] || ((a, b) => (a.dist ?? 99) - (b.dist ?? 99));
+  list.sort(cmp);
+  const prices = list.map((x) => x.it.p).filter(Boolean);
+  const tile = (lab, val, sub, ic) => `<div class="tile"><div class="lab"><span class="ic">${ICON[ic]}</span>${esc(lab)}</div><div class="val">${esc(val)}</div>${sub ? `<div class="sub">${esc(sub)}</div>` : ""}</div>`;
+  const rk = (x) => String(x).replace(".", ",");
+  box.innerHTML = `<div class="hero" style="padding-top:4px"><h1><em>${esc(A.name)}</em> ve çevresi</h1>
+      <p>${esc(A.name)} merkezinin ${esc(rk(r))} km çevresindeki ilanlar. Metroya uzaklık bu sekmede ölçüt değil; konumu belirsiz ilanlar mahalle adından eklenir.</p></div>
+    <div class="toolbar" style="padding-top:14px">
+      <button class="chip" type="button" id="areaok" aria-pressed="${onlyOk}">Yalnız uygun (metro hariç)</button>
+      <select class="sel" id="arear" aria-label="Yarıçap">${[1, 1.5, 2, 2.5, 3].map((k) => `<option value="${k}" ${k === r ? "selected" : ""}>${esc(rk(k))} km</option>`).join("")}</select>
+      <select class="sel" id="areasort" aria-label="Sıralama">${AREA_SORTS.map(([k, l]) => `<option value="${k}" ${k === sort ? "selected" : ""}>${esc(l)}</option>`).join("")}</select>
+    </div>
+    <div class="kpis area">
+      ${tile("İlan", NF.format(list.length), `${rows.filter((x) => x.dist != null).length} tanesinin konumu belli`, "home")}
+      ${tile("Uygun (metro hariç)", NF.format(rows.filter((x) => x.ok).length), "bütçe, eşya, oda kriterlerine göre", "spark")}
+      ${tile("En ucuz", prices.length ? TL(Math.min(...prices)) : "—", prices.length ? `medyan ${TL(median(prices))}` : "", "tag")}
+    </div>
+    ${list.length ? `<div class="cards">${list.map((x) => card(x.it, { area: A.name, dist: x.dist })).join("")}</div>`
+      : `<p class="empty">${rows.length ? "Kriterlerine uyan ilan yok. \"Yalnız uygun\" seçeneğini kapatıp tümüne bakabilirsin." : "Bu çevrede şu an ilan yok. Yeni mahalleler taramaya eklendi; ilk taramalardan sonra burada görünür."}</p>`}`;
+  $("#areaok").onclick = () => { store.set("m2k_area_ok", onlyOk ? "0" : "1"); renderArea(); };
+  $("#arear").onchange = (e) => { store.set("m2k_area_r", e.target.value); renderArea(); };
+  $("#areasort").onchange = (e) => { store.set("m2k_area_sort", e.target.value); renderArea(); };
 }
 // Fiyatı düşenler sekmesi: kriter filtrelerinden bağımsız, gizlenenler hariç
 const DROP_SORTS = [["pct", "En büyük düşüş (%)"], ["tl", "En büyük düşüş (TL)"], ["recent", "En yeni düşüş"], ["price", "En ucuz"]];
@@ -1465,6 +1534,7 @@ function renderAll(rebuildFilters = true, keepFocus = false) {
   if (S.tab === "ayar") { renderSettings(); return; }
   if (S.tab === "durum") { renderStatus(); return; }
   if (S.tab === "dusen") { renderDrops(); return; }
+  if (S.tab === "bolge") { renderArea(); return; }
   const base = D.items.filter((it) => pass(it, S, true));
   const list = base.filter((it) => pass(it, S, false)).sort(sorter(S.sort));
   renderHero(); renderFresh(); renderNewest(); renderLine(base); renderActive(); renderKpis(list);
@@ -1523,7 +1593,9 @@ function skeleton() {
   $("#results").innerHTML = `<div class="cards">${Array.from({ length: 6 }, () => `<div class="skel" style="height:380px"></div>`).join("")}</div>`;
 }
 function applyData(data) {
-  D = data; PHOTOS = null; PRESENT = new Set(D.items.map((i) => i.id));
+  D = data; PHOTOS = null;
+  const A = (D.areas || [])[0];
+  for (const b of document.querySelectorAll(".areatab, .areatab-m")) { b.hidden = !A; if (A) (b.querySelector(".lbl") || b).textContent = A.name; } PRESENT = new Set(D.items.map((i) => i.id));
   if (!connected()) { for (const f of (D.settings && D.settings.favorites) || []) favs.add(f); store.set("m2k_favs", [...favs]); }
   SET = pickSettings(D.settings || {});
   document.title = D.title || "M2 Kiralık"; $("#title").textContent = D.title || "M2 Kiralık";

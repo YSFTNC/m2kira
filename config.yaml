@@ -153,6 +153,17 @@ stations:
   - {name: "Maltepe", lat: 39.932386, lon: 32.842667, line: ANKARAY}
   - {name: "Demirtepe", lat: 39.925718, lon: 32.847687, line: ANKARAY}
 
+# --- bölge sekmeleri (site): bir merkezin çevresindeki ilanlar; metroya uzaklık bu sekmede ölçüt değil.
+# Konumu bilinen ilanlar yarıçapla, konumsuzlar mahalle adıyla seçilir. Merkez: Balgat çarşısı (Ceyhun Atuf Kansu).
+areas:
+  - key: balgat
+    name: "Balgat"
+    lat: 39.8990
+    lon: 32.8180
+    radius_km: 2.0
+    neighborhoods: ["Balgat", "Oğuzlar", "Ehlibeyt", "Kızılırmak", "Nasuh Akar", "Çukurambar", "Aşağı Öveçler", "Öveçler",
+                    "Sokullu Mehmet Paşa", "Cevizlidere", "İşçi Blokları", "Karakusunlar"]
+
 # --- izlenen mahalleler: name, varsayılan istasyon (koordinat yoksa), kaynak slug'ları
 # hepsiemlak: cankaya-<slug>-kiralik/daire ('/' içeren değer olduğu gibi kullanılır; bazı mahalleler sitede
 #   "cankaya-" öneki olmadan, ör. korkutreis-kiralik/daire — slug'lar sitenin kendi navigasyon verisinden alındı)
@@ -182,6 +193,13 @@ neighborhoods:
   - {name: "Çukurambar", station: "Söğütözü", hepsiemlak: "cukurambar-mah-kiralik/daire", emlakjet: cukurambar-mahallesi, sahibinden: 51430}
   - {name: "Kızılırmak", station: "Söğütözü", hepsiemlak: kizilirmak, emlakjet: kizilirmak-mahallesi, sahibinden: 3417}
   - {name: "İşçi Blokları", station: "MTA", hepsiemlak: isci-bloklari, emlakjet: isci-bloklari-mahallesi, sahibinden: 3427, note: "100. Yıl İşçi Blokları (hepsiemlak semt sayfası: 100-yil-isci-bloklari-kiralik/daire)"}
+  # Balgat çevresi (21.10.2026): metroya 2,5-3,1 km; ana listede "uzak", sitedeki Balgat sekmesinde görünür.
+  # Konumsuz ilanlar uygun sayılmasın diye require_distance. sahibinden mahalle kimlikleri engel kalkınca eklenecek.
+  - {name: "Aşağı Öveçler", station: "Söğütözü", hepsiemlak: "asagi-ovecler-kiralik/daire", emlakjet: asagi-ovecler-mahallesi, sahibinden: false, require_distance: true}
+  - {name: "Öveçler", station: "Milli Kütüphane", hepsiemlak: "ovecler-mah-kiralik/daire", emlakjet: ovecler-mahallesi, sahibinden: false, require_distance: true}
+  - {name: "Sokullu Mehmet Paşa", station: "Milli Kütüphane", hepsiemlak: "sokullu-mehmet-pasa-mah-kiralik/daire", emlakjet: sokullu-mehmet-pasa-mahallesi, sahibinden: false, require_distance: true}
+  - {name: "Cevizlidere", station: "Söğütözü", hepsiemlak: cankaya-cevizlidere-mah, emlakjet: cevizlidere-mahallesi, sahibinden: false, require_distance: true}
+  - {name: "Karakusunlar", station: "MTA", hepsiemlak: "karakusunlar-kiralik/daire", emlakjet: false, sahibinden: false, require_distance: true}
   # ODTÜ / Bilkent
   - {name: "Mustafa Kemal", station: "ODTÜ", hepsiemlak: mustafa-kemal, emlakjet: mustafa-kemal-mahallesi, sahibinden: 3418}
   - {name: "Üniversiteler", station: "Bilkent", hepsiemlak: false, emlakjet: universiteler-mahallesi, sahibinden: 3504, note: "hepsiemlak'ta hem 'universiteler-kiralik/daire' hem 'cankaya-universiteler' 404; Üniversiteler ilanları hepsiemlak Beytepe sayfasında çıkıyor"}
