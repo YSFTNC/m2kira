@@ -62,6 +62,7 @@ def test_payload_and_export(cfg, tmp_path):
     info = export_site(cfg, db, out)
     assert info["items"] == 3 and (out / "index.html").exists() and (out / ".nojekyll").exists()
     assert (out / "og.png").exists()
+    assert json.loads((out / "photos.json").read_text(encoding="utf-8")) == {}     # bu tohum veride galeri yok
     j = json.loads((out / "data.json").read_text(encoding="utf-8"))
     assert j["items"] and "M2 Kiralık" in (out / "index.html").read_text(encoding="utf-8")
 
@@ -91,6 +92,6 @@ def test_payload_photos_skip_emlakjet(cfg, tmp_path):
         p.evaluate(l, cfg.budget)
         db.upsert(l)
     items = {i["src"]: i for i in build_payload(cfg, db)["items"]}
-    assert items["emlakjet"]["img"] is None
+    assert items["emlakjet"]["img"] is None and items["emlakjet"]["ni"] is None
     assert items["sahibinden"]["img"] == "https://i0.shbdn.com/photos/1/x5_a.jpg"
     assert items["hepsiemlak"]["img"] is None           # yalnız https

@@ -161,6 +161,20 @@ def _thumb(row) -> Optional[str]:
 
 
 # ---------------------------------------------------------------- detay
+PHOTO_RE = re.compile(r"https?://i\d+\.shbdn\.com/photos/((?:\d+/)+)(?:[a-z0-9]+_)?(\d{6,12}[a-z0-9]*)\.(?:jpe?g|png|webp)", re.I)
+
+
+def extract_photos(html: str) -> list[str]:
+    """Detay sayfasındaki tüm ilan fotoğrafları, büyük boy (x16_), sıra korunarak ve tekilleştirilerek.
+    Küçük resim / normal / büyük sürümler aynı dosya adını paylaşır (thmb_, x5_, x16_ önekleri)."""
+    seen: dict[str, str] = {}
+    for m in PHOTO_RE.finditer(html or ""):
+        name = m.group(2).lower()
+        if name not in seen:
+            seen[name] = f"https://i0.shbdn.com/photos/{m.group(1)}x16_{name}.jpg"
+    return list(seen.values())
+
+
 def parse_detail_html(html: str) -> dict[str, Any]:
     soup = BeautifulSoup(html, "lxml")
     info: dict[str, str] = {}
@@ -206,6 +220,7 @@ def parse_detail_html(html: str) -> dict[str, Any]:
     out["deposit"] = parse_price(info.get("Depozito (TL)")) if info.get("Depozito (TL)") else None
     out["owner_type"] = info.get("Kimden")
     out["listed_date"] = parse_date_any(info.get("İlan Tarihi"))
+    out["photos"] = extract_photos(html)
     return out
 
 
@@ -226,6 +241,10 @@ def apply_detail(listing: Listing, d: dict[str, Any]) -> Listing:
     for k in ("aidat", "deposit", "floor_count"):
         if d.get(k):
             listing.extras[k] = d[k]
+    # yalnız bu ilanın fotoğrafları (benzer ilan / mağaza görselleri dosya adından ayrılır)
+    own = [u for u in d.get("photos") or [] if listing.source_id and f"/x16_{listing.source_id}" in u]
+    if own:
+        listing.extras["imgs"] = own[:24]
     listing.detail_fetched = True
     return listing
 

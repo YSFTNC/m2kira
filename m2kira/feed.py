@@ -186,6 +186,12 @@ def collect_sahibinden(cfg: Config, db: DB, max_details: Optional[int] = None) -
             need = [l for l in res.listings if not (cache.get(l.id) or {}).get("lat")
                     and int((cache.get(l.id) or {}).get("attempts", 0)) < 3]
             need.sort(key=lambda l: (l.listed_date or ""), reverse=True)
+            if len(need) < max_details:   # boş kalan detay hakkı: konumu olup fotoğrafları henüz alınmamış ilanlar
+                photo_need = [l for l in res.listings if (cache.get(l.id) or {}).get("lat")
+                              and not (cache.get(l.id) or {}).get("imgs")
+                              and int((cache.get(l.id) or {}).get("photo_attempts", 0)) < 2]
+                photo_need.sort(key=lambda l: (l.listed_date or ""), reverse=True)
+                need += photo_need[:max_details - len(need)]
             fetched = 0
             for l in need[:max_details]:
                 time.sleep(random.uniform(2.0, 7.0))
@@ -205,9 +211,11 @@ def collect_sahibinden(cfg: Config, db: DB, max_details: Optional[int] = None) -
                     cache[l.id] = dict(prev, seen=now, attempts=int(prev.get("attempts", 0)) + 1)
                     continue
                 entry = {k: getattr(l, k) for k in SB_DETAIL_FIELDS if getattr(l, k) not in (None, "")}
-                for k in ("aidat", "deposit", "floor_count"):
+                for k in ("aidat", "deposit", "floor_count", "imgs"):
                     if l.extras.get(k):
                         entry[k] = l.extras[k]
+                if not entry.get("imgs"):
+                    entry["photo_attempts"] = int(prev.get("photo_attempts", 0)) + 1
                 entry["seen"] = now
                 cache[l.id] = entry
                 fetched += 1
@@ -223,7 +231,7 @@ def collect_sahibinden(cfg: Config, db: DB, max_details: Optional[int] = None) -
                         setattr(l, k, c[k])
                 if c.get("furnished_src") is not None:
                     l.furnished_src = c["furnished_src"]
-                for k in ("aidat", "deposit", "floor_count"):
+                for k in ("aidat", "deposit", "floor_count", "imgs"):
                     if k in c:
                         l.extras[k] = c[k]
                 l.detail_fetched = True

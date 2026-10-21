@@ -70,6 +70,19 @@ def parse_list_state(state: Any) -> tuple[list[dict], int, int]:
 
 
 IMG_CDN = "https://hecdn01.hemlak.com/mncropresize/400/300/"
+IMG_CDN_BIG = "https://hecdn01.hemlak.com/mncropresize/800/600/"   # galeri (sitedeki ilan sayfası)
+MAX_GALLERY = 24
+
+
+def gallery_urls(paths: Any) -> list[str]:
+    """Liste öğesindeki `images` dizisi -> galeri için 800x600 görseller (sıra korunur, en çok 24)."""
+    out: list[str] = []
+    for p in paths if isinstance(paths, list) else []:
+        if isinstance(p, str) and p:
+            u = p if p.startswith("http") else IMG_CDN_BIG + p.lstrip("/")
+            if u not in out:
+                out.append(u)
+    return out[:MAX_GALLERY]
 
 
 def image_url(path: Any) -> Optional[str]:
@@ -128,6 +141,7 @@ def item_to_listing(it: dict, furnished_src: Optional[bool] = None) -> Listing:
             "listing_type": (it.get("category") or {}).get("typeName"),
             "floor_count": (it.get("floor") or {}).get("count"),
             "img": image_url(it.get("imageUrl")),
+            "imgs": gallery_urls(it.get("images")),
         },
     )
     if listing.currency and listing.currency not in ("TL", "TRY"):

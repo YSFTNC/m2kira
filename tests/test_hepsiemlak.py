@@ -69,3 +69,16 @@ def test_parse_detail():
     assert l.detail_fetched is False
     apply_detail(l, d)
     assert l.detail_fetched and l.furnished_src is True and l.heating == "Merkezi" and l.elevator is True
+
+
+
+def test_list_items_carry_full_gallery():
+    import json
+    from pathlib import Path
+    from m2kira.sources.hepsiemlak import item_to_listing, parse_list_state
+    state = json.loads((Path(__file__).parent / "fixtures" / "hepsiemlak_list_kizilay_esyali.nuxt.json").read_text(encoding="utf-8"))
+    items, _, _ = parse_list_state(state)
+    listings = [item_to_listing(it) for it in items]
+    with_gallery = [l for l in listings if len(l.extras.get("imgs") or []) > 1]
+    assert with_gallery, "liste verisinde birden çok fotoğraflı ilan bekleniyordu"
+    assert all(u.startswith("https://hecdn01.hemlak.com/mncropresize/800/600/") for u in with_gallery[0].extras["imgs"])

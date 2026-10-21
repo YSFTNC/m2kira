@@ -402,6 +402,16 @@ dialog.lsheet { width: min(760px, calc(100vw - 20px)); max-width: none; max-heig
 .lsheet .lsmedia .ph svg { width: 36px; height: 36px; opacity: .5; }
 .lsheet .lsclose { position: absolute; right: 12px; top: 12px; z-index: 2; width: 38px; height: 38px; border-radius: 50%; border: 0; background: rgba(255,255,255,.92); color: #111; font-size: 20px; line-height: 1; box-shadow: 0 1px 4px rgba(0,0,0,.2); }
 .lsheet .lsbody { padding: 18px 20px 22px; display: grid; gap: 12px; }
+.gal { position: relative; background: #0b0b0f; }
+.gtrack { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; aspect-ratio: 4 / 3; max-height: 64vh; outline: none; }
+.gtrack::-webkit-scrollbar { display: none; }
+.gtrack img { flex: 0 0 100%; width: 100%; height: 100%; object-fit: contain; scroll-snap-align: center; scroll-snap-stop: always; background: #0b0b0f; }
+.gnav { position: absolute; top: 50%; transform: translateY(-50%); width: 42px; height: 42px; border-radius: 50%; border: 0; background: rgba(255,255,255,.92); color: #111; font-size: 26px; line-height: 1; box-shadow: 0 2px 8px rgba(0,0,0,.25); display: grid; place-items: center; }
+.gnav.prev { left: 12px; } .gnav.next { right: 12px; }
+.gnav:disabled { opacity: 0; pointer-events: none; }
+.gcount { position: absolute; left: 12px; bottom: 12px; background: rgba(10,10,18,.72); color: #fff; font-size: 12.5px; font-weight: 700; padding: 4px 10px; border-radius: 999px; font-variant-numeric: tabular-nums; }
+@media (pointer: coarse) { .gnav { display: none; } }
+.mb.cnt { background: rgba(10,10,18,.68); color: #fff; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
 .lsheet .lsprice { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 .lsheet .lsprice b { font-size: 28px; font-weight: 800; letter-spacing: -.03em; }
 .lsheet h2 { margin: 0; font-size: 19px; line-height: 1.3; letter-spacing: -.015em; }
@@ -1012,27 +1022,56 @@ function detailHtml(it) {
 }
 // sahibinden ilanına tıklayınca sitenin kendi ilan sayfası: sahibinden.com bu ağı engellese de bilgiler, fotoğraf,
 // harita ve ilan numarası görünür; oradan sahibinden'de açma / bağlantı ve ilan no kopyalama
+let PHOTOS = null, photosLoading = null;
+function loadPhotos() {
+  if (PHOTOS) return Promise.resolve(PHOTOS);
+  if (!photosLoading) photosLoading = fetch("photos.json?t=" + encodeURIComponent(D.generated || ""), { cache: "no-cache" })
+    .then((r) => (r.ok ? r.json() : {})).catch(() => ({})).then((p) => { PHOTOS = p || {}; photosLoading = null; return PHOTOS; });
+  return photosLoading;
+}
+const OPEN_AT = { sahibinden: "sahibinden'de aç", hepsiemlak: "hepsiemlak'ta aç", emlakjet: "emlakjet'te aç" };
+function galleryHtml(it, imgs) {
+  const room = (it.r || "").replace("1+0", "Stüdyo");
+  if (!imgs.length) return `<div class="lsmedia" style="--src:${SRC_VAR[it.src] || "var(--accent)"}"><div class="ph">${ICON.building}<b>${esc(room || "—")}</b>${it.src === "emlakjet" ? "fotoğraflar emlakjet'te" : "fotoğraf yok"}</div></div>`;
+  return `<div class="gal"><div class="gtrack" tabindex="0" aria-label="Fotoğraflar">${imgs.map((u, i) =>
+      `<img src="${esc(u)}" alt="Fotoğraf ${i + 1}" loading="${i < 2 ? "eager" : "lazy"}" decoding="async" referrerpolicy="no-referrer" onerror="if(this.dataset.f!=='1'&&this.src.includes('/x16_')){this.dataset.f='1';this.src=this.src.replace('/x16_','/x5_')}else{this.remove()}">`).join("")}</div>
+    ${imgs.length > 1 ? `<button class="gnav prev" type="button" aria-label="Önceki fotoğraf" data-g="-1">‹</button><button class="gnav next" type="button" aria-label="Sonraki fotoğraf" data-g="1">›</button>` : ""}
+    <span class="gcount">1 / ${imgs.length}</span></div>`;
+}
+function wireGallery(dlg) {
+  const tr = dlg.querySelector(".gtrack"); if (!tr) return;
+  const cnt = dlg.querySelector(".gcount"), prev = dlg.querySelector(".gnav.prev"), next = dlg.querySelector(".gnav.next");
+  const total = () => tr.querySelectorAll("img").length;
+  const idx = () => Math.round(tr.scrollLeft / Math.max(1, tr.clientWidth));
+  const upd = () => { const i = idx(), n = total(); if (cnt) cnt.textContent = `${Math.min(i + 1, n)} / ${n}`; if (prev) prev.disabled = i <= 0; if (next) next.disabled = i >= n - 1; };
+  const go = (d) => tr.scrollTo({ left: (idx() + d) * tr.clientWidth, behavior: "smooth" });
+  tr.addEventListener("scroll", debounce(upd, 60));
+  for (const b of dlg.querySelectorAll(".gnav")) b.onclick = (e) => { e.stopPropagation(); go(+b.dataset.g); };
+  dlg.onkeydown = (e) => { if (e.key === "ArrowRight") { go(1); e.preventDefault(); } else if (e.key === "ArrowLeft") { go(-1); e.preventDefault(); } };
+  upd();
+}
 function openListing(id) {
   const it = D.items.find((x) => x.id === id);
   if (!it) { toast("Bu ilan artık aktif listede yok"); return; }
   const dlg = $("#lsheet"), num = (it.id.split(":")[1] || "").trim();
+  dlg.dataset.id = it.id;
   const room = (it.r || "").replace("1+0", "Stüdyo");
   const specs = [room, it.m2 ? `${it.m2} m²` : null, it.fl && /^-?\d+$/.test(String(it.fl).trim()) ? `${String(it.fl).trim()}. kat` : it.fl,
     it.age && it.age !== "0" ? `bina ${it.age}` : null, D.fur_labels[it.fur] || null].filter(Boolean).map((s) => `<span>${esc(s)}</span>`).join("");
   const walk = it.v && it.wm != null ? ` · 🚶 ${Math.round(it.wm)} dk` : "";
   const sb = it.src === "sahibinden";
   dlg.innerHTML = `<button class="lsclose" type="button" aria-label="Kapat" data-close>×</button>
-    <div class="lsmedia" style="--src:${SRC_VAR[it.src] || "var(--accent)"}">${it.img ? `<img src="${esc(it.img)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : ""}
-      ${it.img ? "" : `<div class="ph">${ICON.building}<b>${esc(room || "—")}</b></div>`}</div>
+    <div class="lsgal">${galleryHtml(it, it.img ? [it.img] : [])}</div>
     <div class="lsbody">
       <div class="lsprice"><b>${esc(TL(it.p))}</b><span class="muted">/ay</span>${it.pp ? `<s class="muted">${esc(TL(it.pp))}</s>` : ""}${it.ok ? `<span class="tag f-full">kriterlere uyuyor</span>` : `<span class="tag">kriter dışı</span>`}</div>
       <h2>${esc(niceTitle(it.t))}</h2>
       <div class="specline">${specs}</div>
       <div class="loc"><span class="mi">${ICON.metro}</span><span>${esc(it.d || "?")} → <b>${esc(it.st || "durak belirsiz")}</b>${walk}</span></div>
+      ${it.src === "emlakjet" ? `<div class="lsnote">emlakjet fotoğraflarının başka sitelerde gösterilmesine izin vermiyor. Fotoğraflar için "emlakjet'te aç" düğmesini kullan.</div>` : ""}
       ${sb ? `<div class="lsnote">sahibinden.com bu ağdan şu an "olağan dışı erişim" uyarısı veriyorsa ilan orada açılmaz. Bilgiler aşağıda. Görmek için telefonda Wi-Fi'yi kapatıp mobil veriyle aç ya da sahibinden uygulamasında arama kutusuna ilan numarasını yaz.</div>
         <div class="lsno">İlan no <code>${esc(num)}</code><button class="chip" type="button" data-copy="${esc(num)}" data-msg="İlan no kopyalandı: sahibinden uygulamasında aramaya yapıştır">Kopyala</button></div>` : ""}
       <div class="lsacts">
-        <a class="btn primary" href="${esc(safeUrl(it.url))}" target="_blank" rel="noopener noreferrer">${esc(it.src)}'de aç ↗</a>
+        <a class="btn primary" href="${esc(safeUrl(it.url))}" target="_blank" rel="noopener noreferrer">${esc(OPEN_AT[it.src] || "İlanı aç")} ↗</a>
         <button class="btn" type="button" data-copy="${esc(it.url)}" data-msg="Bağlantı kopyalandı">Bağlantıyı kopyala</button>
         ${navigator.share ? `<button class="btn" type="button" data-sharelst="${esc(it.id)}">Telefona gönder</button>` : ""}
       </div>
@@ -1046,6 +1085,13 @@ function openListing(id) {
   };
   if (!dlg.open) dlg.showModal();
   dlg.scrollTop = 0;
+  wireGallery(dlg);
+  loadPhotos().then((P) => {
+    const imgs = (P[it.id] || []).length ? P[it.id] : (it.img ? [it.img] : []);
+    if (!dlg.open || dlg.dataset.id !== it.id || !imgs.length || (imgs.length === 1 && imgs[0] === it.img)) return;
+    dlg.querySelector(".lsgal").innerHTML = galleryHtml(it, imgs);
+    wireGallery(dlg);
+  });
 }
 function card(it) {
   const ks = tkeys(), cm = it.cm || {};
@@ -1053,11 +1099,12 @@ function card(it) {
   const mt = [];
   if (ageHours(it.fs) <= 24) mt.push(`<span class="mb new">YENİ</span>`);
   if (it.pp) mt.push(`<span class="mb drop">↓ ${esc(kTL(it.pp - it.p))} TL</span>`);
+  if (it.ni > 1) mt.push(`<span class="mb cnt">📷 ${it.ni}</span>`);
   const tier = it.tier === "pazarlikla" ? `<span class="tier">pazarlıkla</span>` : (!it.ok ? `<span class="tier out">kriter dışı</span>` : "");
   const priceBar = `<div class="mprice"><span class="p">${esc(TL(it.p))}</span><span class="per">/ay</span>${it.pp ? `<s>${esc(TL(it.pp))}</s>` : ""}${tier}</div>`;
   const media = it.img
-    ? `<div class="media"${it.src === "sahibinden" ? ' data-act="open" style="cursor:pointer"' : ""}><img src="${esc(it.img)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('noimg');this.remove()">`
-    : `<div class="media noimg" style="--src:${SRC_VAR[it.src] || "var(--accent)"}"><div class="ph">${ICON.building}<b>${esc((it.r || "").replace("1+0", "Stüdyo") || "—")}</b>${it.src === "emlakjet" ? "fotoğraflar emlakjet'te" : "fotoğraf yok"}</div>`;
+    ? `<div class="media" data-act="open" style="cursor:pointer"><img src="${esc(it.img)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('noimg');this.remove()">`
+    : `<div class="media noimg" data-act="open" style="cursor:pointer;--src:${SRC_VAR[it.src] || "var(--accent)"}"><div class="ph">${ICON.building}<b>${esc((it.r || "").replace("1+0", "Stüdyo") || "—")}</b>${it.src === "emlakjet" ? "fotoğraflar emlakjet'te" : "fotoğraf yok"}</div>`;
   const floor = it.fl && /^-?\d+$/.test(String(it.fl).trim()) ? `${String(it.fl).trim()}. kat` : it.fl;
   const specs = [it.r === "1+0" ? "Stüdyo" : it.r, it.m2 ? `${it.m2} m²` : null, floor, it.age && it.age !== "0" ? `bina ${it.age}` : null, it.aid ? `aidat ${kTL(it.aid)}` : null]
     .filter(Boolean).map((s) => `<span>${esc(s)}</span>`).join("");
@@ -1074,7 +1121,7 @@ function card(it) {
     ${media}<div class="mtop">${mt.join("")}</div>
       <button class="heart" type="button" data-act="fav" aria-pressed="${isFav}" aria-label="${isFav ? "Favorilerden çıkar" : "Favorilere ekle"}">${ICON_HEART}</button>${priceBar}</div>
     <div class="cbody">
-      <a class="ttl" href="${esc(safeUrl(it.url))}" target="_blank" rel="noopener noreferrer" title="${esc(it.t)}"${it.src === "sahibinden" ? ' data-act="open"' : ""}>${esc(niceTitle(it.t))}</a>
+      <a class="ttl" href="${esc(safeUrl(it.url))}" target="_blank" rel="noopener noreferrer" title="${esc(it.t)}" data-act="open">${esc(niceTitle(it.t))}</a>
       ${it.pp ? `<div class="dropline">↓ <b>${esc(TL(it.pp - it.p))}</b> (−%${Math.round((it.pp - it.p) / it.pp * 100)}) · ${esc(TL(it.pp))} → ${esc(TL(it.p))}${it.pdt ? " · " + esc(ago(it.pdt)) : ""}</div>` : ""}
       <div class="specline">${specs}</div>
       <div class="loc"><span class="mi">${ICON.metro}</span><span>${esc(it.d || "?")} → <b>${esc(it.st || "durak belirsiz")}</b></span>${walk}</div>
@@ -1388,7 +1435,7 @@ function renderNewest() {
     const title = niceTitle(it.t);
     const where = [it.d, it.st ? "→ " + it.st : ""].filter(Boolean).join(" ");
     const walk = it.v && it.wm != null ? ` · 🚶 ${Math.round(it.wm)} dk` : "";
-    return `<a class="ncard" href="${esc(safeUrl(it.url))}" target="_blank" rel="noopener noreferrer" title="${esc(title)}" data-id="${esc(it.id)}"${it.src === "sahibinden" ? ' data-act="open"' : ""}>
+    return `<a class="ncard" href="${esc(safeUrl(it.url))}" target="_blank" rel="noopener noreferrer" title="${esc(title)}" data-id="${esc(it.id)}" data-act="open">
       <div class="nmedia" style="--src:${SRC_VAR[it.src] || "var(--accent)"}"><span class="ph">${ICON.building}<b>${esc(room || "—")}</b></span>${media}<span class="nage">${esc(ago(it.fs))}</span>${it.ok ? `<span class="nok">uygun</span>` : ""}</div>
       <div class="nbody"><div class="np">${esc(TL(it.p))}</div><div class="nt">${esc(title)}</div>
         <div class="nm"><i class="sdot ${SRC_SHORT[it.src] || ""}"></i>${esc(it.src)} · ${esc(room || "?")}${it.m2 ? " · " + it.m2 + " m²" : ""}</div>
@@ -1464,7 +1511,7 @@ function skeleton() {
   $("#results").innerHTML = `<div class="cards">${Array.from({ length: 6 }, () => `<div class="skel" style="height:380px"></div>`).join("")}</div>`;
 }
 function applyData(data) {
-  D = data; PRESENT = new Set(D.items.map((i) => i.id));
+  D = data; PHOTOS = null; PRESENT = new Set(D.items.map((i) => i.id));
   if (!connected()) { for (const f of (D.settings && D.settings.favorites) || []) favs.add(f); store.set("m2k_favs", [...favs]); }
   SET = pickSettings(D.settings || {});
   document.title = D.title || "M2 Kiralık"; $("#title").textContent = D.title || "M2 Kiralık";

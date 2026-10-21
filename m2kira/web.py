@@ -63,6 +63,14 @@ def commute_minutes(station: Optional[str], walk_min: Optional[int], verified: b
 NO_HOTLINK_SOURCES = {"emlakjet"}
 
 
+def gallery_of(r: dict[str, Any]) -> list[str]:
+    """İlanın galerideki fotoğrafları (https, en çok 24); emlakjet görselleri başka sitede açılmadığı için yok."""
+    if r.get("source") in NO_HOTLINK_SOURCES:
+        return []
+    imgs = (r.get("extras") or {}).get("imgs") or []
+    return [u for u in imgs if isinstance(u, str) and u.startswith("https://")][:24]
+
+
 def build_payload(cfg: Config, db: DB, budget: Optional[int] = None) -> dict[str, Any]:
     budget = int(budget or db.get_setting("budget", cfg.budget))
     tol = float(cfg.budget_tolerance_pct)
@@ -127,6 +135,7 @@ def build_payload(cfg: Config, db: DB, budget: Optional[int] = None) -> dict[str
             "aid": extras.get("aidat"),
             "img": (extras.get("img") if str(extras.get("img") or "").startswith("https://")
                     and r["source"] not in NO_HOTLINK_SOURCES else None),
+            "ni": len(gallery_of(r)) or None,   # sitedeki galeride gösterilecek fotoğraf sayısı
             "ph": h if len(h) > 1 else None,
             "pdt": drop_at[:16] if drop_at else None,   # fiyatın düştüğü an (UTC, YYYY-MM-DDTHH:MM)
             "desc": desc[:DESC_SNIPPET_SB if r["source"] == "sahibinden" else DESC_SNIPPET],
@@ -207,6 +216,8 @@ def export_site(cfg: Config, db: DB, out_dir: Path) -> dict[str, Any]:
     payload = build_payload(cfg, db)
     (out_dir / "data.json").write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     shutil.copyfile(TEMPLATE, out_dir / "index.html")
+    photos = {r["id"]: g for r in db.active_listings(include_hidden=True) if (g := gallery_of(r))}
+    (out_dir / "photos.json").write_text(json.dumps(photos, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     og = TEMPLATE.parent / "og.png"      # bağlantı önizleme görseli (WhatsApp/Telegram)
     if og.exists():
         shutil.copyfile(og, out_dir / "og.png")

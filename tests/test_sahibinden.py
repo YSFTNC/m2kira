@@ -74,3 +74,19 @@ def test_source_builds_combined_url(cfg):
     assert len(q) == 22
     u = src.build_url()
     assert "a103713=true" in u and "price_max=39000" in u
+
+
+
+def test_detail_photos_only_own_listing_big_size():
+    from m2kira.models import Listing
+    from m2kira.sources.sahibinden import apply_detail, extract_photos
+    html = ('<img src="https://i0.shbdn.com/photos/72/29/98/thmb_1328722998mde.jpg">'
+            '<img data-source="https://i0.shbdn.com/photos/72/29/98/x5_1328722998mde.jpg">'
+            '<img src="https://i0.shbdn.com/photos/72/29/98/x5_1328722998abc.jpg">'
+            '<img src="https://i0.shbdn.com/photos/11/22/33/x5_1299999999zzz.jpg">')   # benzer ilan
+    photos = extract_photos(html)
+    assert photos[0] == "https://i0.shbdn.com/photos/72/29/98/x16_1328722998mde.jpg" and len(photos) == 3
+    l = Listing(source="sahibinden", source_id="1328722998", url="https://x", title="t")
+    apply_detail(l, {"photos": photos})
+    assert l.extras["imgs"] == ["https://i0.shbdn.com/photos/72/29/98/x16_1328722998mde.jpg",
+                                "https://i0.shbdn.com/photos/72/29/98/x16_1328722998abc.jpg"]
