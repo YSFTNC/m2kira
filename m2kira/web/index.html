@@ -263,6 +263,27 @@ label.ck input { accent-color: var(--fg); width: 18px; height: 18px; margin: 0; 
 .page { padding: 20px 0 100px; }
 .page h1 { font-size: 24px; letter-spacing: -.02em; margin: 0 0 4px; }
 .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 16px 18px; margin: 14px 0; box-shadow: var(--shadow-1); }
+/* ---------- en yeni eklenenler ---------- */
+.newest { margin: 14px 0 4px; }
+.newest .nhead { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.newest .nhead h2 { font-size: 16px; font-weight: 700; letter-spacing: -.01em; }
+.newest .nhead .small { color: var(--muted); font-size: 12.5px; font-weight: 500; margin-left: 6px; }
+.newest .nctl { display: flex; gap: 8px; align-items: center; }
+.newest .nrow { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 2px 2px 10px; scrollbar-width: thin; }
+.ncard { flex: 0 0 214px; scroll-snap-align: start; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm);
+  overflow: hidden; box-shadow: var(--shadow-1); color: inherit; text-decoration: none; display: flex; flex-direction: column; }
+.ncard:hover { border-color: var(--border-2); }
+.ncard .nmedia { position: relative; aspect-ratio: 16 / 10; background: linear-gradient(135deg, var(--surface-2), var(--surface-3)); overflow: hidden; }
+.ncard .nmedia img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ncard .nmedia .ph { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); font-size: 22px; font-weight: 700; }
+.ncard .nage { position: absolute; left: 8px; top: 8px; background: rgba(15,15,14,.78); color: #fff; font-size: 11.5px; font-weight: 650;
+  padding: 3px 8px; border-radius: 999px; }
+.ncard .nok { position: absolute; right: 8px; top: 8px; background: var(--good); color: #fff; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; }
+.ncard .nbody { padding: 9px 11px 11px; display: grid; gap: 3px; }
+.ncard .np { font-weight: 750; font-size: 15.5px; font-variant-numeric: tabular-nums; }
+.ncard .nt { font-size: 12.5px; color: var(--fg-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ncard .nm { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; }
+.newest .nempty { color: var(--muted); font-size: 13.5px; padding: 6px 0 10px; }
 .panel h2 { font-size: 16px; margin: 0 0 2px; }
 .panel > .small { margin-bottom: 12px; display: block; }
 .sgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px 28px; }
@@ -356,6 +377,7 @@ dialog li { margin: 4px 0; }
   </div>
   <div class="wrap">
     <div class="banner warn" id="fresh" hidden role="status"></div>
+    <section class="newest" id="newest" aria-label="En yeni eklenen ilanlar"></section>
     <div class="active" id="active"></div>
     <div class="kpis" id="kpis"></div>
     <div class="reshead"><span class="count" id="count"></span><span class="small" id="countsub"></span></div>
@@ -1125,13 +1147,38 @@ function renderFresh() {
     `Kapatmak yerine uyutup şarjda bırakırsan 30 dakikada bir kendiliğinden uyanıp tarar. Sitedeki ilanları kalır; emlakjet her zaman güncellenir.`;
   box.hidden = false;
 }
+// En yeni eklenenler: seçili filtrelerden bağımsız, gizlenenler hariç, ilk görülme zamanına göre en yeni 12 ilan
+function renderNewest() {
+  const box = $("#newest"); if (!box || !D) return;
+  const onlyOk = store.get("m2k_new_ok", "0") === "1";
+  const pool = D.items.filter((it) => !isHidden(it) && it.fs && (!onlyOk || it.ok));
+  const list = pool.slice().sort((a, b) => parseT(b.fs) - parseT(a.fs)).slice(0, 12);
+  const n24 = pool.filter((it) => ageHours(it.fs) <= 24).length;
+  const card = (it) => {
+    const room = (it.r || "").replace("1+0", "Stüdyo");
+    const media = it.img ? `<img src="${esc(it.img)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : "";
+    const where = [it.d, it.st ? "→ " + it.st : ""].filter(Boolean).join(" ");
+    const walk = it.v && it.wm != null ? ` · 🚶 ${Math.round(it.wm)} dk` : "";
+    return `<a class="ncard" href="${esc(safeUrl(it.url))}" target="_blank" rel="noopener noreferrer" title="${esc(it.t)}">
+      <div class="nmedia"><span class="ph">${esc(room || "—")}</span>${media}<span class="nage">${esc(ago(it.fs))}</span>${it.ok ? `<span class="nok">uygun</span>` : ""}</div>
+      <div class="nbody"><div class="np">${esc(TL(it.p))}</div><div class="nt">${esc(it.t)}</div>
+        <div class="nm"><i class="sdot ${SRC_SHORT[it.src] || ""}"></i>${esc(it.src)} · ${esc(room || "?")}${it.m2 ? " · " + it.m2 + " m²" : ""}</div>
+        <div class="nm">${esc(where || "?")}${walk}</div></div></a>`;
+  };
+  box.innerHTML = `<div class="nhead"><h2>🆕 En yeni eklenenler<span class="small">son 24 saatte ${n24} ilan</span></h2>
+    <div class="nctl"><button class="chip" type="button" id="newok" aria-pressed="${onlyOk}">Yalnız uygun</button>
+      <button class="chip" type="button" id="newall">Tümünü gör</button></div></div>
+    ${list.length ? `<div class="nrow">${list.map(card).join("")}</div>` : `<p class="nempty">Henüz ilan yok.</p>`}`;
+  $("#newok").onclick = () => { store.set("m2k_new_ok", onlyOk ? "0" : "1"); renderNewest(); };
+  $("#newall").onclick = () => { S = { ...DEF(), tab: "ilan", view: "list", nw: 24, sort: "new", ok: onlyOk ? 1 : 0 }; renderAll(); window.scrollTo({ top: $("#count").getBoundingClientRect().top + scrollY - 90, behavior: "smooth" }); };
+}
 function renderAll(rebuildFilters = true, keepFocus = false) {
   saveState(); renderTabs(); renderConn();
   if (S.tab === "ayar") { renderSettings(); return; }
   if (S.tab === "durum") { renderStatus(); return; }
   const base = D.items.filter((it) => pass(it, S, true));
   const list = base.filter((it) => pass(it, S, false)).sort(sorter(S.sort));
-  renderFresh(); renderLine(base); renderActive(); renderKpis(list);
+  renderFresh(); renderNewest(); renderLine(base); renderActive(); renderKpis(list);
   if (!$("#drawer").hidden && !keepFocus) buildFilters();
   $("#dapply").textContent = `${NF.format(list.length)} ilanı göster`;
   $("#count").textContent = S.view === "map" ? "Harita" : `${NF.format(list.length)} ilan`;
