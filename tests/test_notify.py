@@ -154,3 +154,33 @@ def test_sahibinden_links_point_to_site_page(cfg, tmp_path):
     he = {"id": "hepsiemlak:1-2", "source": "hepsiemlak", "url": "https://www.hepsiemlak.com/x"}
     assert p._listing_link(sb).endswith("#ilan=sahibinden%3A1328722998")
     assert p._listing_link(he) == "https://www.hepsiemlak.com/x"
+
+
+
+def test_digest_skips_listings_far_from_m2(cfg, tmp_path):
+    from m2kira.models import Event
+
+    class Cap(Notifier):
+        def __init__(self):
+            self.sent = []
+
+        def send(self, text, subject="m2kira"):
+            self.sent.append(text)
+            return True
+
+    cap = Cap()
+    db = DB(tmp_path / "far.sqlite")
+    p = Pipeline(cfg, db, cap, sources=[])
+    nb = cfg.neighborhood_by_key("kizilay")
+    near = Listing(source="hepsiemlak", source_id="n", url="https://x/n", title="Eşyasız 1+1", price=30000, rooms="1+1",
+                   lat=39.9231, lon=32.8542, district="Kızılay", neighborhood_key="kizilay")
+    far = Listing(source="hepsiemlak", source_id="f", url="https://x/f", title="Eşyasız 1+1", price=30000, rooms="1+1",
+                  lat=39.8850, lon=32.8167, district="Cevizlidere", neighborhood_key="kizilay")   # M2'ye ~2,9 km
+    for l in (near, far):
+        p.enrich(l, nb)
+        p.evaluate(l, cfg.budget)
+        db.upsert(l)
+        db.add_event(Event(listing_id=l.id, kind="new", new_price=30000, created_at="2026-10-22T10:00:00Z"))
+    assert "uzak" in db.get("hepsiemlak:f")["flags"]
+    p._notify_events(cfg.budget)
+    assert len(cap.sent) == 1 and "https://x/n" in cap.sent[0] and "https://x/f" not in cap.sent[0]

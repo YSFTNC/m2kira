@@ -27,6 +27,10 @@ STICKY = ("description", "lat", "lon", "heating", "building_age", "elevator", "m
           "furnished_src", "office", "floor", "floor_no", "listed_date", "rooms")
 
 
+# İlk kural (M2'ye yürüme mesafesi) dışındaki ilanlar: istasyona uzak ya da koordinatı doğrulanmamış uzak mahalle
+FAR_FLAGS = {"uzak", "mesafe_gerekli"}
+
+
 def _minutes_between(a: str, b: str) -> float:
     """İki UTC zaman damgası (YYYY-MM-DDTHH:MM:SSZ) arasındaki dakika; okunamazsa sonsuz."""
     try:
@@ -504,7 +508,8 @@ class Pipeline:
                     carded = True
             if carded:
                 cards.append((l, evd))
-            elif notify_all and (not stations or l.get("nearest_station") in stations):
+            elif (notify_all and (not stations or l.get("nearest_station") in stations)
+                  and not FAR_FLAGS & set(l.get("flags") or [])):   # ilk kural: M2'ye uzak ilanlar özete girmez
                 digest.append((l, evd))
         sent = 0
         compact_threshold = int(self.cfg.get("compact_threshold", default=12))

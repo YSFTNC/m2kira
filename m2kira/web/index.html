@@ -1414,6 +1414,10 @@ function renderHero() {
     <p><span class="live"><i></i>Canlı</span><span><b>${NF.format(ok)}</b> uygun ilan</span><span><b>${NF.format(D.items.length)}</b> aktif ilan</span>
       <span><b>${NF.format(n24)}</b> yeni (24 sa)</span><span>son güncelleme ${esc(fmtWhen(D.last_scan || D.generated))}</span></p>`;
 }
+// İlk kural: M2 durağına yürüme mesafesi (max_walk + tolerans). "uzak" ya da koordinatı doğrulanmamış geniş/uzak
+// mahalle ilanları (mesafe_gerekli) bu kuralın dışındadır; onlar yalnız bölge sekmesinde görünür.
+const FAR_FLAGS = new Set(["uzak", "mesafe_gerekli"]);
+const nearM2 = (it) => !(it.fg || []).some((f) => FAR_FLAGS.has(f));
 // Bölge sekmesi (config.yaml -> areas): merkezin çevresindeki ilanlar; metroya uzaklık ölçüt değil
 function kmBetween(a1, o1, a2, o2) {
   const R = 6371, t = Math.PI / 180, dA = (a2 - a1) * t, dO = (o2 - o1) * t;
@@ -1478,7 +1482,7 @@ function renderDrops() {
   const onlyOk = store.get("m2k_drop_ok", "0") === "1";
   const sort = store.get("m2k_drop_sort", "pct");
   const pct = (it) => (it.pp - it.p) / it.pp;
-  const all = D.items.filter((it) => it.pp && it.p && it.pp > it.p && !isHidden(it));
+  const all = D.items.filter((it) => it.pp && it.p && it.pp > it.p && !isHidden(it) && nearM2(it));
   const list = all.filter((it) => !onlyOk || it.ok);
   const cmp = {
     pct: (a, b) => pct(b) - pct(a), tl: (a, b) => (b.pp - b.p) - (a.pp - a.p),
@@ -1489,7 +1493,7 @@ function renderDrops() {
   const top = list.slice().sort((a, b) => (b.pp - b.p) - (a.pp - a.p))[0];
   const tile = (lab, val, sub, ic) => `<div class="tile"><div class="lab"><span class="ic">${ICON[ic]}</span>${esc(lab)}</div><div class="val">${esc(val)}</div>${sub ? `<div class="sub">${esc(sub)}</div>` : ""}</div>`;
   box.innerHTML = `<div class="hero" style="padding-top:4px"><h1>Fiyatı <em>düşenler</em></h1>
-      <p>Son fiyatı öncekinden düşük olan aktif ilanlar. Kriter filtrelerinden bağımsızdır; uygun olanlarda yeşil etiket var.</p></div>
+      <p>M2 durağına yürüme mesafesindeki, son fiyatı öncekinden düşük aktif ilanlar. Bütçe/eşya/oda filtrelerinden bağımsızdır; kriterlere uyanlarda yeşil etiket var.</p></div>
     <div class="toolbar" style="padding-top:14px">
       <button class="chip" type="button" id="dropok" aria-pressed="${onlyOk}">Yalnız uygun</button>
       <select class="sel" id="dropsort" aria-label="Sıralama">${DROP_SORTS.map(([k, l]) => `<option value="${k}" ${k === sort ? "selected" : ""}>${esc(l)}</option>`).join("")}</select>
@@ -1507,7 +1511,7 @@ function renderDrops() {
 function renderNewest() {
   const box = $("#newest"); if (!box || !D) return;
   const onlyOk = store.get("m2k_new_ok", "0") === "1";
-  const pool = D.items.filter((it) => !isHidden(it) && it.fs && (!onlyOk || it.ok));
+  const pool = D.items.filter((it) => !isHidden(it) && it.fs && nearM2(it) && (!onlyOk || it.ok));
   const list = pool.slice().sort((a, b) => parseT(b.fs) - parseT(a.fs)).slice(0, 12);
   const n24 = pool.filter((it) => ageHours(it.fs) <= 24).length;
   const card = (it) => {
@@ -1522,7 +1526,7 @@ function renderNewest() {
         <div class="nm"><i class="sdot ${SRC_SHORT[it.src] || ""}"></i>${esc(it.src)} · ${esc(room || "?")}${it.m2 ? " · " + it.m2 + " m²" : ""}</div>
         <div class="nm">${esc(where || "?")}${walk}</div></div></a>`;
   };
-  box.innerHTML = `<div class="nhead"><h2>🆕 En yeni eklenenler<span class="small">son 24 saatte ${n24} ilan</span></h2>
+  box.innerHTML = `<div class="nhead"><h2>🆕 En yeni eklenenler<span class="small">M2'ye yürüme mesafesinde · son 24 saatte ${n24} ilan</span></h2>
     <div class="nctl"><button class="chip" type="button" id="newok" aria-pressed="${onlyOk}">Yalnız uygun</button>
       <button class="chip" type="button" id="newall">Tümünü gör</button></div></div>
     ${list.length ? `<div class="nrow">${list.map(card).join("")}</div>` : `<p class="nempty">Henüz ilan yok.</p>`}`;
