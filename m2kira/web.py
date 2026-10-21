@@ -70,20 +70,23 @@ def build_payload(cfg: Config, db: DB, budget: Optional[int] = None) -> dict[str
     rows = db.active_listings(include_hidden=True)
 
     # fiyat geçmişi (tek sorgu)
-    hist: dict[str, list[int]] = {}
-    for lid, price in db.conn.execute("SELECT listing_id, price FROM price_history ORDER BY seen_at"):
+    hist: dict[str, list[tuple[int, str]]] = {}   # fiyat değişimleri (fiyat, ilk görüldüğü an)
+    for lid, price, seen in db.conn.execute("SELECT listing_id, price, seen_at FROM price_history ORDER BY seen_at"):
         if price is not None:
             h = hist.setdefault(lid, [])
-            if not h or h[-1] != price:
-                h.append(int(price))
+            if not h or h[-1][0] != price:
+                h.append((int(price), seen or ""))
 
     items = []
     for r in rows:
         extras = r.get("extras") or {}
         prev = None
-        h = hist.get(r["id"], [])
+        drop_at = None
+        hh = hist.get(r["id"], [])
+        h = [p for p, _ in hh]
         if len(h) >= 2 and h[-1] < h[-2]:
             prev = h[-2]
+            drop_at = hh[-1][1]
         elif extras.get("previous_price") and r.get("price") and extras["previous_price"] > r["price"]:
             prev = int(extras["previous_price"])
         desc = (r.get("description") or "").replace("\n", " ")
@@ -124,6 +127,7 @@ def build_payload(cfg: Config, db: DB, budget: Optional[int] = None) -> dict[str
             "img": (extras.get("img") if str(extras.get("img") or "").startswith("https://")
                     and r["source"] not in NO_HOTLINK_SOURCES else None),
             "ph": h if len(h) > 1 else None,
+            "pdt": drop_at[:16] if drop_at else None,   # fiyatın düştüğü an (UTC, YYYY-MM-DDTHH:MM)
             "desc": desc[:DESC_SNIPPET],
             "cm": commute_minutes(r.get("nearest_station"), r.get("walk_minutes_est"),
                                   bool(r.get("distance_verified")), cfg, line, targets),

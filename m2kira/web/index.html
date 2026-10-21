@@ -364,6 +364,7 @@ input[type=range], label.ck input { accent-color: var(--accent); }
 .media.noimg, .ncard .nmedia { background: linear-gradient(140deg, color-mix(in srgb, var(--src, var(--accent)) 24%, var(--surface-2)), var(--surface-3)); }
 .media .ph { display: grid; justify-items: center; gap: 2px; color: var(--fg-2); font-size: 12px; }
 .media .ph svg { width: 30px; height: 30px; opacity: .5; margin-bottom: 2px; }
+.media.noimg .ph { margin-bottom: 52px; }
 .media .ph b { font-size: 26px; font-weight: 800; }
 .mb { border-radius: 8px; }
 .mb.new { background: var(--accent); color: var(--accent-fg); }
@@ -393,6 +394,10 @@ input[type=range], label.ck input { accent-color: var(--accent); }
 .ncard .nmedia .ph svg { width: 24px; height: 24px; opacity: .5; }
 .ncard .nage { background: rgba(10,10,18,.68); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
 .newest .nhead h2 { font-size: 17px; font-weight: 800; letter-spacing: -.02em; }
+.dropline { font-size: 13px; color: var(--good-text); background: var(--good-soft); border-radius: 10px; padding: 5px 10px; }
+.dropline b { font-weight: 800; }
+.kpis.drops { grid-template-columns: repeat(3, minmax(0, 1fr)); padding-top: 4px; }
+#dusen .cards { margin-top: 16px; }
 .panel, .scard { border-radius: 18px; }
 .page h1 { font-weight: 800; letter-spacing: -.03em; }
 @media (prefers-reduced-motion: no-preference) {
@@ -411,6 +416,8 @@ input[type=range], label.ck input { accent-color: var(--accent); }
   body { padding-bottom: 72px; }
   .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .kpis .tile.wide { grid-column: 1 / -1; }
+  .kpis.drops { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .kpis.drops .tile:last-child { grid-column: 1 / -1; }
   .tile .val { font-size: 21px; }
   .ghead { grid-template-columns: 1fr; }
   .cards { grid-template-columns: 1fr; }
@@ -433,6 +440,7 @@ input[type=range], label.ck input { accent-color: var(--accent); }
     <a class="brand" href="#tab=ilan" aria-label="M2 Kiralık ana sayfa"><span class="logo">M2</span><span><b id="title">M2 Kiralık</b><small id="meta">Yükleniyor…</small></span></a>
     <nav class="nav" role="tablist" aria-label="Bölümler">
       <button role="tab" data-tab="ilan" type="button">İlanlar</button>
+      <button role="tab" data-tab="dusen" type="button">Fiyatı düşenler</button>
       <button role="tab" data-tab="ayar" type="button">Ayarlar</button>
       <button role="tab" data-tab="durum" type="button">Durum</button>
     </nav>
@@ -474,12 +482,14 @@ input[type=range], label.ck input { accent-color: var(--accent); }
   </div>
 </section>
 
+<section id="tab-dusen" hidden><div class="wrap page" id="dusen"></div></section>
 <section id="tab-ayar" hidden><div class="wrap page" id="ayar"></div></section>
 <section id="tab-durum" hidden><div class="wrap page" id="durum"></div></section>
 
 <nav class="bottomnav" role="tablist" aria-label="Bölümler">
   <button role="tab" data-tab="ilan" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>İlanlar</button>
   <button role="tab" data-tab="harita" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg>Harita</button>
+  <button role="tab" data-tab="dusen" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7l6 6 4-4 8 8"/><path d="M21 11v6h-6"/></svg>Düşenler</button>
   <button role="tab" data-tab="ayar" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>Ayarlar</button>
   <button role="tab" data-tab="durum" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>Durum</button>
 </nav>
@@ -1010,6 +1020,7 @@ function card(it) {
       <button class="heart" type="button" data-act="fav" aria-pressed="${isFav}" aria-label="${isFav ? "Favorilerden çıkar" : "Favorilere ekle"}">${ICON_HEART}</button>${priceBar}</div>
     <div class="cbody">
       <a class="ttl" href="${esc(safeUrl(it.url))}" target="_blank" rel="noopener noreferrer" title="${esc(it.t)}">${esc(niceTitle(it.t))}</a>
+      ${it.pp ? `<div class="dropline">↓ <b>${esc(TL(it.pp - it.p))}</b> (−%${Math.round((it.pp - it.p) / it.pp * 100)}) · ${esc(TL(it.pp))} → ${esc(TL(it.p))}${it.pdt ? " · " + esc(ago(it.pdt)) : ""}</div>` : ""}
       <div class="specline">${specs}</div>
       <div class="loc"><span class="mi">${ICON.metro}</span><span>${esc(it.d || "?")} → <b>${esc(it.st || "durak belirsiz")}</b></span>${walk}</div>
       ${com ? `<div class="com"><svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>${com}</div>` : ""}
@@ -1224,6 +1235,7 @@ function renderTabs() {
   const t = S.tab === "ilan" && S.view === "map" ? "harita" : S.tab;
   for (const b of document.querySelectorAll("[data-tab]")) b.setAttribute("aria-selected", String(b.dataset.tab === t || (b.dataset.tab === "ilan" && t === "harita" && b.closest(".nav"))));
   $("#tab-ilan").hidden = S.tab !== "ilan"; $("#tab-ayar").hidden = S.tab !== "ayar"; $("#tab-durum").hidden = S.tab !== "durum";
+  $("#tab-dusen").hidden = S.tab !== "dusen";
 }
 // PC'den gelen kaynaklar (hepsiemlak, sahibinden) eskidiyse ilanlar sayfasında kısa bir uyarı
 function renderFresh() {
@@ -1249,6 +1261,7 @@ function niceTitle(t) {
   // kesmeyle bağlı ekler kelimenin parçası (Jüpiter'den); birimler ve kısaltmalar korunur (m², TL, ODTÜ)
   return s.toLocaleLowerCase("tr-TR").replace(/[\p{L}\p{N}]+(?:['’][\p{L}]+)*/gu, (w) => {
     let out;
+    if (w.includes("ı") && /(ences?|ings?|ity|ites?|ifes?|ives?|ious)$/.test(w.replace(/ı/g, "i"))) w = w.replace(/ı/g, "i");
     if (/^m[²2³]?$/.test(w)) out = w;
     else if (KEEP_UPPER.has(w)) out = w.toLocaleUpperCase("tr-TR");
     else if (!first && SMALL_WORDS.has(w)) out = w;
@@ -1274,6 +1287,39 @@ function renderHero() {
   box.innerHTML = `<h1>Ankara <em>M2 hattında</em> eşyalı kiralık</h1>
     <p><span class="live"><i></i>Canlı</span><span><b>${NF.format(ok)}</b> uygun ilan</span><span><b>${NF.format(D.items.length)}</b> aktif ilan</span>
       <span><b>${NF.format(n24)}</b> yeni (24 sa)</span><span>son güncelleme ${esc(fmtWhen(D.last_scan || D.generated))}</span></p>`;
+}
+// Fiyatı düşenler sekmesi: kriter filtrelerinden bağımsız, gizlenenler hariç
+const DROP_SORTS = [["pct", "En büyük düşüş (%)"], ["tl", "En büyük düşüş (TL)"], ["recent", "En yeni düşüş"], ["price", "En ucuz"]];
+function renderDrops() {
+  const box = $("#dusen"); if (!box || !D) return;
+  const onlyOk = store.get("m2k_drop_ok", "0") === "1";
+  const sort = store.get("m2k_drop_sort", "pct");
+  const pct = (it) => (it.pp - it.p) / it.pp;
+  const all = D.items.filter((it) => it.pp && it.p && it.pp > it.p && !isHidden(it));
+  const list = all.filter((it) => !onlyOk || it.ok);
+  const cmp = {
+    pct: (a, b) => pct(b) - pct(a), tl: (a, b) => (b.pp - b.p) - (a.pp - a.p),
+    recent: (a, b) => (parseT(b.pdt || b.fs) || 0) - (parseT(a.pdt || a.fs) || 0), price: (a, b) => a.p - b.p,
+  }[sort] || ((a, b) => pct(b) - pct(a));
+  list.sort(cmp);
+  const avg = list.length ? Math.round(list.reduce((s, it) => s + pct(it), 0) / list.length * 100) : 0;
+  const top = list.slice().sort((a, b) => (b.pp - b.p) - (a.pp - a.p))[0];
+  const tile = (lab, val, sub, ic) => `<div class="tile"><div class="lab"><span class="ic">${ICON[ic]}</span>${esc(lab)}</div><div class="val">${esc(val)}</div>${sub ? `<div class="sub">${esc(sub)}</div>` : ""}</div>`;
+  box.innerHTML = `<div class="hero" style="padding-top:4px"><h1>Fiyatı <em>düşenler</em></h1>
+      <p>Son fiyatı öncekinden düşük olan aktif ilanlar. Kriter filtrelerinden bağımsızdır; uygun olanlarda yeşil etiket var.</p></div>
+    <div class="toolbar" style="padding-top:14px">
+      <button class="chip" type="button" id="dropok" aria-pressed="${onlyOk}">Yalnız uygun</button>
+      <select class="sel" id="dropsort" aria-label="Sıralama">${DROP_SORTS.map(([k, l]) => `<option value="${k}" ${k === sort ? "selected" : ""}>${esc(l)}</option>`).join("")}</select>
+    </div>
+    <div class="kpis drops">
+      ${tile("Fiyatı düşen ilan", NF.format(list.length), onlyOk ? "yalnız kriterlere uyanlar" : `${list.filter((i) => i.ok).length} tanesi kriterlere uyuyor`, "tag")}
+      ${tile("Ortalama düşüş", list.length ? "%" + avg : "—", list.length ? "eski fiyata göre" : "", "chart")}
+      ${tile("En büyük düşüş", top ? TL(top.pp - top.p) : "—", top ? niceTitle(top.t).slice(0, 40) : "", "spark")}
+    </div>
+    ${list.length ? `<div class="cards">${list.map(card).join("")}</div>`
+      : `<p class="empty">${all.length ? "Kriterlerine uyan ilanlarda fiyat düşüşü yok. \"Yalnız uygun\" seçeneğini kapatıp tümüne bakabilirsin." : "Şu an fiyatı düşen ilan yok. Bir fiyat düşünce burada ve Telegram'da görünür."}</p>`}`;
+  $("#dropok").onclick = () => { store.set("m2k_drop_ok", onlyOk ? "0" : "1"); renderDrops(); };
+  $("#dropsort").onchange = (e) => { store.set("m2k_drop_sort", e.target.value); renderDrops(); };
 }
 function renderNewest() {
   const box = $("#newest"); if (!box || !D) return;
@@ -1304,6 +1350,7 @@ function renderAll(rebuildFilters = true, keepFocus = false) {
   saveState(); renderTabs(); renderConn();
   if (S.tab === "ayar") { renderSettings(); return; }
   if (S.tab === "durum") { renderStatus(); return; }
+  if (S.tab === "dusen") { renderDrops(); return; }
   const base = D.items.filter((it) => pass(it, S, true));
   const list = base.filter((it) => pass(it, S, false)).sort(sorter(S.sort));
   renderHero(); renderFresh(); renderNewest(); renderLine(base); renderActive(); renderKpis(list);

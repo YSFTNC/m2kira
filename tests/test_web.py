@@ -54,6 +54,7 @@ def test_payload_and_export(cfg, tmp_path):
     items = {i["id"]: i for i in d["items"]}
     assert items["hepsiemlak:9-0"]["ok"] and items["hepsiemlak:9-0"]["st"] == "Kızılay" and items["hepsiemlak:9-0"]["v"]
     assert items["hepsiemlak:9-1"]["pp"] == 34000          # önceki fiyat (düşüş)
+    assert items["hepsiemlak:9-1"]["pdt"] and items["hepsiemlak:9-0"]["pdt"] is None   # düşüş zamanı yalnız düşende
     assert not items["hepsiemlak:9-2"]["ok"]                # bütçe dışı ama listede (Tümü görünümü için)
     assert d["stats"]["Kızılay"]["n"] == 2 and d["stats"]["Kızılay"]["min"] == 30000
     assert set(items["hepsiemlak:9-0"]["cm"]) == {"MK", "ŞH"}
