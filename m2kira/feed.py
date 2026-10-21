@@ -58,7 +58,7 @@ def listing_to_feed(l: Listing) -> dict[str, Any]:
     for k in DROP_FIELDS:
         d.pop(k, None)
     d.pop("id", None)
-    d["description"] = (d.get("description") or "")[:600]
+    d["description"] = (d.get("description") or "")[:1500]   # sitedeki ilan sayfasında okunabilsin
     return d
 
 
