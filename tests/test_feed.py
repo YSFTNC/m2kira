@@ -315,9 +315,25 @@ def test_block_backoff_pauses_attempts(tmp_path):
     denied = {"units": [], "errors": ["sahibinden: liste tablosu bulunamadı (başlık: 'Access to this page has been denied')"]}
     assert feedmod.apply_block_backoff(db, "sahibinden", {"units": [], "errors": ["ERR_CONNECTION_TIMED_OUT"]}, now=t0) is None
     until = feedmod.apply_block_backoff(db, "sahibinden", denied, now=t0)
-    assert until == "2026-10-22T02:10:00Z"                                     # ilk engel: 12 saat
-    assert not feedmod.attempt_due(db, "sahibinden", 115, now=t0 + timedelta(hours=6))
-    assert feedmod.attempt_due(db, "sahibinden", 115, now=t0 + timedelta(hours=13))
-    t1 = t0 + timedelta(hours=13)
-    assert feedmod.apply_block_backoff(db, "sahibinden", denied, now=t1) == "2026-10-23T03:10:00Z"   # tekrar: 24 saat
-    assert feedmod.apply_block_backoff(db, "sahibinden", {"units": [{"unit": "x"}], "errors": []}, now=t1) is None
+    assert until == "2026-10-21T18:10:00Z"                                     # ilk engel: 4 saat
+    assert not feedmod.attempt_due(db, "sahibinden", 115, now=t0 + timedelta(hours=3))
+    assert feedmod.attempt_due(db, "sahibinden", 115, now=t0 + timedelta(hours=5))
+    t1 = t0 + timedelta(hours=5)
+    assert feedmod.apply_block_backoff(db, "sahibinden", denied, now=t1) == "2026-10-22T07:10:00Z"   # ikinci: 12 saat
+    t2 = t1 + timedelta(hours=13)
+    assert feedmod.apply_block_backoff(db, "sahibinden", denied, now=t2) == "2026-10-23T08:10:00Z"   # üçüncü: 24 saat
+    assert feedmod.apply_block_backoff(db, "sahibinden", {"units": [{"unit": "x"}], "errors": []}, now=t2) is None
+    assert db.get_setting("feed_block_count:sahibinden") == 0                 # başarılı tarama kademeyi sıfırlar
+
+
+def test_sahibinden_light_scan_reads_first_page_only(cfg):
+    from types import SimpleNamespace
+    from pathlib import Path
+    from m2kira.sources.sahibinden import SahibindenSource
+    html = (Path(__file__).parent / "fixtures" / "sahibinden_list_real.html").read_text(encoding="utf-8")
+    src = SahibindenSource(cfg)
+    urls = []
+    src._get = lambda url, ttl: (urls.append(url), SimpleNamespace(html=html, title="Kiralık", status=200))[1]
+    src.page_limit = 1
+    res = src.scan_neighborhood(None)
+    assert len(urls) == 1 and res.listings and not res.complete and not res.errors   # tek istek, hata değil

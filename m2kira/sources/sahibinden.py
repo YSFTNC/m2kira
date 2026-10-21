@@ -332,7 +332,8 @@ class SahibindenSource(Source):
         offset = 0
         page = 1
         total: Optional[int] = None
-        while page <= self.max_pages:
+        limit = int(getattr(self, "page_limit", 0) or self.max_pages)   # hafif tarama: yalnız 1. sayfa (en yeni 50)
+        while page <= limit:
             url = self.build_url(offset)
             if result.url is None:
                 result.url = url
@@ -356,8 +357,9 @@ class SahibindenSource(Source):
                 break
             page += 1
         else:
-            result.complete = False
-            result.errors.append(f"sayfa sınırı ({self.max_pages}) aşıldı; toplam {total}")
+            result.complete = False          # eksik tarama: yayından kalkma tespiti yapılmaz
+            if limit >= self.max_pages:
+                result.errors.append(f"sayfa sınırı ({self.max_pages}) aşıldı; toplam {total}")
         result.listings = list(merged.values())
         return result
 

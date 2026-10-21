@@ -94,7 +94,8 @@ sources:
     max_age_hours: 3
     headless: true         # gerçek Chrome --headless=new: sahibinden'in korumasını geçti (19.10.2026). 21.10'da sık taramadan
                            # sonra hem görünmez hem ekran dışı görünür Chrome engellendi -> engelde 12-24 saat duraklama
-    max_detail_fetch: 5    # tarama başına en fazla yeni ilan detayı (konum için; 30 dk aralıkla saatte ~10); önbellekte kalır.
+    max_detail_fetch: 3    # tarama başına en fazla yeni ilan detayı (konum için); önbellekte kalır.
+    full_every_hours: 20   # diğer taramalar yalnız 1. sayfa (en yeni 50 ilan); tüm sayfalar günde bir
                            # 20.10.2026: 11:55'te 20 detay, 13:10'da 4 detaydan sonra giriş duvarı -> ~24/saat sınırı var
   emlakjet:
     enabled: true

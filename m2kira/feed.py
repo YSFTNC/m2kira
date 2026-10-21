@@ -171,7 +171,15 @@ def collect_sahibinden(cfg: Config, db: DB, max_details: Optional[int] = None) -
             src.mode = "cdp"
             src.headed_fallback = False
             src.browser.cdp_url = f"http://127.0.0.1:{port}"
-            res = src.scan_neighborhood(None)   # liste sayfası giriş isterse burada LoginRequiredError -> uyarı
+            # Hafif tarama (21.10.2026, sahibinden'in otomatik erişim engelinden sonra): arama tarihe göre sıralı,
+            # yeni ilanlar 1. sayfada. Tam tarama (kalkan ilan tespiti için tüm sayfalar) günde bir.
+            last_full = db.get_setting("sahibinden_full_at")
+            full = not last_full or (datetime.now(timezone.utc) - datetime.strptime(last_full, "%Y-%m-%dT%H:%M:%SZ")
+                                     .replace(tzinfo=timezone.utc)).total_seconds() > float(scfg.get("full_every_hours", 20)) * 3600
+            src.page_limit = None if full else 1
+            res = src.scan_neighborhood(None)
+            if full and res.complete:
+                db.set_setting("sahibinden_full_at", utcnow())   # liste sayfası giriş isterse burada LoginRequiredError -> uyarı
             # yeni ilanların detayı (koordinat, açıklama): en yeniler önce. 19.10.2026: ~30 detaydan sonra
             # sahibinden geçici bir giriş duvarı gösterdi (oturum geçerliydi) -> tarama başına sınır + rastgele
             # bekleme; duvar çıkarsa detay bırakılır ama liste verisi yine gönderilir.
@@ -221,7 +229,8 @@ def collect_sahibinden(cfg: Config, db: DB, max_details: Optional[int] = None) -
                 l.detail_fetched = True
             log.info("sahibinden: %d ilan (%d sayfa), %d yeni detay, önbellekte %d", len(res.listings), res.pages,
                      fetched, len(cache))
-            units.append({"nb": "sahibinden-arama", "complete": res.complete, "full_pass": True, "pages": res.pages,
+            units.append({"nb": "sahibinden-arama", "complete": res.complete, "full_pass": bool(full and res.complete),
+                          "pages": res.pages,
                           "errors": res.errors, "listings": [listing_to_feed(l) for l in res.listings]})
     except (LoginRequiredError, BlockedError) as exc:
         errors.append(str(exc))
@@ -257,27 +266,32 @@ def attempt_due(db: DB, source: str, min_minutes: float, now: Optional[datetime]
 
 
 BLOCK_MARKERS = ("denied", "bot koruması", "olağan dışı", "doğrulama")
+BLOCK_BACKOFF_HOURS = (4, 12, 24)   # art arda engellerde bekleme; başarılı taramada başa döner
 
 
 def apply_block_backoff(db: DB, source: str, payload: dict[str, Any], now: Optional[datetime] = None) -> Optional[str]:
     """Site otomatik erişimi açıkça engellediyse (21.10.2026: sahibinden 'Access to this page has been denied',
-    'olağan dışı erişim') taramayı 12 saat, 48 saat içinde tekrar ederse 24 saat duraklatır. Zorlamak hesabı riske
-    atar; bekleme sonrası kendiliğinden yeniden denenir. Döndürür: duraklama bitişi (UTC) ya da None."""
+    'olağan dışı erişim') taramayı art arda engellerde 4 / 12 / 24 saat duraklatır. Zorlamak hesabı riske atar;
+    bekleme sonrası kendiliğinden yeniden denenir. Döndürür: duraklama bitişi (UTC) ya da None."""
     if payload.get("units"):
+        if db.get_setting(f"feed_block_count:{source}"):
+            db.set_setting(f"feed_block_count:{source}", 0)      # başarılı tarama: kademe sıfırlanır
         return None
     text = " ".join(str(e) for e in payload.get("errors") or []).lower()
     if not any(m in text for m in BLOCK_MARKERS):
         return None
     now = now or datetime.now(timezone.utc)
     prev = db.get_setting(f"feed_block_last:{source}")
-    hours = 12
+    count = int(db.get_setting(f"feed_block_count:{source}", 0) or 0)
     if prev:
         try:
             last = datetime.strptime(prev, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
-            if (now - last).total_seconds() < 48 * 3600:
-                hours = 24
+            if (now - last).total_seconds() > 48 * 3600:
+                count = 0
         except ValueError:
             pass
+    hours = BLOCK_BACKOFF_HOURS[min(count, len(BLOCK_BACKOFF_HOURS) - 1)]
+    db.set_setting(f"feed_block_count:{source}", count + 1)
     until = (now + timedelta(hours=hours)).strftime("%Y-%m-%dT%H:%M:%SZ")
     db.set_setting(f"feed_block_until:{source}", until)
     db.set_setting(f"feed_block_last:{source}", now.strftime("%Y-%m-%dT%H:%M:%SZ"))
@@ -312,7 +326,7 @@ def _send_pc_notice(cfg: Config, text: str, subject: str) -> None:
         log.warning("uyarı gönderilemedi: %s", exc)
 
 
-FEED_HINTS = {
+FEED_HINTS = {  # noqa: E501
     "sahibinden": ("sahibinden bu bilgisayardan otomatik erişimi engelliyorsa tarama kendiliğinden 12-24 saat duraklatılır ve "
                    "sonra yeniden denenir; bu sürede yeni ilanları sahibinden uygulamasının kayıtlı arama bildirimi haber verir. "
                    "Giriş isterse proje klasöründe <code>python main.py sahibinden-chrome</code> çalıştırıp açılan Chrome'da gir."),
