@@ -12,14 +12,14 @@ from typing import Any, Optional
 from .config import Config, Neighborhood
 from .db import DB, row_to_listing, utcnow
 from .dedup import find_duplicates
-from .format import esc, fmt_price, format_line, format_listing, format_summary, long_id, short_id
+from .format import SOURCE_LABEL, esc, fmt_price, format_line, format_listing, format_summary, long_id, short_id
 from .geo import walk_minutes
 from .http import BlockedError, LoginRequiredError, ParseError
 from .models import Event, Listing, ScanResult
 from .notify import Notifier
 from .sources import build_sources
 from .sources.base import Source
-from .textnorm import detect_flags, detect_furnished, detect_price_includes, fold
+from .textnorm import FLAG_LABELS, detect_flags, detect_furnished, detect_price_includes, fold
 
 log = logging.getLogger(__name__)
 
@@ -476,7 +476,9 @@ class Pipeline:
         # siteden: yalnız bu duraklar için bildir (boş = hepsi); favoriler her zaman (fiyat düşüşü / kalkma)
         stations = set(self.cfg.get("notify_stations", default=[]) or [])
         favorites = set(self.cfg.get("favorites", default=[]) or [])
+        notify_all = bool(self.cfg.get("notify_all_changes", default=True))
         cards: list[tuple[dict[str, Any], dict[str, Any]]] = []
+        digest: list[tuple[dict[str, Any], dict[str, Any]]] = []   # kart olmayan diğer tüm değişiklikler
         done: list[int] = []
         for ev in events:
             done.append(ev.id)  # type: ignore[arg-type]
@@ -487,14 +489,19 @@ class Pipeline:
             fav = l["id"] in favorites
             if fav:
                 evd["fav"] = True
+            carded = False
             if ev.kind in ("new", "reappeared", "price_drop", "now_matches"):
                 if fav and ev.kind == "price_drop" and l.get("active"):
-                    cards.append((l, evd))
+                    carded = True
                 elif l.get("matches") and l.get("active") and (not stations or l.get("nearest_station") in stations or fav):
-                    cards.append((l, evd))
+                    carded = True
             elif ev.kind == "removed":
                 if (notify_removed and l.get("notified_at")) or fav:
-                    cards.append((l, evd))
+                    carded = True
+            if carded:
+                cards.append((l, evd))
+            elif notify_all and (not stations or l.get("nearest_station") in stations):
+                digest.append((l, evd))
         sent = 0
         compact_threshold = int(self.cfg.get("compact_threshold", default=12))
         if len(cards) > compact_threshold:
@@ -523,12 +530,72 @@ class Pipeline:
                     sent += 1
                 except Exception as exc:  # noqa: BLE001
                     log.error("bildirim gönderilemedi (%s): %s", l.get("id"), exc)
+        if digest:
+            try:
+                self.notifier.send(self.digest_text(digest, budget, with_cards=bool(cards)), subject="m2kira: değişiklikler")
+                sent += len(digest)
+            except Exception as exc:  # noqa: BLE001
+                log.error("değişiklik özeti gönderilemedi: %s", exc)
         now = utcnow()
         for l, evd in cards:
             if evd["kind"] != "removed":
                 self.db.set_notified(l["id"], now)
         self.db.mark_events_notified(done)
         return sent
+
+    DIGEST_HEAD = {"new": "🆕", "reappeared": "♻️", "price_drop": "💸", "price_up": "📈", "removed": "❌", "now_matches": "✅"}
+    DIGEST_LIMIT = 20
+
+    def mismatch_reason(self, l: dict[str, Any], budget: int) -> str:
+        """Kriter dışı kalan ilanın kısa nedeni (özet satırı için); kriterlere uyuyorsa boş."""
+        price = l.get("price")
+        if not price:
+            return "fiyat yok"
+        if price > budget * (1 + self.cfg.budget_tolerance_pct / 100.0):
+            return "bütçe üstü"
+        accept = set(self.cfg.get("furnished_accept", default=["full", "partial", "either"]) or [])
+        if bool(self.cfg.get("include_unknown_furnished", default=False)):
+            accept.add("unknown")
+        fur = l.get("furnished") or "unknown"
+        if fur not in accept:
+            return {"none": "eşyasız", "unknown": "eşya durumu belirsiz", "partial": "kısmi eşyalı",
+                    "either": "eşyalı/eşyasız", "full": "eşyalı"}.get(fur, fur)
+        allowed = self.cfg.get("rooms_allowed", default=[]) or []
+        if allowed and l.get("rooms") and l["rooms"] not in allowed:
+            return f"{l['rooms']} (seçili oda tipi: {', '.join(allowed)})"
+        exclude = set(self.cfg.get("exclude_flags", default=["gunluk", "oda", "uzak"]) or []) | {"mesafe_gerekli"}
+        hit = [f for f in (l.get("flags") or []) if f in exclude]
+        if hit:
+            return ", ".join(FLAG_LABELS.get(f, f) for f in hit)
+        return ""
+
+    def digest_text(self, items: list[tuple[dict[str, Any], dict[str, Any]]], budget: int, with_cards: bool = False) -> str:
+        order = {"new": 0, "reappeared": 0, "now_matches": 0, "price_drop": 1, "price_up": 1, "removed": 2}
+        items = sorted(items, key=lambda x: (order.get(x[1]["kind"], 3), x[0].get("price") or 0))
+        n_new = sum(1 for _, e in items if e["kind"] in ("new", "reappeared", "now_matches"))
+        n_price = sum(1 for _, e in items if e["kind"] in ("price_drop", "price_up"))
+        n_gone = sum(1 for _, e in items if e["kind"] == "removed")
+        parts = [f"{n} {lab}" for n, lab in ((n_new, "yeni"), (n_price, "fiyat değişti"), (n_gone, "kalktı")) if n]
+        head = f"🔄 <b>{'Diğer değişiklikler' if with_cards else 'Değişiklikler'}</b> · {datetime.now().strftime('%H:%M')} · " + " · ".join(parts)
+        lines = [head]
+        for l, e in items[:self.DIGEST_LIMIT]:
+            kind = e["kind"]
+            if kind in ("price_drop", "price_up") and e.get("old_price"):
+                price = f"{fmt_price(e['old_price'])} → {fmt_price(e.get('new_price') or l.get('price'))}"
+            else:
+                price = fmt_price(l.get("price"))
+            walk = f" {l['walk_minutes_est']} dk" if l.get("distance_verified") and l.get("walk_minutes_est") else ""
+            why = "" if kind == "removed" else self.mismatch_reason(l, budget)
+            lines.append(f"{self.DIGEST_HEAD.get(kind, '•')} <b>{price}</b> · {esc(l.get('rooms') or '?')} · "
+                         f"{esc(l.get('district') or '?')} → {esc(l.get('nearest_station') or '?')}{walk}"
+                         + (f" · <i>{esc(why)}</i>" if why else "")
+                         + f" · <a href=\"{esc(l.get('url'))}\">{esc(SOURCE_LABEL.get(l.get('source'), l.get('source')))}</a>")
+        more = len(items) - self.DIGEST_LIMIT
+        link = self.web_link(nw=24, sort="new", ok=0)
+        tail = (f"+{more} değişiklik daha. " if more > 0 else "") + (f'<a href="{esc(link)}">Sitede tümünü gör</a>' if link else "")
+        if tail:
+            lines.append(tail)
+        return "\n".join(lines)
 
     # ------------------------------------------------------------------ özet / liste / durum
     def matching_listings(self, max_price: Optional[int] = None, station: Optional[str] = None,

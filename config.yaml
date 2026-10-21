@@ -17,6 +17,8 @@ rooms_priority: ["1+1"]
 furnished_accept: ["full", "partial", "either"]   # bildirim için kabul edilen eşya durumları
 include_unknown_furnished: false                  # eşya durumu belirsiz ilanları da bildir
 exclude_flags: ["gunluk", "oda", "uzak"]          # bu bayraklı ilanlar bildirilmez (yine kaydedilir)
+notify_all_changes: true                          # her taramadan sonra kriter dışı olanlar dahil tüm
+                                                  # değişikliklerin tek mesajlık özeti (nedenleriyle)
 cheap_ratio: 0.6                                  # bölge medyanının %40 altı -> ⚠️ fiyat_cok_dusuk
 missing_scans_before_removed: 2                   # ardışık kaç taramada görünmezse "yayından kalktı"
 block_cooldown_min: 45                            # bir kaynak engellenince (429/Cloudflare) bu kadar süre o kaynağa dokunma

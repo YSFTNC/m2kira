@@ -49,6 +49,7 @@ def mk(sid, price, title, nb="kizilay", **kw):
 def env(cfg, tmp_path):
     cfg.raw["notify_removed"] = True
     cfg.raw["compact_threshold"] = 12
+    cfg.raw["notify_all_changes"] = False   # bu dosya kriter kartlarını sınar; tüm değişiklik özeti test_notify'da
     cfg.neighborhoods = [n for n in cfg.neighborhoods if n.key in ("kizilay", "emek", "yasamkent")]
     db = DB(tmp_path / "t.sqlite")
     notifier = CaptureNotifier()

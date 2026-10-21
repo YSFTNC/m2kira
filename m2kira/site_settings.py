@@ -21,7 +21,8 @@ from .textnorm import fold
 log = logging.getLogger(__name__)
 
 CONFIG_KEYS = ("budget_tolerance_pct", "rooms_allowed", "furnished_accept", "include_unknown_furnished",
-               "max_walk_m", "walk_tolerance_m", "exclude_flags", "notify_removed", "notify_stations")
+               "max_walk_m", "walk_tolerance_m", "exclude_flags", "notify_removed", "notify_stations",
+               "notify_all_changes")
 VALID_FURNISHED = {"full", "partial", "either", "unknown", "none"}
 VALID_ROOMS = {"1+0", "1+1", "2+1", "3+1", "4+1", "5+1"}
 
@@ -61,7 +62,7 @@ def _clean(s: dict[str, Any]) -> dict[str, Any]:
         fa = [f for f in s["furnished_accept"] if f in VALID_FURNISHED]
         if fa:
             out["furnished_accept"] = fa
-    for k in ("include_unknown_furnished", "notify_removed"):
+    for k in ("include_unknown_furnished", "notify_removed", "notify_all_changes"):
         if isinstance(s.get(k), bool):
             out[k] = s[k]
     for k in ("exclude_flags", "notify_stations", "disabled_neighborhoods", "favorites"):
@@ -119,6 +120,7 @@ def effective(cfg: Config, db: DB) -> dict[str, Any]:
         "walk_tolerance_m": int(cfg.get("walk_tolerance_m", default=500)),
         "exclude_flags": list(cfg.get("exclude_flags", default=["gunluk", "oda", "uzak"]) or []),
         "notify_removed": bool(cfg.get("notify_removed", default=True)),
+        "notify_all_changes": bool(cfg.get("notify_all_changes", default=True)),
         "notify_stations": list(cfg.get("notify_stations", default=[]) or []),
         "disabled_neighborhoods": list(db.get_setting("disabled_neighborhoods", []) or []),
         "favorites": list(cfg.get("favorites", default=[]) or []),

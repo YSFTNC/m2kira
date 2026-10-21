@@ -955,7 +955,7 @@ function renderResults(list) {
 
 /* ---------------- ayarlar ---------------- */
 function pickSettings(src) {
-  const keys = ["budget", "budget_tolerance_pct", "rooms_allowed", "furnished_accept", "include_unknown_furnished", "max_walk_m", "walk_tolerance_m", "exclude_flags", "notify_removed", "notify_stations", "disabled_neighborhoods"];
+  const keys = ["budget", "budget_tolerance_pct", "rooms_allowed", "furnished_accept", "include_unknown_furnished", "max_walk_m", "walk_tolerance_m", "exclude_flags", "notify_removed", "notify_all_changes", "notify_stations", "disabled_neighborhoods"];
   const o = {}; for (const k of keys) if (src && k in src) o[k] = JSON.parse(JSON.stringify(src[k])); return o;
 }
 function settingsPayload() { const o = pickSettings(SET); o.favorites = [...favs]; o.hidden = hidMap; return o; }
@@ -974,7 +974,8 @@ function renderSettings() {
       <div><div class="small">Tolerans (m)</div><input class="num" style="max-width:140px" id="s-walktol" type="number" inputmode="numeric" step="50" min="0" max="3000" value="${esc(s.walk_tolerance_m)}"></div></div></div>
   <div class="panel"><h2>Bildirim</h2><span class="small">Telegram'a hangi ilanların gideceği. Favori ilanların fiyat düşüşü ve yayından kalkması her zaman bildirilir.</span>
     <div class="sgrid"><div id="s-excl"></div><div id="s-stations"></div></div>
-    <label class="ck" style="margin-top:12px"><input type="checkbox" id="s-removed" ${s.notify_removed ? "checked" : ""}> Daha önce bildirilen ilan yayından kalkınca haber ver</label></div>
+    <label class="ck" style="margin-top:12px"><input type="checkbox" id="s-removed" ${s.notify_removed ? "checked" : ""}> Daha önce bildirilen ilan yayından kalkınca haber ver</label>
+    <label class="ck" style="margin-top:8px"><input type="checkbox" id="s-allchg" ${s.notify_all_changes !== false ? "checked" : ""}> Her taramadan sonra diğer tüm değişiklikleri de tek mesajda bildir (kriter dışı yeni ilanlar, fiyat değişimleri, kalkanlar; nedeni yazar)</label></div>
   <div class="panel"><h2>Mahalleler</h2><span class="small">İşaretsiz mahalleler taranmaz (hepsiemlak, emlakjet). sahibinden kayıtlı aramasını sahibinden.com'dan düzenle.</span>
     <div class="nblist">${(D.neighborhoods || []).map((n) => `<label class="ck"><input type="checkbox" data-nb="${esc(n.key)}" ${disabled.has(n.key) ? "" : "checked"}> ${esc(n.name)} <span class="muted" style="font-size:12px">→ ${esc(n.station || "?")}</span></label>`).join("")}</div></div>
   <div class="savebar"><button class="btn primary" type="button" id="s-apply" ${connected() ? "" : "disabled"}>Kaydet ve uygula</button>
@@ -989,6 +990,7 @@ function renderSettings() {
   $("#s-walk").oninput = (e) => { s.max_walk_m = +e.target.value || s.max_walk_m; walkMin(); };
   $("#s-walktol").oninput = (e) => { s.walk_tolerance_m = +e.target.value || 0; };
   $("#s-removed").onchange = (e) => { s.notify_removed = e.target.checked; };
+  $("#s-allchg").onchange = (e) => { s.notify_all_changes = e.target.checked; };
   box.querySelectorAll("[data-nb]").forEach((cb) => cb.addEventListener("change", () => { const set = new Set(s.disabled_neighborhoods || []); cb.checked ? set.delete(cb.dataset.nb) : set.add(cb.dataset.nb); s.disabled_neighborhoods = [...set]; }));
   $("#s-reset").onclick = () => { SET = pickSettings(D.settings); renderSettings(); toast("Geri alındı"); };
   $("#s-save").onclick = () => saveSettings(false); $("#s-apply").onclick = () => saveSettings(true);

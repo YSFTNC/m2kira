@@ -75,6 +75,7 @@ def test_notify_station_filter_and_favorites(cfg, tmp_path):
 
 def test_reevaluate_after_budget_change(cfg, tmp_path):
     cfg.neighborhoods = [n for n in cfg.neighborhoods if n.key == "kizilay"]
+    cfg.raw["notify_all_changes"] = False   # yalnız kriter kartları sınanıyor (özet: test_notify)
     db = DB(tmp_path / "r.sqlite")
     cap = Cap()
     src = Fake(cfg, [L("5", 41000)])
