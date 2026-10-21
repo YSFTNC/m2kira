@@ -526,6 +526,10 @@ class Pipeline:
             for l, evd in cards:
                 try:
                     text = format_listing(l, evd, budget)
+                    if l.get("source") == "sahibinden":
+                        page = self.web_link(ilan=l["id"])
+                        if page:
+                            text += f'\n📄 <a href="{esc(page)}">Sitede ilan sayfası</a> (sahibinden açılmazsa)'
                     img = str((l.get("extras") or {}).get("img") or "")
                     if evd["kind"] != "removed" and img.startswith("https://"):
                         self.notifier.send_photo(img, text, subject=f"m2kira: {evd['kind']}")
@@ -549,6 +553,14 @@ class Pipeline:
 
     DIGEST_HEAD = {"new": "🆕", "reappeared": "♻️", "price_drop": "💸", "price_up": "📈", "removed": "❌", "now_matches": "✅"}
     DIGEST_LIMIT = 20
+
+    def _listing_link(self, l: dict[str, Any]) -> str:
+        """sahibinden ilanı için sitedeki ilan sayfası (sahibinden.com ağı engelleyebiliyor), diğerleri için ilanın kendisi."""
+        if l.get("source") == "sahibinden":
+            page = self.web_link(ilan=l["id"])
+            if page:
+                return page
+        return str(l.get("url") or "")
 
     def mismatch_reason(self, l: dict[str, Any], budget: int) -> str:
         """Kriter dışı kalan ilanın kısa nedeni (özet satırı için); kriterlere uyuyorsa boş."""
@@ -593,7 +605,7 @@ class Pipeline:
             lines.append(f"{self.DIGEST_HEAD.get(kind, '•')} <b>{price}</b> · {esc(l.get('rooms') or '?')} · "
                          f"{esc(l.get('district') or '?')} → {esc(l.get('nearest_station') or '?')}{walk}"
                          + (f" · <i>{esc(why)}</i>" if why else "")
-                         + f" · <a href=\"{esc(l.get('url'))}\">{esc(SOURCE_LABEL.get(l.get('source'), l.get('source')))}</a>")
+                         + f" · <a href=\"{esc(self._listing_link(l))}\">{esc(SOURCE_LABEL.get(l.get('source'), l.get('source')))}</a>")
         more = len(items) - self.DIGEST_LIMIT
         link = self.web_link(nw=24, sort="new", ok=0)
         tail = (f"+{more} değişiklik daha. " if more > 0 else "") + (f'<a href="{esc(link)}">Sitede tümünü gör</a>' if link else "")

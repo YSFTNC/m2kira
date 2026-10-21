@@ -145,3 +145,12 @@ def test_heartbeat_after_quiet_hours(cfg, tmp_path):
     db.set_setting("last_message_at", old)
     assert not p.heartbeat_if_quiet(now=datetime(2026, 10, 21, 2, 0))       # gece sessiz
     assert p.heartbeat_if_quiet(now=day) and len(cap.sent) == 2
+
+
+def test_sahibinden_links_point_to_site_page(cfg, tmp_path):
+    db = DB(tmp_path / "l.sqlite")
+    p = Pipeline(cfg, db, MultiNotifier([]), sources=[])
+    sb = {"id": "sahibinden:1328722998", "source": "sahibinden", "url": "https://www.sahibinden.com/ilan/x-1328722998/detay"}
+    he = {"id": "hepsiemlak:1-2", "source": "hepsiemlak", "url": "https://www.hepsiemlak.com/x"}
+    assert p._listing_link(sb).endswith("#ilan=sahibinden%3A1328722998")
+    assert p._listing_link(he) == "https://www.hepsiemlak.com/x"

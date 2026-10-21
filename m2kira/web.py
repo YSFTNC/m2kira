@@ -18,6 +18,7 @@ from .textnorm import FLAG_LABELS, FURNISHED_LABELS
 
 TEMPLATE = Path(__file__).resolve().parent / "web" / "index.html"
 DESC_SNIPPET = 400
+DESC_SNIPPET_SB = 1500   # sahibinden sayfası engellenebiliyor: açıklamanın tamamına yakını sitedeki ilan sayfasında
 
 
 def m2_line(cfg: Config) -> list[dict[str, Any]]:
@@ -128,7 +129,7 @@ def build_payload(cfg: Config, db: DB, budget: Optional[int] = None) -> dict[str
                     and r["source"] not in NO_HOTLINK_SOURCES else None),
             "ph": h if len(h) > 1 else None,
             "pdt": drop_at[:16] if drop_at else None,   # fiyatın düştüğü an (UTC, YYYY-MM-DDTHH:MM)
-            "desc": desc[:DESC_SNIPPET],
+            "desc": desc[:DESC_SNIPPET_SB if r["source"] == "sahibinden" else DESC_SNIPPET],
             "cm": commute_minutes(r.get("nearest_station"), r.get("walk_minutes_est"),
                                   bool(r.get("distance_verified")), cfg, line, targets),
         })
