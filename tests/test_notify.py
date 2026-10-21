@@ -120,3 +120,28 @@ def test_members_get_listing_messages_but_not_technical_notices():
     calls.clear()
     tg.send("yanıt", chat_id="222")
     assert [p["chat_id"] for _, p in calls] == ["222"]
+
+
+def test_heartbeat_after_quiet_hours(cfg, tmp_path):
+    from datetime import datetime, timedelta, timezone
+
+    class Cap(Notifier):
+        def __init__(self):
+            self.sent = []
+
+        def send(self, text, subject="m2kira"):
+            self.sent.append((subject, text))
+            return True
+
+    cap = Cap()
+    db = DB(tmp_path / "h.sqlite")
+    p = Pipeline(cfg, db, cap, sources=[])
+    day = datetime(2026, 10, 21, 16, 0)
+    assert p.heartbeat_if_quiet(now=day)                                   # hiç mesaj yok: hemen
+    assert cap.sent[-1][0] == "m2kira: durum" and "değişiklik yok" in cap.sent[-1][1]
+    assert "sahibinden" in cap.sent[-1][1]
+    assert not p.heartbeat_if_quiet(now=day)                               # az önce gönderildi
+    old = (datetime.now(timezone.utc) - timedelta(hours=4)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    db.set_setting("last_message_at", old)
+    assert not p.heartbeat_if_quiet(now=datetime(2026, 10, 21, 2, 0))       # gece sessiz
+    assert p.heartbeat_if_quiet(now=day) and len(cap.sent) == 2

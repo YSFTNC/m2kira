@@ -268,6 +268,10 @@ class Pipeline:
             if not s_stats["blocked"] and s_stats["neighborhoods"]:
                 self.db.set_setting(f"last_scan_ok:{src.name}", started)
         summary["notified"] = self._notify_events(budget)
+        if summary["notified"]:
+            self.db.set_setting("last_message_at", utcnow())
+        elif os.environ.get("M2KIRA_HEARTBEAT") == "1":
+            self.heartbeat_if_quiet()
         summary["finished"] = utcnow()
         self.last_summary = summary
         log.info("tarama bitti: yeni=%d düşüş=%d kalkan=%d bildirim=%d hata=%d", summary["new"], summary["price_drop"],
@@ -663,6 +667,49 @@ class Pipeline:
             text += f'\n\n🔎 <a href="{esc(link)}">Filtre sayfası</a> (durak durak, harita, işe ulaşım süresi)'
         self.notifier.send(text, subject="m2kira günlük özet")
         self.db.set_setting("summary_sent_on", datetime.now().date().isoformat())
+        self.db.set_setting("last_message_at", utcnow())
+
+    def heartbeat_if_quiet(self, now: Optional[datetime] = None) -> bool:
+        """Gündüz (08-23) `heartbeat_quiet_hours` boyunca hiç bildirim gitmediyse kısa bir 'değişiklik yok, sistem
+        çalışıyor' mesajı ve kaynakların son kontrol saatleri. Sessizliğin arıza mı değişiklik yok mu olduğu anlaşılsın."""
+        quiet_h = float(self.cfg.get("heartbeat_quiet_hours", default=3) or 0)
+        if quiet_h <= 0 or not bool(self.cfg.get("notify_all_changes", default=True)):
+            return False
+        local = now or datetime.now()
+        if not 8 <= local.hour < 23:
+            return False
+        last = self.db.get_setting("last_message_at")
+        utc_now = datetime.now(timezone.utc)
+        if last and _minutes_between(last, utc_now.strftime("%Y-%m-%dT%H:%M:%SZ")) < quiet_h * 60:
+            return False
+
+        def when(ts: Optional[str]) -> str:
+            if not ts:
+                return "henüz yok"
+            try:
+                t = datetime.strptime(ts, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc).astimezone()
+            except ValueError:
+                return "?"
+            return t.strftime("%H:%M") if t.date() == local.date() else t.strftime("%d.%m %H:%M")
+
+        checks = [("emlakjet", self.db.get_setting("last_scan_ok:emlakjet")),
+                  ("hepsiemlak", self.db.get_setting("feed_processed:hepsiemlak")),
+                  ("sahibinden", self.db.get_setting("feed_processed:sahibinden"))]
+        lines = [f"🟢 <b>Son {quiet_h:g} saatte yeni ilan ya da değişiklik yok</b>, sistem çalışıyor.",
+                 "Son kontroller: " + " · ".join(f"{name} {when(ts)}" for name, ts in checks)]
+        stale = [name for name, ts in checks[1:] if not ts or _minutes_between(ts, utc_now.strftime("%Y-%m-%dT%H:%M:%SZ")) > 180]
+        if stale:
+            lines.append(f"{' ve '.join(stale)} evdeki bilgisayardan taranır; bilgisayar kapalıysa güncellenmez.")
+        link = self.web_link()
+        if link:
+            lines.append(f'<a href="{esc(link)}">Siteyi aç</a>')
+        try:
+            self.notifier.send("\n".join(lines), subject="m2kira: durum")
+        except Exception as exc:  # noqa: BLE001
+            log.error("durum mesajı gönderilemedi: %s", exc)
+            return False
+        self.db.set_setting("last_message_at", utcnow())
+        return True
 
     def daily_summary_if_due(self, ignore_time: bool = False, now: Optional[datetime] = None) -> bool:
         """Günlük özeti günde bir kez gönderir. GitHub'ın zamanlanmış çalıştırması düşerse özet, özet saatinden
