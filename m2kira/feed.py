@@ -240,6 +240,9 @@ def attempt_due(db: DB, source: str, min_minutes: float, now: Optional[datetime]
     """Kaynak en son `min_minutes` dakikadan önce denendiyse True döner ve deneme zamanını kaydeder.
     sahibinden aynı aramanın 30 dakikada bir açılmasını 'olağan dışı erişim' sayıyor (20.10.2026)."""
     now = now or datetime.now(timezone.utc)
+    until = db.get_setting(f"feed_block_until:{source}")
+    if until and now.strftime("%Y-%m-%dT%H:%M:%SZ") < str(until):
+        return False                                   # site otomatik erişimi engelledi: duraklatıldı
     key = f"feed_last_attempt:{source}"
     last = db.get_setting(key)
     if min_minutes > 0 and last:
@@ -251,6 +254,35 @@ def attempt_due(db: DB, source: str, min_minutes: float, now: Optional[datetime]
             pass
     db.set_setting(key, now.strftime("%Y-%m-%dT%H:%M:%SZ"))
     return True
+
+
+BLOCK_MARKERS = ("denied", "bot koruması", "olağan dışı", "doğrulama")
+
+
+def apply_block_backoff(db: DB, source: str, payload: dict[str, Any], now: Optional[datetime] = None) -> Optional[str]:
+    """Site otomatik erişimi açıkça engellediyse (21.10.2026: sahibinden 'Access to this page has been denied',
+    'olağan dışı erişim') taramayı 12 saat, 48 saat içinde tekrar ederse 24 saat duraklatır. Zorlamak hesabı riske
+    atar; bekleme sonrası kendiliğinden yeniden denenir. Döndürür: duraklama bitişi (UTC) ya da None."""
+    if payload.get("units"):
+        return None
+    text = " ".join(str(e) for e in payload.get("errors") or []).lower()
+    if not any(m in text for m in BLOCK_MARKERS):
+        return None
+    now = now or datetime.now(timezone.utc)
+    prev = db.get_setting(f"feed_block_last:{source}")
+    hours = 12
+    if prev:
+        try:
+            last = datetime.strptime(prev, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+            if (now - last).total_seconds() < 48 * 3600:
+                hours = 24
+        except ValueError:
+            pass
+    until = (now + timedelta(hours=hours)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    db.set_setting(f"feed_block_until:{source}", until)
+    db.set_setting(f"feed_block_last:{source}", now.strftime("%Y-%m-%dT%H:%M:%SZ"))
+    log.warning("%s otomatik erişimi engelledi; tarama %d saat duraklatıldı (%s UTC'ye kadar)", source, hours, until)
+    return until
 
 
 def wait_for_network(timeout: float = 90.0, url: str = "https://api.github.com") -> bool:
@@ -281,8 +313,9 @@ def _send_pc_notice(cfg: Config, text: str, subject: str) -> None:
 
 
 FEED_HINTS = {
-    "sahibinden": ("Bilgisayarda proje klasöründe <code>python main.py sahibinden-chrome</code> çalıştır; açılan Chrome'da "
-                   "sahibinden'i aç, doğrulama ya da giriş isterse geç, sonra pencereyi kapat."),
+    "sahibinden": ("sahibinden bu bilgisayardan otomatik erişimi engelliyorsa tarama kendiliğinden 12-24 saat duraklatılır ve "
+                   "sonra yeniden denenir; bu sürede yeni ilanları sahibinden uygulamasının kayıtlı arama bildirimi haber verir. "
+                   "Giriş isterse proje klasöründe <code>python main.py sahibinden-chrome</code> çalıştırıp açılan Chrome'da gir."),
     "hepsiemlak": ("Genelde hepsiemlak'ın hız sınırı ya da Cloudflare doğrulamasıdır ve birkaç saat içinde kendiliğinden "
                    "düzelir. Sürerse bilgisayarın internet bağlantısına bak."),
 }

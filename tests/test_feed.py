@@ -305,3 +305,19 @@ def test_collect_hepsiemlak_resumes_where_blocked(cfg, tmp_path, monkeypatch):
     feedmod.collect_hepsiemlak(cfg, db)
     assert order[:3] == keys[-3:] and order[3] == keys[0] and len(order) == len(keys)
     assert db.get_setting(feedmod.RESUME_KEY) is None
+
+
+def test_block_backoff_pauses_attempts(tmp_path):
+    from datetime import datetime, timedelta, timezone
+    from m2kira import feed as feedmod
+    db = DB(tmp_path / "b.sqlite")
+    t0 = datetime(2026, 10, 21, 14, 10, tzinfo=timezone.utc)
+    denied = {"units": [], "errors": ["sahibinden: liste tablosu bulunamadı (başlık: 'Access to this page has been denied')"]}
+    assert feedmod.apply_block_backoff(db, "sahibinden", {"units": [], "errors": ["ERR_CONNECTION_TIMED_OUT"]}, now=t0) is None
+    until = feedmod.apply_block_backoff(db, "sahibinden", denied, now=t0)
+    assert until == "2026-10-22T02:10:00Z"                                     # ilk engel: 12 saat
+    assert not feedmod.attempt_due(db, "sahibinden", 115, now=t0 + timedelta(hours=6))
+    assert feedmod.attempt_due(db, "sahibinden", 115, now=t0 + timedelta(hours=13))
+    t1 = t0 + timedelta(hours=13)
+    assert feedmod.apply_block_backoff(db, "sahibinden", denied, now=t1) == "2026-10-23T03:10:00Z"   # tekrar: 24 saat
+    assert feedmod.apply_block_backoff(db, "sahibinden", {"units": [{"unit": "x"}], "errors": []}, now=t1) is None

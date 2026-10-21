@@ -115,6 +115,8 @@ def main(argv: list[str] | None = None) -> int:
             else:
                 payload = feed.collect_sahibinden(cfg, db, max_details=args.details)
             feed.notify_feed_problem(cfg, db, source, payload)
+            if source == "sahibinden":
+                feed.apply_block_backoff(db, source, payload)
             out = cfg.data_dir / "feed" / f"{source}.json"
             out.parent.mkdir(parents=True, exist_ok=True)
             out.write_text(_json.dumps(payload, ensure_ascii=False), encoding="utf-8")
