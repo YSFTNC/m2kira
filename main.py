@@ -99,12 +99,17 @@ def main(argv: list[str] | None = None) -> int:
         import json as _json
         from m2kira import feed
         from m2kira.power import keep_awake
+        feed.wait_for_network()
         feed.sync_budget_from_web(cfg, db)
         wanted = [args.only] if args.only else [s for s in feed.FEED_SOURCES if cfg.source_enabled(f"{s}_feed")]
         rc = 0
         awake = keep_awake()          # uykudan uyandırıldıysa tarama bitene kadar uyanık kal
         awake.__enter__()
         for source in wanted:
+            min_iv = float(cfg.source_cfg(f"{source}_feed").get("min_interval_min", 0) or 0)
+            if not args.only and not feed.attempt_due(db, source, min_iv):
+                log.info("%s: son deneme %g dakikadan yeni; bu çalıştırmada atlandı", source, min_iv)
+                continue
             if source == "hepsiemlak":
                 payload = feed.collect_hepsiemlak(cfg, db)
             else:

@@ -236,6 +236,38 @@ def collect_sahibinden(cfg: Config, db: DB, max_details: Optional[int] = None) -
     return _payload("sahibinden", units, errors)
 
 
+def attempt_due(db: DB, source: str, min_minutes: float, now: Optional[datetime] = None) -> bool:
+    """Kaynak en son `min_minutes` dakikadan önce denendiyse True döner ve deneme zamanını kaydeder.
+    sahibinden aynı aramanın 30 dakikada bir açılmasını 'olağan dışı erişim' sayıyor (20.10.2026)."""
+    now = now or datetime.now(timezone.utc)
+    key = f"feed_last_attempt:{source}"
+    last = db.get_setting(key)
+    if min_minutes > 0 and last:
+        try:
+            prev = datetime.strptime(last, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+            if (now - prev).total_seconds() < min_minutes * 60:
+                return False
+        except ValueError:
+            pass
+    db.set_setting(key, now.strftime("%Y-%m-%dT%H:%M:%SZ"))
+    return True
+
+
+def wait_for_network(timeout: float = 90.0, url: str = "https://api.github.com") -> bool:
+    """Bilgisayar yeni açıldıysa ya da uykudan uyandıysa ağ birkaç saniye gecikebilir (21.10.2026 14:40:
+    açılıştan hemen sonra sahibinden ERR_CONNECTION_TIMED_OUT)."""
+    deadline = time.time() + timeout
+    while True:
+        try:
+            requests.head(url, timeout=5)
+            return True
+        except requests.RequestException:
+            if time.time() >= deadline:
+                log.warning("ağ %d sn içinde hazır olmadı; yine de deneniyor", timeout)
+                return False
+            time.sleep(5)
+
+
 def _is_login_error(errors: list[str]) -> bool:
     return any("oturum" in e.lower() or "giriş" in e.lower() or "giris" in e.lower() for e in errors)
 
@@ -257,8 +289,9 @@ FEED_HINTS = {
 
 
 def notify_feed_problem(cfg: Config, db: DB, source: str, payload: dict[str, Any]) -> None:
-    """PC'de bir kaynak hiç taranamadıysa Telegram'a haber verir: sahibinden oturumu düştüyse hemen, diğer
-    hatalarda üst üste 2 başarısız çalıştırmadan sonra. Her uyarı en fazla günde bir; başarılı taramada sayaç sıfırlanır."""
+    """PC'de bir kaynak hiç taranamadıysa Telegram'a haber verir: üst üste 2 başarısız denemeden sonra (geçici
+    giriş duvarları ve hız sınırları bir sonraki denemede geçiyor; 20.10.2026'da tek hatada giden uyarılar yanlıştı).
+    Her uyarı en fazla günde bir; başarılı taramada sayaç sıfırlanır."""
     key = f"feed_fail_streak:{source}"
     if payload.get("units"):
         if db.get_setting(key, 0):
@@ -267,6 +300,8 @@ def notify_feed_problem(cfg: Config, db: DB, source: str, payload: dict[str, Any
     streak = int(db.get_setting(key, 0) or 0) + 1
     db.set_setting(key, streak)
     errors = [str(e) for e in payload.get("errors") or []]
+    if streak < 2:
+        return
     if source == "sahibinden" and _is_login_error(errors):
         if db.notice_due("sahibinden-login", 24):
             _send_pc_notice(cfg,
@@ -274,7 +309,7 @@ def notify_feed_problem(cfg: Config, db: DB, source: str, payload: dict[str, Any
                 "<code>python main.py sahibinden-chrome</code>\nGiriş yapınca pencereyi kapatabilirsin; sonraki taramada "
                 "sahibinden ilanları siteye yine gelir.", "m2kira sahibinden")
         return
-    if streak < 2 or not db.notice_due(f"feed-fail:{source}", 24):
+    if not db.notice_due(f"feed-fail:{source}", 24):
         return
     from .format import esc
     detail = esc("; ".join(errors)[:300] or "bilinmeyen hata")

@@ -179,6 +179,8 @@ def _patch_feed_push(cfg, monkeypatch, units_by_source):
     monkeypatch.setattr(mainmod, "load_config", lambda path=None: cfg)
     monkeypatch.setattr(mainmod, "setup_logging", lambda *a, **k: None)
     monkeypatch.setattr(feedmod, "sync_budget_from_web", lambda c, d: None)
+    monkeypatch.setattr(feedmod, "wait_for_network", lambda *a, **k: True)
+    monkeypatch.setattr(feedmod, "attempt_due", lambda *a, **k: True)
     monkeypatch.setattr(feedmod, "notify_feed_problem", lambda c, d, s, p: calls.append(f"check:{s}:{len(p['units'])}"))
     monkeypatch.setattr(feedmod, "collect_sahibinden",
                         lambda c, d, max_details=None: (calls.append("collect:sahibinden"), payload("sahibinden"))[1])
@@ -227,8 +229,41 @@ def test_notify_feed_problem_streaks(cfg, tmp_path, monkeypatch):
     assert len(sent) == 1                               # günde en fazla bir
     feedmod.notify_feed_problem(cfg, db, "sahibinden", ok)
     assert db.get_setting("feed_fail_streak:sahibinden") == 0
-    feedmod.notify_feed_problem(cfg, db, "sahibinden", {"units": [], "errors": ["sahibinden oturum istiyor"]})
-    assert len(sent) == 2 and "oturumu düştü" in sent[1]   # oturum: hemen
+    login = {"units": [], "errors": ["sahibinden oturum istiyor"]}
+    feedmod.notify_feed_problem(cfg, db, "sahibinden", login)
+    assert len(sent) == 1                               # tek giriş duvarı: geçici olabilir, sessiz
+    feedmod.notify_feed_problem(cfg, db, "sahibinden", login)
+    assert len(sent) == 2 and "oturumu düştü" in sent[1]   # üst üste ikinci: uyarı
+
+
+def test_attempt_due_spacing(tmp_path):
+    from datetime import datetime, timedelta, timezone
+    from m2kira import feed as feedmod
+    db = DB(tmp_path / "a.sqlite")
+    t0 = datetime(2026, 10, 20, 12, 9, tzinfo=timezone.utc)
+    assert feedmod.attempt_due(db, "sahibinden", 115, now=t0)
+    assert not feedmod.attempt_due(db, "sahibinden", 115, now=t0 + timedelta(minutes=30))
+    assert not feedmod.attempt_due(db, "sahibinden", 115, now=t0 + timedelta(minutes=90))
+    assert feedmod.attempt_due(db, "sahibinden", 115, now=t0 + timedelta(minutes=120))
+    assert feedmod.attempt_due(db, "hepsiemlak", 0, now=t0) and feedmod.attempt_due(db, "hepsiemlak", 0, now=t0)
+
+
+def test_unusual_access_page_is_rate_limit_not_login():
+    from types import SimpleNamespace
+    import pytest
+    from m2kira.http import BlockedError
+    from m2kira.sources.sahibinden import SahibindenSource, is_unusual_access_page
+    from m2kira.config import load_config
+    from conftest import ROOT
+    html = ("<html><head><title>sahibinden.com Hata Sayfası</title></head><body>Olağan dışı erişim tespit ettik... "
+            "Cihazınızdan ya da bağlı olduğunuz ağdan sitemize olağan dışı (otomatik) erişim</body></html>")
+    assert is_unusual_access_page("sahibinden.com Hata Sayfası", html)
+    assert not is_unusual_access_page("Kiralık Daire İlanları", "<html>liste</html>")
+    src = SahibindenSource(load_config(ROOT / "config.yaml"))
+    src.browser.get = lambda url, ttl=0, **kw: SimpleNamespace(from_cache=False, title="sahibinden.com Hata Sayfası", status=200,
+                                                               html=html, final_url=url)
+    with pytest.raises(BlockedError):
+        src._get("https://www.sahibinden.com/kiralik-daire", ttl=0)
 
 
 def test_collect_hepsiemlak_resumes_where_blocked(cfg, tmp_path, monkeypatch):

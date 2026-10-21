@@ -83,6 +83,8 @@ sources:
     max_age_hours: 3       # daha eski besleme işlenmez (PC kapalı): ilan silinmez, uyarı gitmez
   sahibinden_feed:         # PC: kullanıcının giriş yapılmış Chrome profiliyle (görünmez) birleşik arama -> GitHub
     enabled: true
+    min_interval_min: 115  # en az ~2 saatte bir dene: 30 dakikada bir açılan arama 'olağan dışı erişim'
+                           # sayfasına düştü (20.10.2026); yeni ilanları anında sahibinden uygulaması bildiriyor
     path: feed/sahibinden.json
     max_age_hours: 3
     headless: true         # gerçek Chrome --headless=new: sahibinden'in korumasını geçti (19.10.2026)

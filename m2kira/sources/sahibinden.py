@@ -66,6 +66,17 @@ def is_login_page(title: str, url: str) -> bool:
     return "giris" in fold(title) or "secure.sahibinden.com/giris" in (url or "")
 
 
+UNUSUAL_ACCESS_MSG = ("sahibinden 'olağan dışı erişim tespit ettik' uyarısı verdi (çok sık tarama); "
+                      "bir sonraki deneme aralık dolunca")
+
+
+def is_unusual_access_page(title: str, html: str) -> bool:
+    """20.10.2026: arama 30 dakikada bir açılınca sahibinden 'Hata Sayfası / Olağan dışı erişim tespit ettik'
+    sayfası döndü (otomatik erişim uyarısı). Bu bir hız sınırıdır, oturum düşmesi değil."""
+    t = fold(title)
+    return "hata sayfasi" in t and "olagan disi erisim" in fold((html or "")[:200000])
+
+
 def is_blocked_page(title: str, status: int) -> bool:
     t = (title or "").lower()
     return status == 403 or "denied" in t or "access to this page" in t or "doğrulama" in t
@@ -305,6 +316,8 @@ class SahibindenSource(Source):
                     raise BlockedError("sahibinden bot koruması (PerimeterX) geçilemedi")
             else:
                 raise BlockedError("sahibinden bot koruması (PerimeterX) geçilemedi")
+        if is_unusual_access_page(bp.title, bp.html):
+            raise BlockedError(UNUSUAL_ACCESS_MSG)
         if is_login_page(bp.title, bp.final_url):
             raise LoginRequiredError("sahibinden oturum istiyor: `python main.py sahibinden-chrome` ile açılan Chrome'da giriş yapın")
         return bp

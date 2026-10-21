@@ -52,7 +52,7 @@ verisi zaten herkese açık; token, kişisel bilgi ya da sahibinden oturumu içe
 |---|---|---|
 | emlakjet | GitHub Actions, 30 dakikada bir (PC'den bağımsız) | Telegram kartı, 09:00 özet, filtre sayfası |
 | hepsiemlak | **PC açıkken ya da uykudayken** (şarjda) Görev Zamanlayıcı ile 30 dakikada bir (pencere açmaz) → GitHub'a besleme | aynı Telegram kartları ve site; PC tamamen kapalıyken son bilinen hali kalır |
-| sahibinden | **PC açıkken ya da uykudayken** (şarjda) aynı görev, giriş yapılmış Chrome profilinle görünmez tarar → GitHub'a besleme. Ayrıca sahibinden'in kendi kayıtlı araması **"M2 eşyalı 39bin altı"** | Telegram kartları ve site (fotoğraf, konum, harita); PC kapalıyken sahibinden uygulaması bildirir |
+| sahibinden | **PC açıkken ya da uykudayken** (şarjda) aynı görev, en fazla 2 saatte bir (30 dakikada bir açılan arama "olağan dışı erişim" sayfasına düştü), giriş yapılmış Chrome profilinle görünmez tarar → GitHub'a besleme. Ayrıca sahibinden'in kendi kayıtlı araması **"M2 eşyalı 39bin altı"** | Telegram kartları ve site (fotoğraf, konum, harita); PC kapalıyken sahibinden uygulaması bildirir |
 
 sahibinden arama sonuçları üye girişi ve gerçek tarayıcı istediği için GitHub sunucusundan taranamıyor;
 bu yüzden PC açıkken PC'deki görev tarayıp siteye gönderir, PC kapalıyken sahibinden'in kendi bildirim
