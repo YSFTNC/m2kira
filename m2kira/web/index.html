@@ -1276,7 +1276,7 @@ function renderStatus() {
   const ejLevel = st.emlakjet ? (ageHours(st.emlakjet.last) > 5 ? "warn" : "ok") : "bad";
   const pcs = (D.pc || {}).sources || {};
   const pauseLine = (k) => { const u = (pcs[k] || {}).paused_until; return u && parseT(u) > Date.now()
-    ? `<div class="kv">⏸ Otomatik tarama <b>${esc(fmtWhen(u))}</b>'e kadar duraklatıldı (site otomatik erişimi engelledi); sonra kendiliğinden yeniden denenir.</div>` : ""; };
+    ? `<div class="kv">⏸ Otomatik tarama duraklatıldı (site otomatik erişimi engelledi). Kendiliğinden yeniden deneme: <b>${esc(fmtWhen(u))}</b>.</div>` : ""; };
   const feedLine = (k) => pauseLine(k) + `<div class="kv">Son PC gönderimi: <b>${esc(fg[k] ? fmtWhen(fg[k]) : "yok")}</b>${fg[k] ? " (" + esc(ago(fg[k])) + ")" : ""}</div>${feedOk(k) ? "" : `<div class="kv">Bilgisayar kapalıyken güncellenmez; uyutup şarjda bırakırsan 30 dakikada bir uyanıp tarar. Mevcut ilanlar sitede kalır.</div>`}`;
   const tg = D.telegram_bot ? `<a href="https://t.me/${esc(D.telegram_bot)}" target="_blank" rel="noopener noreferrer">@${esc(D.telegram_bot)}</a>` : "Telegram botu";
   box.innerHTML = `<h1>Durum</h1>
@@ -1350,7 +1350,7 @@ function renderFresh() {
   const pausedUntil = (k) => { const u = (((D.pc || {}).sources || {})[k] || {}).paused_until; return u && parseT(u) > Date.now() ? u : null; };
   const sbPause = pausedUntil("sahibinden");
   if (sbPause) {
-    box.innerHTML = `<b>sahibinden</b> otomatik taraması <b>${esc(fmtWhen(sbPause))}</b>'e kadar duraklatıldı, çünkü sahibinden bu bilgisayardan gelen otomatik erişimi engelledi. ` +
+    box.innerHTML = `<b>sahibinden</b> otomatik taraması duraklatıldı, çünkü sahibinden bu bilgisayardan gelen otomatik erişimi engelledi. Yeniden deneme: <b>${esc(fmtWhen(sbPause))}</b>. ` +
       `Bu sürede yeni sahibinden ilanları siteye düşmez, sahibinden uygulamasının bildirimi haber verir. Sitedeki ilanları kalır.` +
       (stale.includes("hepsiemlak") ? ` hepsiemlak da ${fg.hepsiemlak ? "en son " + esc(ago(fg.hepsiemlak)) + " güncellendi" : "henüz gelmedi"}: bilgisayar kapalı görünüyor.` : "");
     box.hidden = false; return;
