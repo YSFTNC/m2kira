@@ -143,6 +143,11 @@ Kayıt: `data\m2kira.log`.
 
 ### GitHub zamanlayıcısı çalışmazsa: dış tetikleyici (5 dakika, ücretsiz)
 
+**En kolayı Google Apps Script:** [deploy/google-apps-script.gs](deploy/google-apps-script.gs) dosyasının başındaki
+4 adımı izle (script.google.com'da yeni proje, kodu yapıştır, GitHub anahtarını gir, `kur` işlevini çalıştır).
+Google hesabında çalışır, ayrı hesap gerekmez, 30 dakikada bir GitHub işini başlatır. Aşağıdaki cron-job.org
+yolu aynı işi yapar (20.10.2026'da konsolu bakımdaydı).
+
 GitHub zamanlanmış çalıştırmaları düşürebiliyor (20.10.2026 gecesi 10 saatte 6 zamanlamadan 1'i çalıştı).
 PC kapalıyken emlakjet, Telegram komutları ve 09:00 özeti bu çalıştırmalara bağlı. Sitenin Durum
 sekmesindeki "Son çalıştırmalar" listesinde saatlerce "zamanlanmış" satırı görünmüyorsa:
