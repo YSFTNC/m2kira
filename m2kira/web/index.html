@@ -1060,7 +1060,7 @@ function renderStatus() {
     <p class="small" id="d-msg">${connected() ? "" : "Tarama başlatmak için sağ üstten GitHub'a bağlan."}</p></div>
   <div class="scards">
     ${srcCard("emlakjet", "emlakjet", "GitHub'da, 30 dakikada bir (PC'den bağımsız)", st.emlakjet, "", ejLevel)}
-    ${srcCard("hepsiemlak", "hepsiemlak", "Evdeki bilgisayardan, açıkken ya da uykudayken (şarjda) 30 dakikada bir; bulut sunucularını Cloudflare engelliyor", st.hepsiemlak, feedLine("hepsiemlak"), feedOk("hepsiemlak") ? "ok" : "warn")}
+    ${srcCard("hepsiemlak", "hepsiemlak", "Evdeki bilgisayardan, açıkken ya da uykudayken (şarjda) saatte bir (daha sık taramada hız sınırı geliyor); bulut sunucularını Cloudflare engelliyor", st.hepsiemlak, feedLine("hepsiemlak"), feedOk("hepsiemlak") ? "ok" : "warn")}
     ${srcCard("sahibinden", "sahibinden", "Evdeki bilgisayardan, açıkken ya da uykudayken (şarjda), giriş yapılmış Chrome profilinle görünmez tarama, en fazla 2 saatte bir (daha sık taramayı sahibinden otomatik erişim sayıp engelliyor) · yeni ilanları anında sahibinden uygulamasının kayıtlı arama bildirimi haber verir", st.sahibinden, feedLine("sahibinden") + `<div class="kv"><a href="https://banaozel.sahibinden.com/favori-aramalarim" target="_blank" rel="noopener noreferrer">Kayıtlı aramalarım ↗</a></div>`, feedOk("sahibinden") ? "ok" : (fg.sahibinden ? "warn" : "bad"))}
   </div>
   <div class="panel"><h2>Son çalıştırmalar</h2><div class="runs-wrap" id="d-runs"><p class="small">Yükleniyor…</p></div></div>`;

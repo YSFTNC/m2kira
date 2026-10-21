@@ -79,6 +79,7 @@ sources:
     block_resources: true  # sayfa başına yalnızca HTML'i yükle (resim/JS/XHR hız sınırına sayılıyor)
   hepsiemlak_feed:         # GitHub tarafı: PC'nin `feed-push` ile gönderdiği hepsiemlak beslemesi
     enabled: true          # (hepsiemlak GitHub'ın veri merkezi IP'lerini Cloudflare'da engelliyor)
+    min_interval_min: 55   # en az saatte bir: 30 dakikada bir taramada bir gün sonra ilk sayfada HTTP 429 geldi (21.10.2026)
     repo: YSFTNC/m2kira
     branch: feed
     path: feed/hepsiemlak.json
