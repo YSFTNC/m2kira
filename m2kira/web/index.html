@@ -14,59 +14,68 @@
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="theme-color" content="#f5f5f3" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f6f7fb" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b0b0f" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%230f0f0e'/%3E%3Ctext x='16' y='21.5' font-size='14' font-family='Arial' font-weight='700' fill='white' text-anchor='middle'%3EM2%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 /* ---------- tokenlar ---------- */
 :root {
   color-scheme: light;
-  --bg: #f5f5f3; --surface: #ffffff; --surface-2: #f1f0ed; --surface-3: #e9e8e4;
-  --fg: #0f0f0e; --fg-2: #52514e; --muted: #7d7b75; --border: rgba(11,11,11,.09); --border-2: rgba(11,11,11,.16);
-  --grid: #e1e0d9; --axis: #c3c2b7;
-  --sel: #0f0f0e; --sel-fg: #ffffff;
+  --bg: #f6f7fb; --surface: #ffffff; --surface-2: #f2f3f7; --surface-3: #e8eaf1;
+  --fg: #0f1222; --fg-2: #4a4f63; --muted: #7b8094; --border: rgba(15,18,34,.08); --border-2: rgba(15,18,34,.16);
+  --grid: #e3e5ec; --axis: #c3c7d3;
+  --sel: #0f1222; --sel-fg: #ffffff;
+  --accent: #4f46e5; --accent-2: #9333ea; --accent-fg: #ffffff; --accent-soft: #eef0ff; --accent-ink: #4338ca;
+  --accent-glow: rgba(79,70,229,.30); --glow-1: rgba(99,102,241,.14); --glow-2: rgba(168,85,247,.10);
   --good: #0ca30c; --good-text: #006300; --good-soft: #e3f4e3;
   --warn: #fab219; --warn-text: #7a5000; --warn-soft: #fdf2d6;
   --crit: #d03b3b; --crit-text: #b42323; --crit-soft: #fbe6e6;
   --heart: #e5484d;
   --s-he: #2a78d6; --s-ej: #eb6834; --s-sb: #1baf7a;
-  --dot: #2a78d6;
-  --shadow-1: 0 1px 2px rgba(15,15,14,.05);
-  --shadow-2: 0 1px 2px rgba(15,15,14,.04), 0 8px 24px rgba(15,15,14,.07);
-  --appbar: rgba(245,245,243,.82);
+  --dot: #4f46e5;
+  --shadow-1: 0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.05);
+  --shadow-2: 0 2px 4px rgba(16,24,40,.04), 0 14px 34px rgba(16,24,40,.11);
+  --appbar: rgba(246,247,251,.8);
   --r: 16px; --r-sm: 10px;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --bg: #0d0d0d; --surface: #1a1a19; --surface-2: #232321; --surface-3: #2d2d2a;
-    --fg: #f0efec; --fg-2: #c3c2b7; --muted: #8f8d86; --border: rgba(255,255,255,.08); --border-2: rgba(255,255,255,.16);
-    --grid: #2c2c2a; --axis: #383835;
-    --sel: #f0efec; --sel-fg: #0d0d0d;
+    --bg: #0b0b0f; --surface: #18181b; --surface-2: #212126; --surface-3: #2b2b31;
+    --fg: #f1f1f4; --fg-2: #c4c5ce; --muted: #8e8f9b; --border: rgba(255,255,255,.08); --border-2: rgba(255,255,255,.16);
+    --grid: #2b2b31; --axis: #3a3a42;
+    --sel: #f1f1f4; --sel-fg: #0b0b0f;
+    --accent: #818cf8; --accent-2: #c084fc; --accent-fg: #0b0b12; --accent-soft: rgba(129,140,248,.14); --accent-ink: #a5b4fc;
+    --accent-glow: rgba(129,140,248,.25); --glow-1: rgba(99,102,241,.16); --glow-2: rgba(168,85,247,.10);
     --good: #0ca30c; --good-text: #3ccf3c; --good-soft: #12301a;
     --warn: #fab219; --warn-text: #fab219; --warn-soft: #33290c;
     --crit: #e66767; --crit-text: #f08a8a; --crit-soft: #3a1818;
     --heart: #ff6369;
     --s-he: #3987e5; --s-ej: #d95926; --s-sb: #199e70;
-    --dot: #3987e5;
-    --shadow-1: none; --shadow-2: 0 8px 24px rgba(0,0,0,.35);
-    --appbar: rgba(13,13,13,.78);
+    --dot: #818cf8;
+    --shadow-1: none; --shadow-2: 0 10px 30px rgba(0,0,0,.45);
+    --appbar: rgba(11,11,15,.78);
   }
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #0d0d0d; --surface: #1a1a19; --surface-2: #232321; --surface-3: #2d2d2a;
-  --fg: #f0efec; --fg-2: #c3c2b7; --muted: #8f8d86; --border: rgba(255,255,255,.08); --border-2: rgba(255,255,255,.16);
-  --grid: #2c2c2a; --axis: #383835;
-  --sel: #f0efec; --sel-fg: #0d0d0d;
+  --bg: #0b0b0f; --surface: #18181b; --surface-2: #212126; --surface-3: #2b2b31;
+  --fg: #f1f1f4; --fg-2: #c4c5ce; --muted: #8e8f9b; --border: rgba(255,255,255,.08); --border-2: rgba(255,255,255,.16);
+  --grid: #2b2b31; --axis: #3a3a42;
+  --sel: #f1f1f4; --sel-fg: #0b0b0f;
+  --accent: #818cf8; --accent-2: #c084fc; --accent-fg: #0b0b12; --accent-soft: rgba(129,140,248,.14); --accent-ink: #a5b4fc;
+  --accent-glow: rgba(129,140,248,.25); --glow-1: rgba(99,102,241,.16); --glow-2: rgba(168,85,247,.10);
   --good: #0ca30c; --good-text: #3ccf3c; --good-soft: #12301a;
   --warn: #fab219; --warn-text: #fab219; --warn-soft: #33290c;
   --crit: #e66767; --crit-text: #f08a8a; --crit-soft: #3a1818;
   --heart: #ff6369;
   --s-he: #3987e5; --s-ej: #d95926; --s-sb: #199e70;
-  --dot: #3987e5;
-  --shadow-1: none; --shadow-2: 0 8px 24px rgba(0,0,0,.35);
-  --appbar: rgba(13,13,13,.78);
+  --dot: #818cf8;
+  --shadow-1: none; --shadow-2: 0 10px 30px rgba(0,0,0,.45);
+  --appbar: rgba(11,11,15,.78);
 }
 
 /* ---------- temel ---------- */
@@ -313,6 +322,84 @@ dialog li { margin: 4px 0; }
 .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 11px 18px; border-radius: 999px; font-size: 14px; z-index: 100; max-width: calc(100vw - 32px); box-shadow: var(--shadow-2); }
 .pending { position: fixed; left: 50%; top: 72px; transform: translateX(-50%); z-index: 45; background: var(--fg); color: var(--bg); border-radius: 999px; padding: 8px 16px; font-size: 13px; box-shadow: var(--shadow-2); }
 
+/* ---------- v3: modern görünüm ---------- */
+body { font-family: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI Variable Text", "Segoe UI", Roboto, sans-serif;
+  background: radial-gradient(1100px 420px at 0% -6%, var(--glow-1), transparent 62%),
+              radial-gradient(900px 380px at 100% -10%, var(--glow-2), transparent 60%), var(--bg);
+  background-repeat: no-repeat; }
+:focus-visible { outline-color: var(--accent); }
+.logo { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; box-shadow: 0 6px 16px var(--accent-glow); border-radius: 11px; }
+.brand b { font-weight: 800; letter-spacing: -.02em; }
+.nav button[aria-selected="true"] { color: var(--accent-ink); }
+.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); box-shadow: 0 6px 16px var(--accent-glow); }
+.btn .badge { background: var(--accent); color: var(--accent-fg); }
+input[type=range], label.ck input { accent-color: var(--accent); }
+.search:focus-within { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.hero { padding: 24px 0 0; }
+.hero h1 { margin: 0; font-size: clamp(23px, 3.2vw, 34px); font-weight: 800; letter-spacing: -.035em; line-height: 1.12; }
+.hero h1 em { font-style: normal; background: linear-gradient(90deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero p { margin: 8px 0 0; color: var(--fg-2); font-size: 14.5px; display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; }
+.hero .live { display: inline-flex; align-items: center; gap: 7px; font-weight: 700; color: var(--fg); }
+.hero .live i { width: 8px; height: 8px; border-radius: 50%; background: var(--good); box-shadow: 0 0 0 4px var(--good-soft); }
+.hero b { color: var(--fg); font-weight: 700; }
+.line::before { height: 4px; top: 17px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); opacity: 1; }
+.stn .dot { border-color: var(--accent); }
+.stn.has .dot { background: var(--accent); }
+.stn[aria-pressed="true"] .dot { background: var(--surface); box-shadow: 0 0 0 4px var(--accent); }
+.stn.has .ct { color: var(--fg-2); font-weight: 600; }
+.linkbtn { color: var(--accent-ink); }
+.banner { border-radius: 14px; padding: 12px 16px; line-height: 1.5; }
+.apill { background: var(--accent-soft); color: var(--accent-ink); font-weight: 600; }
+.apill span.x { background: rgba(255,255,255,.6); color: var(--accent-ink); }
+.tile { border-radius: 18px; padding: 14px 16px; }
+.tile .lab { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.tile .ic { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent-ink); flex: none; }
+.tile .ic svg { width: 15px; height: 15px; }
+.tile .val { font-size: 26px; font-weight: 800; letter-spacing: -.03em; margin-top: 6px; }
+.ghead h2 { font-weight: 800; letter-spacing: -.025em; }
+.card { border-radius: 20px; }
+.card:hover { transform: translateY(-3px); }
+.media { aspect-ratio: 16 / 11; }
+.media.noimg, .ncard .nmedia { background: linear-gradient(140deg, color-mix(in srgb, var(--src, var(--accent)) 24%, var(--surface-2)), var(--surface-3)); }
+.media .ph { display: grid; justify-items: center; gap: 2px; color: var(--fg-2); font-size: 12px; }
+.media .ph svg { width: 30px; height: 30px; opacity: .5; margin-bottom: 2px; }
+.media .ph b { font-size: 26px; font-weight: 800; }
+.mb { border-radius: 8px; }
+.mb.new { background: var(--accent); color: var(--accent-fg); }
+.mprice { padding: 34px 14px 12px; background: linear-gradient(to top, rgba(8,8,16,.72), rgba(8,8,16,0)); }
+.mprice .p { font-size: 22px; font-weight: 800; letter-spacing: -.03em; }
+.mprice .per { font-size: 12.5px; font-weight: 600; opacity: .85; margin-left: -4px; }
+.cbody { padding: 14px 16px 6px; gap: 8px; }
+.ttl { font-size: 15.5px; font-weight: 700; letter-spacing: -.01em; line-height: 1.38; }
+.specline { display: flex; flex-wrap: wrap; font-size: 13px; color: var(--fg-2); row-gap: 2px; }
+.specline span + span::before { content: "·"; margin: 0 7px; color: var(--muted); }
+.loc { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.loc .mi { width: 24px; height: 24px; border-radius: 8px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent-ink); flex: none; }
+.loc .mi svg { width: 14px; height: 14px; }
+.walk { background: var(--accent-soft); color: var(--accent-ink); margin-left: auto; }
+.walk.unv { background: var(--surface-2); color: var(--muted); }
+.com { display: flex; flex-wrap: wrap; align-items: center; font-size: 12.5px; color: var(--muted); row-gap: 2px; }
+.com .ci { width: 14px; height: 14px; margin-right: 6px; color: var(--muted); flex: none; }
+.com span + span::before { content: "·"; margin: 0 6px; }
+.com b { color: var(--fg-2); font-weight: 700; }
+.tag { border: 0; background: var(--surface-2); padding: 3px 9px; }
+.cfoot { border-top: 1px solid var(--border); margin-top: 8px; padding: 10px 16px 12px; }
+.acts button, .acts a { background: transparent; border: 1px solid var(--border); transition: background .15s; }
+.acts button:hover, .acts a:hover { background: var(--surface-2); }
+.ncard { border-radius: 16px; transition: transform .2s, box-shadow .2s; }
+.ncard:hover { transform: translateY(-2px); box-shadow: var(--shadow-2); }
+.ncard .nmedia .ph { display: grid; justify-items: center; align-content: center; gap: 2px; color: var(--fg-2); }
+.ncard .nmedia .ph svg { width: 24px; height: 24px; opacity: .5; }
+.ncard .nage { background: rgba(10,10,18,.68); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.newest .nhead h2 { font-size: 17px; font-weight: 800; letter-spacing: -.02em; }
+.panel, .scard { border-radius: 18px; }
+.page h1 { font-weight: 800; letter-spacing: -.03em; }
+@media (prefers-reduced-motion: no-preference) {
+  .card, .ncard, .tile { animation: rise .35s ease both; }
+  @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+}
+
 /* ---------- mobil ---------- */
 @media (max-width: 760px) {
   .nav { display: none; }
@@ -360,6 +447,7 @@ dialog li { margin: 4px 0; }
 
 <section id="tab-ilan">
   <div class="wrap">
+    <div class="hero" id="hero"></div>
     <div class="toolbar">
       <label class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         <input id="q" type="search" placeholder="Ara: balkon, doğalgaz, Kızılay, ofis adı…" aria-label="İlanlarda ara"></label>
@@ -817,13 +905,13 @@ function renderKpis(list) {
   const drops = list.filter((i) => i.pp).length;
   const bySrc = SRCS.map(([k]) => [k, list.filter((i) => i.src === k).length]);
   const total = list.length || 1;
-  const tile = (lab, val, sub) => `<div class="tile"><div class="lab">${esc(lab)}</div><div class="val">${esc(val)}</div>${sub ? `<div class="sub">${esc(sub)}</div>` : ""}</div>`;
+  const tile = (lab, val, sub, ic) => `<div class="tile"><div class="lab">${ic ? `<span class="ic">${ICON[ic]}</span>` : ""}${esc(lab)}</div><div class="val">${esc(val)}</div>${sub ? `<div class="sub">${esc(sub)}</div>` : ""}</div>`;
   $("#kpis").innerHTML =
-    tile(S.ok ? "Uygun ilan" : "Listelenen ilan", NF.format(list.length), list.length ? `${list.filter((i) => i.v).length} tanesinin konumu belli` : "") +
-    tile("Son 24 saatte yeni", NF.format(n24), drops ? `${drops} ilanın fiyatı düştü` : "") +
-    tile("En ucuz", prices.length ? TL(Math.min(...prices)) : "—", prices.length ? `bütçe ${TL(D.budget)}` : "") +
-    tile("Medyan kira", prices.length ? TL(median(prices)) : "—", prices.length ? `${prices.filter((p) => p <= D.budget).length} ilan bütçe içinde` : "") +
-    `<div class="tile wide"><div class="lab">Kaynaklara göre</div>
+    tile(S.ok ? "Uygun ilan" : "Listelenen ilan", NF.format(list.length), list.length ? `${list.filter((i) => i.v).length} tanesinin konumu belli` : "", "home") +
+    tile("Son 24 saatte yeni", NF.format(n24), drops ? `${drops} ilanın fiyatı düştü` : "", "spark") +
+    tile("En ucuz", prices.length ? TL(Math.min(...prices)) : "—", prices.length ? `bütçe ${TL(D.budget)}` : "", "tag") +
+    tile("Medyan kira", prices.length ? TL(median(prices)) : "—", prices.length ? `${prices.filter((p) => p <= D.budget).length} ilan bütçe içinde` : "", "chart") +
+    `<div class="tile wide"><div class="lab"><span class="ic">${ICON.layers}</span>Kaynaklara göre</div>
       <div class="split" role="img" aria-label="${esc(bySrc.map(([k, c]) => `${k} ${c}`).join(", "))}">${bySrc.filter(([, c]) => c).map(([k, c]) => `<i class="${SRC_SHORT[k]}" style="flex:${c}" data-tip="${esc(k)}|${c}|${Math.round(c * 100 / total)}"></i>`).join("")}</div>
       <div class="legend">${bySrc.map(([k, c]) => `<span><i class="sdot ${SRC_SHORT[k]}"></i>${esc(k)} <b>${NF.format(c)}</b></span>`).join("")}</div></div>`;
 }
@@ -901,14 +989,15 @@ function card(it) {
   if (ageHours(it.fs) <= 24) mt.push(`<span class="mb new">YENİ</span>`);
   if (it.pp) mt.push(`<span class="mb drop">↓ ${esc(kTL(it.pp - it.p))} TL</span>`);
   const tier = it.tier === "pazarlikla" ? `<span class="tier">pazarlıkla</span>` : (!it.ok ? `<span class="tier out">kriter dışı</span>` : "");
-  const priceBar = `<div class="mprice"><span class="p">${esc(TL(it.p))}</span>${it.pp ? `<s>${esc(TL(it.pp))}</s>` : ""}${tier}</div>`;
+  const priceBar = `<div class="mprice"><span class="p">${esc(TL(it.p))}</span><span class="per">/ay</span>${it.pp ? `<s>${esc(TL(it.pp))}</s>` : ""}${tier}</div>`;
   const media = it.img
     ? `<div class="media"><img src="${esc(it.img)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('noimg');this.remove()">`
-    : `<div class="media noimg"><div class="ph"><b>${esc((it.r || "").replace("1+0", "Stüdyo") || "—")}</b>${it.src === "emlakjet" ? "fotoğraflar emlakjet'te" : "fotoğraf yok"}</div>`;
-  const specs = [it.r === "1+0" ? "Stüdyo" : it.r, it.m2 ? `${it.m2} m²` : null, it.fl, it.age && it.age !== "0" ? `bina ${it.age}` : null, it.aid ? `aidat ${kTL(it.aid)}` : null]
-    .filter(Boolean).map((s) => `<span class="spec">${esc(s)}</span>`).join("");
+    : `<div class="media noimg" style="--src:${SRC_VAR[it.src] || "var(--accent)"}"><div class="ph">${ICON.building}<b>${esc((it.r || "").replace("1+0", "Stüdyo") || "—")}</b>${it.src === "emlakjet" ? "fotoğraflar emlakjet'te" : "fotoğraf yok"}</div>`;
+  const floor = it.fl && /^-?\d+$/.test(String(it.fl).trim()) ? `${String(it.fl).trim()}. kat` : it.fl;
+  const specs = [it.r === "1+0" ? "Stüdyo" : it.r, it.m2 ? `${it.m2} m²` : null, floor, it.age && it.age !== "0" ? `bina ${it.age}` : null, it.aid ? `aidat ${kTL(it.aid)}` : null]
+    .filter(Boolean).map((s) => `<span>${esc(s)}</span>`).join("");
   const walk = it.v && it.wm != null ? `<span class="walk">🚶 ${it.wm} dk</span>` : `<span class="walk unv" title="İlanda konum yok; mahallenin durağı varsayıldı">konum yok</span>`;
-  const com = ks.filter((k) => cm[k] != null).map((k) => `${esc((D.targets.find((t) => (t.short || t.name) === k) || {}).name || k)} <b>${it.v ? "" : "~"}${cm[k]} dk</b>`).join(" · ");
+  const com = ks.filter((k) => cm[k] != null).map((k) => `<span>${esc((D.targets.find((t) => (t.short || t.name) === k) || {}).name || k)} <b>${it.v ? "" : "~"}${cm[k]} dk</b></span>`).join("");
   const tags = [`<span class="tag f-${esc(it.fur)}">${esc(D.fur_labels[it.fur] || it.fur)}</span>`];
   const incTxt = { hepsi: "her şey dahil", faturalar: "faturalar dahil", aidat: "aidat dahil", internet: "internet dahil" };
   for (const i of it.inc || []) tags.push(`<span class="tag inc">${esc(incTxt[i] || i)}</span>`);
@@ -920,10 +1009,10 @@ function card(it) {
     ${media}<div class="mtop">${mt.join("")}</div>
       <button class="heart" type="button" data-act="fav" aria-pressed="${isFav}" aria-label="${isFav ? "Favorilerden çıkar" : "Favorilere ekle"}">${ICON_HEART}</button>${priceBar}</div>
     <div class="cbody">
-      <a class="ttl" href="${esc(safeUrl(it.url))}" target="_blank" rel="noopener noreferrer">${esc(it.t)}</a>
-      <div class="specs">${specs}</div>
-      <div class="loc">${esc(it.d || "?")} → <b>${esc(it.st || "durak belirsiz")}</b> ${walk}</div>
-      ${com ? `<div class="com">🚇 ${com}</div>` : ""}
+      <a class="ttl" href="${esc(safeUrl(it.url))}" target="_blank" rel="noopener noreferrer" title="${esc(it.t)}">${esc(niceTitle(it.t))}</a>
+      <div class="specline">${specs}</div>
+      <div class="loc"><span class="mi">${ICON.metro}</span><span>${esc(it.d || "?")} → <b>${esc(it.st || "durak belirsiz")}</b></span>${walk}</div>
+      ${com ? `<div class="com"><svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>${com}</div>` : ""}
       <div class="tags">${tags.join("")}</div>
     </div>
     <div class="cfoot"><span class="src"><i class="sdot ${SRC_SHORT[it.src] || ""}"></i><b>${esc(it.src)}</b>${it.of ? " · " + esc(it.of) : ""} · ${esc(ago(it.fs))}</span>
@@ -1148,6 +1237,44 @@ function renderFresh() {
   box.hidden = false;
 }
 // En yeni eklenenler: seçili filtrelerden bağımsız, gizlenenler hariç, ilk görülme zamanına göre en yeni 12 ilan
+// sahibinden başlıkları çoğunlukla BÜYÜK HARF: Türkçe kurallarıyla okunur hale getir (bağlaçlar küçük)
+const SMALL_WORDS = new Set(["ve", "ile", "da", "de", "ya", "veya", "için", "ki", "mi"]);
+const KEEP_UPPER = new Set(["tl", "odtü", "mta", "aşti", "avm", "kyk", "tbmm", "ab", "abd", "hgs", "tc", "ytü"]);
+function niceTitle(t) {
+  const s = String(t || "").trim();
+  const letters = s.replace(/[^A-Za-zÇĞİÖŞÜçğıöşü]/g, "");
+  const upper = letters.replace(/[^A-ZÇĞİÖŞÜ]/g, "").length;
+  if (letters.length < 4 || upper / letters.length < 0.6) return s;
+  let first = true;
+  // kesmeyle bağlı ekler kelimenin parçası (Jüpiter'den); birimler ve kısaltmalar korunur (m², TL, ODTÜ)
+  return s.toLocaleLowerCase("tr-TR").replace(/[\p{L}\p{N}]+(?:['’][\p{L}]+)*/gu, (w) => {
+    let out;
+    if (/^m[²2³]?$/.test(w)) out = w;
+    else if (KEEP_UPPER.has(w)) out = w.toLocaleUpperCase("tr-TR");
+    else if (!first && SMALL_WORDS.has(w)) out = w;
+    else out = w.charAt(0).toLocaleUpperCase("tr-TR") + w.slice(1);
+    first = false;
+    return out;
+  });
+}
+const ICON = {
+  home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/></svg>',
+  spark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18"/></svg>',
+  tag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>',
+  chart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
+  layers: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5 9-5z"/><path d="m3 13 9 5 9-5"/></svg>',
+  metro: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="14" rx="3"/><path d="M5 11h14M9 21l-2-4M15 21l2-4"/><circle cx="9" cy="14" r=".6"/><circle cx="15" cy="14" r=".6"/></svg>',
+  building: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/><path d="M16 9h2a2 2 0 0 1 2 2v10M2 21h20M8 7h4M8 11h4M8 15h4"/></svg>',
+};
+const SRC_VAR = { hepsiemlak: "var(--s-he)", emlakjet: "var(--s-ej)", sahibinden: "var(--s-sb)" };
+function renderHero() {
+  const box = $("#hero"); if (!box || !D) return;
+  const ok = D.items.filter((i) => i.ok && !isHidden(i)).length;
+  const n24 = D.items.filter((i) => !isHidden(i) && ageHours(i.fs) <= 24).length;
+  box.innerHTML = `<h1>Ankara <em>M2 hattında</em> eşyalı kiralık</h1>
+    <p><span class="live"><i></i>Canlı</span><span><b>${NF.format(ok)}</b> uygun ilan</span><span><b>${NF.format(D.items.length)}</b> aktif ilan</span>
+      <span><b>${NF.format(n24)}</b> yeni (24 sa)</span><span>son güncelleme ${esc(fmtWhen(D.last_scan || D.generated))}</span></p>`;
+}
 function renderNewest() {
   const box = $("#newest"); if (!box || !D) return;
   const onlyOk = store.get("m2k_new_ok", "0") === "1";
@@ -1157,11 +1284,12 @@ function renderNewest() {
   const card = (it) => {
     const room = (it.r || "").replace("1+0", "Stüdyo");
     const media = it.img ? `<img src="${esc(it.img)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : "";
+    const title = niceTitle(it.t);
     const where = [it.d, it.st ? "→ " + it.st : ""].filter(Boolean).join(" ");
     const walk = it.v && it.wm != null ? ` · 🚶 ${Math.round(it.wm)} dk` : "";
-    return `<a class="ncard" href="${esc(safeUrl(it.url))}" target="_blank" rel="noopener noreferrer" title="${esc(it.t)}">
-      <div class="nmedia"><span class="ph">${esc(room || "—")}</span>${media}<span class="nage">${esc(ago(it.fs))}</span>${it.ok ? `<span class="nok">uygun</span>` : ""}</div>
-      <div class="nbody"><div class="np">${esc(TL(it.p))}</div><div class="nt">${esc(it.t)}</div>
+    return `<a class="ncard" href="${esc(safeUrl(it.url))}" target="_blank" rel="noopener noreferrer" title="${esc(title)}">
+      <div class="nmedia" style="--src:${SRC_VAR[it.src] || "var(--accent)"}"><span class="ph">${ICON.building}<b>${esc(room || "—")}</b></span>${media}<span class="nage">${esc(ago(it.fs))}</span>${it.ok ? `<span class="nok">uygun</span>` : ""}</div>
+      <div class="nbody"><div class="np">${esc(TL(it.p))}</div><div class="nt">${esc(title)}</div>
         <div class="nm"><i class="sdot ${SRC_SHORT[it.src] || ""}"></i>${esc(it.src)} · ${esc(room || "?")}${it.m2 ? " · " + it.m2 + " m²" : ""}</div>
         <div class="nm">${esc(where || "?")}${walk}</div></div></a>`;
   };
@@ -1178,7 +1306,7 @@ function renderAll(rebuildFilters = true, keepFocus = false) {
   if (S.tab === "durum") { renderStatus(); return; }
   const base = D.items.filter((it) => pass(it, S, true));
   const list = base.filter((it) => pass(it, S, false)).sort(sorter(S.sort));
-  renderFresh(); renderNewest(); renderLine(base); renderActive(); renderKpis(list);
+  renderHero(); renderFresh(); renderNewest(); renderLine(base); renderActive(); renderKpis(list);
   if (!$("#drawer").hidden && !keepFocus) buildFilters();
   $("#dapply").textContent = `${NF.format(list.length)} ilanı göster`;
   $("#count").textContent = S.view === "map" ? "Harita" : `${NF.format(list.length)} ilan`;
