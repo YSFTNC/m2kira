@@ -71,6 +71,16 @@ def gallery_of(r: dict[str, Any]) -> list[str]:
     return [u for u in imgs if isinstance(u, str) and u.startswith("https://")][:24]
 
 
+def _pc_status(cfg: Config) -> Optional[dict[str, Any]]:
+    """PC'nin feed dalına yazdığı durum (GitHub iş akışı data/feed/pc_status.json olarak indirir)."""
+    p = cfg.data_dir / "feed" / "pc_status.json"
+    try:
+        d = json.loads(p.read_text(encoding="utf-8")) if p.exists() else None
+        return d if isinstance(d, dict) else None
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def build_payload(cfg: Config, db: DB, budget: Optional[int] = None) -> dict[str, Any]:
     budget = int(budget or db.get_setting("budget", cfg.budget))
     tol = float(cfg.budget_tolerance_pct)
@@ -161,6 +171,7 @@ def build_payload(cfg: Config, db: DB, budget: Optional[int] = None) -> dict[str
         "settings": effective(cfg, db),
         "status": source_status(db),
         "feed_generated": {s: db.get_setting(f"feed_processed:{s}") for s in ("hepsiemlak", "sahibinden")},
+        "pc": _pc_status(cfg),
         "neighborhoods": [{"name": n.name, "key": n.key, "station": n.station, "enabled": n.enabled}
                           for n in cfg.neighborhoods],
         "repo": {"name": str(fc.get("repo", "YSFTNC/m2kira")), "branch": str(fc.get("branch", "feed")),

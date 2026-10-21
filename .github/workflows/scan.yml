@@ -88,6 +88,7 @@ jobs:
                 python -c "import json,sys; d=json.load(open('data/feed/$f.json', encoding='utf-8')); print('$f beslemesi:', d['generated'], d['listings'], 'ilan')"
               else rm -f data/feed/$f.json; echo "$f beslemesi yok"; fi
             done
+            git show FETCH_HEAD:feed/pc_status.json > data/feed/pc_status.json 2>/dev/null || rm -f data/feed/pc_status.json
             if git show FETCH_HEAD:feed/settings.json > data/feed/settings.json 2>/dev/null; then
               python -c "import json; d=json.load(open('data/feed/settings.json', encoding='utf-8')); print('site ayarları:', d.get('updated'))"
             else rm -f data/feed/settings.json; echo "site ayarı yok"; fi

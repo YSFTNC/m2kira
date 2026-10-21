@@ -1274,10 +1274,14 @@ function renderStatus() {
   const feedAge = (k) => (fg[k] ? ageHours(fg[k]) : null);
   const feedOk = (k) => feedAge(k) != null && feedAge(k) <= (D.feed_max_age_hours || 3);
   const ejLevel = st.emlakjet ? (ageHours(st.emlakjet.last) > 5 ? "warn" : "ok") : "bad";
-  const feedLine = (k) => `<div class="kv">Son PC gönderimi: <b>${esc(fg[k] ? fmtWhen(fg[k]) : "yok")}</b>${fg[k] ? " (" + esc(ago(fg[k])) + ")" : ""}</div>${feedOk(k) ? "" : `<div class="kv">Bilgisayar kapalıyken güncellenmez; uyutup şarjda bırakırsan 30 dakikada bir uyanıp tarar. Mevcut ilanlar sitede kalır.</div>`}`;
+  const pcs = (D.pc || {}).sources || {};
+  const pauseLine = (k) => { const u = (pcs[k] || {}).paused_until; return u && parseT(u) > Date.now()
+    ? `<div class="kv">⏸ Otomatik tarama <b>${esc(fmtWhen(u))}</b>'e kadar duraklatıldı (site otomatik erişimi engelledi); sonra kendiliğinden yeniden denenir.</div>` : ""; };
+  const feedLine = (k) => pauseLine(k) + `<div class="kv">Son PC gönderimi: <b>${esc(fg[k] ? fmtWhen(fg[k]) : "yok")}</b>${fg[k] ? " (" + esc(ago(fg[k])) + ")" : ""}</div>${feedOk(k) ? "" : `<div class="kv">Bilgisayar kapalıyken güncellenmez; uyutup şarjda bırakırsan 30 dakikada bir uyanıp tarar. Mevcut ilanlar sitede kalır.</div>`}`;
   const tg = D.telegram_bot ? `<a href="https://t.me/${esc(D.telegram_bot)}" target="_blank" rel="noopener noreferrer">@${esc(D.telegram_bot)}</a>` : "Telegram botu";
   box.innerHTML = `<h1>Durum</h1>
   <div class="panel"><div class="kv">Sayfa üretildi <b>${esc(fmtWhen(D.generated))}</b> (${esc(ago(D.generated))}) · her <b>${D.schedule && D.schedule.every_min ? D.schedule.every_min + " dakikada" : (D.schedule ? D.schedule.every_hours : 2) + " saatte"}</b> bir tarama, her gün <b>${esc(D.schedule ? D.schedule.summary : "09:00")}</b> özet · bildirimler ${tg}</div>
+    ${D.pc && D.pc.generated ? `<div class="kv">Bilgisayar en son çalıştı <b>${esc(fmtWhen(D.pc.generated))}</b> (${esc(ago(D.pc.generated))})</div>` : ""}
     <div class="kv">Kriterlere uyan aktif ilan <b>${D.items.filter((i) => i.ok && !isHidden(i)).length}</b> · son 24 saatte yeni uygun <b>${D.new24 ?? "?"}</b> · bütçe <b>${esc(TL(D.budget))}</b></div>
     <div class="row" style="margin-top:14px"><button class="btn primary" type="button" id="d-scan">Şimdi tara</button><button class="btn" type="button" id="d-refresh">Sayfayı yenile</button>
       <a class="btn" href="https://github.com/${esc(GH.repo())}/actions" target="_blank" rel="noopener noreferrer">GitHub Actions ↗</a></div>
@@ -1343,6 +1347,14 @@ function renderTabs() {
 function renderFresh() {
   const box = $("#fresh"), fg = D.feed_generated || {}, max = D.feed_max_age_hours || 3;
   const stale = ["sahibinden", "hepsiemlak"].filter((k) => !fg[k] || ageHours(fg[k]) > max);
+  const pausedUntil = (k) => { const u = (((D.pc || {}).sources || {})[k] || {}).paused_until; return u && parseT(u) > Date.now() ? u : null; };
+  const sbPause = pausedUntil("sahibinden");
+  if (sbPause) {
+    box.innerHTML = `<b>sahibinden</b> otomatik taraması <b>${esc(fmtWhen(sbPause))}</b>'e kadar duraklatıldı, çünkü sahibinden bu bilgisayardan gelen otomatik erişimi engelledi. ` +
+      `Bu sürede yeni sahibinden ilanları siteye düşmez, sahibinden uygulamasının bildirimi haber verir. Sitedeki ilanları kalır.` +
+      (stale.includes("hepsiemlak") ? ` hepsiemlak da ${fg.hepsiemlak ? "en son " + esc(ago(fg.hepsiemlak)) + " güncellendi" : "henüz gelmedi"}: bilgisayar kapalı görünüyor.` : "");
+    box.hidden = false; return;
+  }
   if (!stale.length) { box.hidden = true; return; }
   const seen = stale.filter((k) => fg[k]).map((k) => fg[k]).sort();
   const when = seen.length ? `en son ${ago(seen[0])} güncellendi` : "henüz gelmedi";

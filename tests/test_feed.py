@@ -187,6 +187,7 @@ def _patch_feed_push(cfg, monkeypatch, units_by_source):
     monkeypatch.setattr(feedmod, "collect_hepsiemlak", lambda c, d: (calls.append("collect:hepsiemlak"), payload("hepsiemlak"))[1])
     monkeypatch.setattr(feedmod, "push", lambda c, p: (calls.append(f"push:{p['source']}"), "ok")[1])
     monkeypatch.setattr(feedmod, "trigger", lambda c, s: (calls.append(f"trigger:{s}"), True)[1])
+    monkeypatch.setattr(feedmod, "push_status", lambda c, d: calls.append("status") or "ok")
     return mainmod, calls
 
 
@@ -196,7 +197,7 @@ def test_feed_push_runs_sahibinden_first_and_triggers_per_source(cfg, monkeypatc
     assert mainmod.main(["feed-push"]) == 0
     # her gönderimden hemen sonra varsayılan kaynaklarla (boş) tetikleme
     assert calls == ["collect:sahibinden", "check:sahibinden:1", "push:sahibinden", "trigger:",
-                     "collect:hepsiemlak", "check:hepsiemlak:1", "push:hepsiemlak", "trigger:"]
+                     "collect:hepsiemlak", "check:hepsiemlak:1", "push:hepsiemlak", "trigger:", "status"]
 
 
 def test_feed_push_skips_empty_source_but_continues(cfg, monkeypatch):
@@ -204,7 +205,7 @@ def test_feed_push_skips_empty_source_but_continues(cfg, monkeypatch):
     mainmod, calls = _patch_feed_push(cfg, monkeypatch, {"sahibinden": [], "hepsiemlak": unit})
     assert mainmod.main(["feed-push"]) == 1          # sahibinden taranamadı -> görev hata koduyla biter
     assert "push:sahibinden" not in calls and calls.count("trigger:") == 1
-    assert calls[-2:] == ["push:hepsiemlak", "trigger:"]
+    assert calls[-3:] == ["push:hepsiemlak", "trigger:", "status"]
 
 
 def test_notify_feed_problem_streaks(cfg, tmp_path, monkeypatch):

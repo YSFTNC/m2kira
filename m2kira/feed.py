@@ -394,7 +394,32 @@ def _gh(args: list[str], input_file: Optional[str] = None) -> subprocess.Complet
 
 def push(cfg: Config, payload: dict[str, Any]) -> str:
     fc = feed_cfg(cfg, payload.get("source", "hepsiemlak"))
-    repo, branch, path = fc["repo"], fc["branch"], fc["path"]
+    return push_file(cfg, fc["path"], payload,
+                     f"{payload.get('source')} beslemesi {payload['generated']} ({payload['listings']} ilan)")
+
+
+STATUS_PATH = "feed/pc_status.json"
+
+
+def pc_status(db: DB) -> dict[str, Any]:
+    """Sitede gösterilecek PC durumu: kaynak duraklamaları, son denemeler, üst üste hata sayısı."""
+    return {"generated": utcnow(), "sources": {
+        s: {"paused_until": db.get_setting(f"feed_block_until:{s}"),
+            "last_attempt": db.get_setting(f"feed_last_attempt:{s}"),
+            "fail_streak": int(db.get_setting(f"feed_fail_streak:{s}", 0) or 0)} for s in FEED_SOURCES}}
+
+
+def push_status(cfg: Config, db: DB) -> Optional[str]:
+    try:
+        return push_file(cfg, STATUS_PATH, pc_status(db), "PC durumu")
+    except Exception as exc:  # noqa: BLE001
+        log.warning("PC durumu gönderilemedi: %s", exc)
+        return None
+
+
+def push_file(cfg: Config, path: str, obj: Any, message: str) -> str:
+    fc = feed_cfg(cfg, "hepsiemlak")
+    repo, branch = fc["repo"], fc["branch"]
     r = _gh(["api", f"repos/{repo}/git/ref/heads/{branch}"])
     if r.returncode != 0:
         main_sha = _gh(["api", f"repos/{repo}/git/ref/heads/main", "--jq", ".object.sha"]).stdout.strip()
@@ -405,8 +430,8 @@ def push(cfg: Config, payload: dict[str, Any]) -> str:
             raise RuntimeError(f"{branch} dalı oluşturulamadı: {c.stderr.strip()[:200]}")
     sha = _gh(["api", f"repos/{repo}/contents/{path}?ref={branch}", "--jq", ".sha"]).stdout.strip()
     body = {
-        "message": f"{payload.get('source')} beslemesi {payload['generated']} ({payload['listings']} ilan)",
-        "content": base64.b64encode(json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")).decode("ascii"),
+        "message": message,
+        "content": base64.b64encode(json.dumps(obj, ensure_ascii=False, separators=(",", ":")).encode("utf-8")).decode("ascii"),
         "branch": branch,
     }
     if sha and not sha.startswith("{"):

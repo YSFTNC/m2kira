@@ -108,7 +108,11 @@ def main(argv: list[str] | None = None) -> int:
         for source in wanted:
             min_iv = float(cfg.source_cfg(f"{source}_feed").get("min_interval_min", 0) or 0)
             if not args.only and not feed.attempt_due(db, source, min_iv):
-                log.info("%s: son deneme %g dakikadan yeni; bu çalıştırmada atlandı", source, min_iv)
+                paused = db.get_setting(f"feed_block_until:{source}")
+                if paused and paused > feed.utcnow():
+                    log.info("%s: otomatik erişim engeli nedeniyle %s UTC'ye kadar duraklatıldı; atlandı", source, paused)
+                else:
+                    log.info("%s: son deneme %g dakikadan yeni; bu çalıştırmada atlandı", source, min_iv)
                 continue
             if source == "hepsiemlak":
                 payload = feed.collect_hepsiemlak(cfg, db)
@@ -139,6 +143,8 @@ def main(argv: list[str] | None = None) -> int:
             # emlakjet'i ve kaçan günlük özeti de işler. Sıradaki bir çalıştırma iptal olsa da sonraki hepsini toplar.
             if feed.trigger(cfg, ""):
                 log.info("GitHub işi tetiklendi (%s beslemesi gönderildi)", source)
+        if not args.no_push:
+            feed.push_status(cfg, db)   # sitede: sahibinden duraklaması, bilgisayarın son çalışması
         awake.__exit__(None, None, None)
         db.close()
         return rc

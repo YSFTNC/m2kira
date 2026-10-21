@@ -31,3 +31,13 @@ def cfg(tmp_path):
     c = load_config(ROOT / "config.yaml")
     c.raw["data_dir"] = str(tmp_path / "data")
     return c
+
+
+@pytest.fixture(autouse=True)
+def no_real_github(monkeypatch):
+    """Testler gerçek GitHub'a (gh CLI) asla istek atmasın: 21.10.2026'da bir test feed dalına durum dosyası yazdı."""
+    import m2kira.feed as feedmod
+
+    def blocked(*a, **k):
+        raise RuntimeError("testte gerçek gh çağrısı engellendi")
+    monkeypatch.setattr(feedmod, "_gh", blocked)
