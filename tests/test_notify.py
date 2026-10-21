@@ -104,3 +104,19 @@ def test_digest_reports_every_change_with_reason(cfg, tmp_path):
     db.add_event(Event(listing_id="hepsiemlak:room", kind="price_drop", old_price=30000, new_price=28000,
                        created_at="2026-10-21T10:30:00Z"))
     assert p._notify_events(cfg.budget) == 0 and len(cap.sent) == 2
+
+
+def test_members_get_listing_messages_but_not_technical_notices():
+    tg, calls = fake_tg()
+    tg.extra_chats = ["222"]
+    tg.send("<b>ilan</b>", subject="m2kira: new")
+    assert [p["chat_id"] for _, p in calls] == ["1", "222"]
+    calls.clear()
+    tg.send("parser hata", subject="m2kira uyarı")
+    assert [p["chat_id"] for _, p in calls] == ["1"]
+    calls.clear()
+    tg.send_photo("https://x/a.jpg", "<b>kart</b>", subject="m2kira: new")
+    assert [(m, p["chat_id"]) for m, p in calls] == [("sendPhoto", "1"), ("sendPhoto", "222")]
+    calls.clear()
+    tg.send("yanıt", chat_id="222")
+    assert [p["chat_id"] for _, p in calls] == ["222"]

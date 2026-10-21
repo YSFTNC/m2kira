@@ -149,6 +149,8 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     notifier = build_notifier(cfg)
+    from m2kira.bot import attach_members
+    attach_members(notifier, db)   # /davet ile katılan arkadaşlar da ilan bildirimlerini alır
     if args.cmd == "test-notify":
         ok = notifier.send("✅ m2kira bildirim testi — bu mesajı görüyorsanız kanal çalışıyor.", subject="m2kira test")
         print("gönderildi" if ok else "gönderilemedi (log'a bakın)")

@@ -43,7 +43,7 @@ def test_registration_and_auth(bot):
     b.handle(msg("/start", chat=111))
     assert tg.chat_id == "111" and p.db.get_setting("chat_id") == "111" and "kaydedildi" in tg.sent[-1]
     b.handle(msg("/liste", chat=222))
-    assert "sahibine" in tg.sent[-1]
+    assert "özel" in tg.sent[-1] and "/katil" in tg.sent[-1]        # davetsiz sohbet: yalnız katılma yolu
 
 
 def test_commands(bot):
@@ -81,3 +81,28 @@ def test_commands(bot):
     assert "/yardim" in tg.sent[-1]
     b.handle(msg("/yardim@m2kira_bot"))
     assert "komutlar" in tg.sent[-1]
+
+
+def test_invite_member_flow(bot):
+    b, tg, p = bot
+    tg.chat_id = "111"
+    b.handle(msg("/liste", chat=222))
+    assert "katil" in tg.sent[-1]                                   # davetsiz: reddedilir
+    b.handle(msg("/davet", chat=111))
+    code = p.db.get_setting("tg_invite")["code"]
+    assert code in tg.sent[-1]
+    b.handle(msg("/katil 000000", chat=222))
+    assert "geçersiz" in tg.sent[-1]
+    b.handle(msg(f"/katil {code}", chat=222))
+    assert "Katıldın" in tg.sent[-2] and "katıldı" in tg.sent[-1]
+    assert tg.extra_chats == ["222"] and p.db.get_setting("tg_invite") == {}
+    b.handle(msg("/liste", chat=222))
+    assert "ilan" in tg.sent[-1]                                    # üye komut kullanabilir
+    b.handle(msg("/davet", chat=222))
+    assert "yalnız botun sahibi" in tg.sent[-1]
+    b.handle(msg(f"/katil {code}", chat=333))
+    assert "geçersiz" in tg.sent[-1]                                # kod tek kullanımlık
+    b.handle(msg("/uyeler", chat=111))
+    assert "1." in tg.sent[-1]
+    b.handle(msg("/cikar 1", chat=111))
+    assert tg.extra_chats == [] and not p.db.get_setting("tg_members")

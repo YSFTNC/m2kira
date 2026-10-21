@@ -15,11 +15,23 @@ log = logging.getLogger(__name__)
 class TelegramNotifier(Notifier):
     name = "telegram"
 
+    # yalnız sahibine gidecek teknik mesajlar (parser/erişim uyarıları, test)
+    OWNER_ONLY_SUBJECTS = ("m2kira uyarı", "m2kira test")
+
     def __init__(self, token: str, chat_id: Optional[str] = None, timeout: float = 30.0):
         self.token = token
         self.chat_id = chat_id
         self.timeout = timeout
         self.api = f"https://api.telegram.org/bot{token}"
+        self.extra_chats: list[str] = []   # /davet ile katılan üyeler (bot veritabanından)
+
+    def _targets(self, subject: str, chat_id: Optional[str]) -> list[str]:
+        if chat_id:
+            return [str(chat_id)]
+        out = [str(self.chat_id)] if self.chat_id else []
+        if subject not in self.OWNER_ONLY_SUBJECTS:
+            out += [str(c) for c in self.extra_chats if str(c) not in out]
+        return out
 
     def call(self, method: str, **params: Any) -> dict[str, Any]:
         r = requests.post(f"{self.api}/{method}", json=params, timeout=self.timeout)
@@ -29,10 +41,14 @@ class TelegramNotifier(Notifier):
         return data["result"]
 
     def send(self, text: str, subject: str = "m2kira", chat_id: Optional[str] = None) -> bool:
-        chat = chat_id or self.chat_id
-        if not chat:
+        targets = self._targets(subject, chat_id)
+        if not targets:
             log.warning("TELEGRAM_CHAT_ID yok; bota /start yazın (chat id kaydedilir). Mesaj:\n%s", strip_html(text))
             return False
+        results = [self._send_one(chat, text) for chat in targets]
+        return results[0]
+
+    def _send_one(self, chat: str, text: str) -> bool:
         ok = True
         for chunk in split_message(text):
             try:
@@ -52,15 +68,18 @@ class TelegramNotifier(Notifier):
     def send_photo(self, photo_url: str, caption: str, subject: str = "m2kira", chat_id: Optional[str] = None) -> bool:
         """İlan kartını fotoğrafla gönderir. Fotoğrafı Telegram'ın sunucusu indirir; indiremezse ya da başlık
         sınırı aşılırsa kart her zamanki gibi düz mesaj olarak gider."""
-        chat = chat_id or self.chat_id
-        if not chat or not photo_url or len(strip_html(caption)) > self.CAPTION_LIMIT:
+        targets = self._targets(subject, chat_id)
+        if not targets or not photo_url or len(strip_html(caption)) > self.CAPTION_LIMIT:
             return self.send(caption, subject, chat_id=chat_id)
-        try:
-            self.call("sendPhoto", chat_id=chat, photo=photo_url, caption=caption, parse_mode="HTML")
-            return True
-        except Exception as exc:  # noqa: BLE001
-            log.info("fotoğraflı kart gönderilemedi (%s); düz mesaj gönderiliyor", exc)
-            return self.send(caption, subject, chat_id=chat_id)
+        results = []
+        for chat in targets:
+            try:
+                self.call("sendPhoto", chat_id=chat, photo=photo_url, caption=caption, parse_mode="HTML")
+                results.append(True)
+            except Exception as exc:  # noqa: BLE001
+                log.info("fotoğraflı kart gönderilemedi (%s); düz mesaj gönderiliyor", exc)
+                results.append(self._send_one(chat, caption))
+        return results[0]
 
     def get_updates(self, offset: Optional[int], timeout: int = 30) -> list[dict[str, Any]]:
         r = requests.get(f"{self.api}/getUpdates",

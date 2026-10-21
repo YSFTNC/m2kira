@@ -212,6 +212,16 @@ python main.py bot-once            # birikmiş Telegram komutlarını bir kez i�
 
 İlan kimlikleri kısa biçimde: `he:` hepsiemlak, `ej:` emlakjet, `sb:` sahibinden.
 
+## Arkadaşınla birlikte kullanmak
+
+- **Site:** sağ üstteki paylaş düğmesi o anki filtrelerle bağlantıyı paylaşır (telefonda paylaşım menüsü,
+  bilgisayarda panoya kopyalar). Arkadaşın filtrelerini ve favorilerini kendi tarayıcısında tutar; ayarları
+  değiştiremez. Favoriler ve ayarlar ortak olsun istersen ona da bir GitHub anahtarı ver (yalnız bu depo,
+  Contents + Actions: Read and write) ve sitede "GitHub'a bağlan" ile girsin.
+- **Telegram:** bota `/davet` yaz; çıkan kodu arkadaşına ver, o da bota `/katil KOD` yazsın (kod 48 saat
+  geçerli, tek kullanımlık). Katılan üyeler ilan kartlarını, değişiklik özetlerini ve günlük özeti alır,
+  komutları kullanabilir; teknik arıza uyarıları yalnız sana gelir. `/uyeler`, `/cikar <no>`, üye için `/ayril`.
+
 ## Yapılandırma (`config.yaml`)
 
 * `budget`, `budget_tolerance_pct` (bütçeyi %5'e kadar aşanlar "🤝 pazarlıkla" etiketiyle gelir)

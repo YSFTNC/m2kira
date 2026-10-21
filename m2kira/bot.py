@@ -27,6 +27,8 @@ HELP = """<b>m2kira komutları</b>
 /filtre [durak] — filtre sayfası linki (ör. /filtre Kızılay)
 /tara — şimdi tara
 /durum — son tarama, sayılar, hatalar
+/davet — arkadaşın için katılma kodu (yalnız sahibi) · /uyeler · /cikar &lt;no&gt;
+/ayril — (üye) bildirimleri bırak
 /yardim — bu mesaj"""
 
 
@@ -39,6 +41,7 @@ class TelegramBot:
         saved = self.p.db.get_setting("chat_id")
         if not self.tg.chat_id and saved:
             self.tg.chat_id = str(saved)
+        self.tg.extra_chats = [m["id"] for m in self._members()]
 
     # ------------------------------------------------------------------ döngü
     def start(self) -> None:
@@ -102,13 +105,31 @@ class TelegramBot:
             self.p.db.set_setting("chat_id", chat_id)
             self._reply(msg, f"Bu sohbet kaydedildi (chat id <code>{chat_id}</code>). Bildirimler buraya gelecek.\n\n" + HELP)
             return
-        if chat_id != str(self.tg.chat_id):
-            self._reply(msg, "Bu bot yalnızca sahibine yanıt verir.")
-            return
         parts = text.split()
         cmd = parts[0].split("@")[0].lower()
         args = parts[1:]
-        if cmd in ("/start", "/yardim", "/help"):
+        owner = chat_id == str(self.tg.chat_id)
+        if not owner and not self._is_member(chat_id):
+            if cmd in ("/katil", "/katıl"):
+                self.cmd_join(msg, chat_id, args)
+            else:
+                self._reply(msg, "Bu bot özel. Sahibinden katılma kodu iste ve buraya <code>/katil KOD</code> yaz.")
+            return
+        if cmd == "/davet":
+            if owner:
+                self.cmd_invite(msg)
+            else:
+                self._reply(msg, "Davet kodunu yalnız botun sahibi oluşturabilir.")
+        elif cmd in ("/uyeler", "/üyeler"):
+            self._reply(msg, self.members_text())
+        elif cmd in ("/cikar", "/çıkar") and owner:
+            self.cmd_remove(msg, args)
+        elif cmd in ("/ayril", "/ayrıl") and not owner:
+            self._set_members([m for m in self._members() if m["id"] != chat_id])
+            self._reply(msg, "Bildirimler durduruldu. Yeniden katılmak için yeni bir kod gerekir.")
+        elif cmd in ("/katil", "/katıl"):
+            self._reply(msg, "Zaten bildirimleri alıyorsun.")
+        elif cmd in ("/start", "/yardim", "/help"):
             self._reply(msg, HELP)
         elif cmd == "/liste":
             self.cmd_liste(msg, args)
@@ -139,6 +160,65 @@ class TelegramBot:
             self._reply(msg, self.p.status_text())
         else:
             self._reply(msg, "Anlaşılmadı. /yardim")
+
+    # ---- üyeler (arkadaş): davet koduyla katılır, ilan bildirimlerini ve komutları kullanır
+    INVITE_HOURS = 48
+
+    def _members(self) -> list[dict[str, str]]:
+        raw = self.p.db.get_setting("tg_members", []) or []
+        return [m for m in raw if isinstance(m, dict) and m.get("id")]
+
+    def _set_members(self, members: list[dict[str, str]]) -> None:
+        self.p.db.set_setting("tg_members", members)
+        self.tg.extra_chats = [m["id"] for m in members]
+
+    def _is_member(self, chat_id: str) -> bool:
+        return any(m["id"] == chat_id for m in self._members())
+
+    def members_text(self) -> str:
+        ms = self._members()
+        if not ms:
+            return "Henüz üye yok. Arkadaşını eklemek için /davet yaz."
+        lines = ["<b>👥 Bildirim alan üyeler</b>"] + [f"{i}. {esc(m.get('name') or m['id'])}" for i, m in enumerate(ms, 1)]
+        return "\n".join(lines + ["Çıkarmak için: /cikar &lt;no&gt;"])
+
+    def cmd_invite(self, msg: dict[str, Any]) -> None:
+        import secrets
+        from datetime import datetime, timedelta, timezone
+        code = f"{secrets.randbelow(900000) + 100000}"
+        until = (datetime.now(timezone.utc) + timedelta(hours=self.INVITE_HOURS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        self.p.db.set_setting("tg_invite", {"code": code, "until": until})
+        bot_name = str(self.p.cfg.get("web", "telegram_bot", default="") or "")
+        where = f"@{bot_name}" if bot_name else "bota"
+        self._reply(msg, f"👥 Arkadaşın {esc(where)} adresine şunu yazsın:\n<code>/katil {code}</code>\n"
+                         f"Kod {self.INVITE_HOURS} saat geçerli ve bir kez kullanılır. Komutlar ~30 dakikada bir işlendiği için "
+                         "onay mesajı biraz gecikebilir.")
+
+    def cmd_join(self, msg: dict[str, Any], chat_id: str, args: list[str]) -> None:
+        from datetime import datetime, timezone
+        inv = self.p.db.get_setting("tg_invite") or {}
+        now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        if not args or not inv.get("code") or args[0].strip() != inv["code"] or now > str(inv.get("until") or ""):
+            self._reply(msg, "Kod geçersiz ya da süresi dolmuş. Botun sahibinden yeni kod iste (/davet).")
+            return
+        frm = msg.get("from") or {}
+        name = " ".join(x for x in (frm.get("first_name"), frm.get("last_name")) if x) or frm.get("username") or chat_id
+        self._set_members(self._members() + [{"id": chat_id, "name": str(name)[:60]}])
+        self.p.db.set_setting("tg_invite", {})
+        self._reply(msg, "✅ Katıldın. Yeni ilan, fiyat düşüşü ve değişiklik bildirimleri artık sana da gelecek.\n\n" + HELP)
+        try:
+            self.tg.send(f"👥 <b>{esc(name)}</b> bildirimlere katıldı. Üyeler: /uyeler", chat_id=str(self.tg.chat_id))
+        except Exception:  # noqa: BLE001
+            pass
+
+    def cmd_remove(self, msg: dict[str, Any], args: list[str]) -> None:
+        ms = self._members()
+        if not args or not args[0].isdigit() or not 1 <= int(args[0]) <= len(ms):
+            self._reply(msg, self.members_text())
+            return
+        gone = ms.pop(int(args[0]) - 1)
+        self._set_members(ms)
+        self._reply(msg, f"{esc(gone.get('name') or gone['id'])} çıkarıldı.")
 
     def cmd_liste(self, msg: dict[str, Any], args: list[str]) -> None:
         n = 15
@@ -241,3 +321,13 @@ class TelegramBot:
             self._reply(msg, ("Gizlendi: " if hidden else "Geri getirildi: ") + esc(lid))
         else:
             self._reply(msg, "İlan bulunamadı.")
+
+
+def attach_members(notifier: Any, db: Any) -> None:
+    """Pipeline bildirimleri /davet ile katılan üyelere de gitsin (teknik uyarılar hariç)."""
+    from .notify.base import MultiNotifier
+    tgs = [notifier] if isinstance(notifier, TelegramNotifier) else (
+        [n for n in notifier.notifiers if isinstance(n, TelegramNotifier)] if isinstance(notifier, MultiNotifier) else [])
+    members = [m["id"] for m in (db.get_setting("tg_members", []) or []) if isinstance(m, dict) and m.get("id")]
+    for t in tgs:
+        t.extra_chats = members
