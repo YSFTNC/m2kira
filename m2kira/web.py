@@ -202,5 +202,8 @@ def export_site(cfg: Config, db: DB, out_dir: Path) -> dict[str, Any]:
     payload = build_payload(cfg, db)
     (out_dir / "data.json").write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     shutil.copyfile(TEMPLATE, out_dir / "index.html")
+    og = TEMPLATE.parent / "og.png"      # bağlantı önizleme görseli (WhatsApp/Telegram)
+    if og.exists():
+        shutil.copyfile(og, out_dir / "og.png")
     (out_dir / ".nojekyll").write_text("", encoding="utf-8")
     return {"items": len(payload["items"]), "matching": sum(1 for i in payload["items"] if i["ok"]), "out": str(out_dir)}

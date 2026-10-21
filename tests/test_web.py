@@ -60,6 +60,7 @@ def test_payload_and_export(cfg, tmp_path):
     out = tmp_path / "site"
     info = export_site(cfg, db, out)
     assert info["items"] == 3 and (out / "index.html").exists() and (out / ".nojekyll").exists()
+    assert (out / "og.png").exists()
     j = json.loads((out / "data.json").read_text(encoding="utf-8"))
     assert j["items"] and "M2 Kiralık" in (out / "index.html").read_text(encoding="utf-8")
 
