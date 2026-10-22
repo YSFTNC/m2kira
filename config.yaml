@@ -163,6 +163,12 @@ areas:
     radius_km: 2.0
     neighborhoods: ["Balgat", "Oğuzlar", "Ehlibeyt", "Kızılırmak", "Nasuh Akar", "Çukurambar", "Aşağı Öveçler", "Öveçler",
                     "Sokullu Mehmet Paşa", "Cevizlidere", "İşçi Blokları", "Karakusunlar"]
+  # duraklara yürüme süresiyle (sistemin tahmini: kuş uçuşu x1,25 / 80 m/dk); 17 dk ~ 1.090 m kuş uçuşu
+  - key: umitkoy-tarim
+    name: "Ümitköy · Tarım Bakanlığı"
+    stations: ["Ümitköy", "Tarım Bakanlığı-Danıştay"]
+    walk_min: 17
+    neighborhoods: ["Ümit", "Mutlukent", "Mustafa Kemal"]
 
 # --- izlenen mahalleler: name, varsayılan istasyon (koordinat yoksa), kaynak slug'ları
 # hepsiemlak: cankaya-<slug>-kiralik/daire ('/' içeren değer olduğu gibi kullanılır; bazı mahalleler sitede

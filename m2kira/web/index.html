@@ -475,7 +475,7 @@ dialog.lsheet { width: min(760px, calc(100vw - 20px)); max-width: none; max-heig
     <nav class="nav" role="tablist" aria-label="Bölümler">
       <button role="tab" data-tab="ilan" type="button">İlanlar</button>
       <button role="tab" data-tab="dusen" type="button">Fiyatı düşenler</button>
-      <button role="tab" data-tab="bolge" type="button" class="areatab">Balgat</button>
+      <button role="tab" data-tab="bolge" type="button" class="areatab">Bölgeler</button>
       <button role="tab" data-tab="ayar" type="button">Ayarlar</button>
       <button role="tab" data-tab="durum" type="button">Durum</button>
     </nav>
@@ -526,7 +526,7 @@ dialog.lsheet { width: min(760px, calc(100vw - 20px)); max-width: none; max-heig
   <button role="tab" data-tab="ilan" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>İlanlar</button>
   <button role="tab" data-tab="harita" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg>Harita</button>
   <button role="tab" data-tab="dusen" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7l6 6 4-4 8 8"/><path d="M21 11v6h-6"/></svg>Düşenler</button>
-  <button role="tab" data-tab="bolge" type="button" class="areatab-m"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span class="lbl">Balgat</span></button>
+  <button role="tab" data-tab="bolge" type="button" class="areatab-m"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span class="lbl">Bölgeler</span></button>
   <button role="tab" data-tab="ayar" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>Ayarlar</button>
   <button role="tab" data-tab="durum" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>Durum</button>
 </nav>
@@ -1133,7 +1133,8 @@ function card(it, opt) {
       <button class="heart" type="button" data-act="fav" aria-pressed="${isFav}" aria-label="${isFav ? "Favorilerden çıkar" : "Favorilere ekle"}">${ICON_HEART}</button>${priceBar}</div>
     <div class="cbody">
       <a class="ttl" href="${esc(safeUrl(it.url))}" target="_blank" rel="noopener noreferrer" title="${esc(it.t)}" data-act="open">${esc(niceTitle(it.t))}</a>
-      ${opt.area ? `<div class="aline">📍 ${opt.dist != null ? `${esc(opt.area)}'a <b>${String(opt.dist.toFixed(1)).replace(".", ",")} km</b>` : `${esc(opt.area)} çevresi · konum belirsiz`}</div>` : ""}
+      ${opt.area ? `<div class="aline">${opt.dist == null ? `📍 ${esc(opt.area)} çevresi · konum belirsiz`
+        : opt.walk ? `🚶 ${esc(opt.near)} durağına <b>${opt.dist} dk</b> yürüme` : `📍 ${esc(opt.area)} merkezine <b>${String(opt.dist.toFixed(1)).replace(".", ",")} km</b>`}</div>` : ""}
       ${it.pp ? `<div class="dropline">↓ <b>${esc(TL(it.pp - it.p))}</b> (−%${Math.round((it.pp - it.p) / it.pp * 100)}) · ${esc(TL(it.pp))} → ${esc(TL(it.p))}${it.pdt ? " · " + esc(ago(it.pdt)) : ""}</div>` : ""}
       <div class="specline">${specs}</div>
       <div class="loc"><span class="mi">${ICON.metro}</span><span>${esc(it.d || "?")} → <b>${esc(it.st || "durak belirsiz")}</b></span>${walk}</div>
@@ -1436,43 +1437,62 @@ function areaOk(it) {   // kriterler (bütçe, eşya, oda, hariç bayraklar) —
   return !(it.fg || []).some((f) => ex.has(f));
 }
 const AREA_SORTS = [["dist", "Merkeze yakın"], ["price", "En ucuz"], ["new", "En yeni"]];
+const walkMin = (m) => Math.max(1, Math.round(m * 1.25 / 80));   // sistemin yürüme tahmini (kuş uçuşu x1,25, 80 m/dk)
 function renderArea() {
-  const box = $("#bolge"), A = (D.areas || [])[0];
-  if (!A) { box.innerHTML = `<p class="empty">Bölge tanımlı değil (config.yaml → areas).</p>`; return; }
-  const r = +store.get("m2k_area_r", String(A.radius_km || 2));
+  const box = $("#bolge"), areas = D.areas || [];
+  if (!areas.length) { box.innerHTML = `<p class="empty">Bölge tanımlı değil (config.yaml → areas).</p>`; return; }
+  const key = store.get("m2k_area", areas[0].key), A = areas.find((x) => x.key === key) || areas[0];
+  const byWalk = !!A.walk_min;
+  const lim = +store.get("m2k_area_lim_" + A.key, String(byWalk ? A.walk_min : (A.radius_km || 2)));
   const onlyOk = store.get("m2k_area_ok", "0") === "1", sort = store.get("m2k_area_sort", "dist");
+  // konumu belirsiz ilanlar: yarıçaplı bölgede varsayılan açık, durak/yürüme bölgesinde kapalı (mesafe bilinmiyor)
+  const showUnk = store.get("m2k_area_unk_" + A.key, byWalk ? "0" : "1") === "1";
   const names = new Set((A.neighborhoods || []).map(nbKey));
   const rows = [];
   for (const it of D.items) {
     if (isHidden(it)) continue;
-    let dist = null;
-    if (it.lat && it.lon) { dist = kmBetween(A.lat, A.lon, it.lat, it.lon); if (dist > r) continue; }
-    else if (!names.has(nbKey(it.d))) continue;
-    rows.push({ it, dist, ok: areaOk(it) });
+    let dist = null, near = null;
+    if (it.lat && it.lon) {
+      for (const c of A.centers) {
+        const km = kmBetween(c.lat, c.lon, it.lat, it.lon);
+        const v = byWalk ? walkMin(km * 1000) : km;
+        if (dist == null || v < dist) { dist = v; near = c.name; }
+      }
+      if (dist > lim) continue;
+    } else if (!names.has(nbKey(it.d))) continue;
+    rows.push({ it, dist, near, ok: areaOk(it) });
   }
-  const list = rows.filter((x) => !onlyOk || x.ok);
-  const cmp = { dist: (a, b) => (a.dist ?? 99) - (b.dist ?? 99), price: (a, b) => (a.it.p || 1e12) - (b.it.p || 1e12),
-    new: (a, b) => ageHours(a.it.fs) - ageHours(b.it.fs) }[sort] || ((a, b) => (a.dist ?? 99) - (b.dist ?? 99));
+  const unk = rows.filter((x) => x.dist == null).length;
+  const list = rows.filter((x) => (!onlyOk || x.ok) && (showUnk || x.dist != null));
+  const cmp = { dist: (a, b) => (a.dist ?? 999) - (b.dist ?? 999), price: (a, b) => (a.it.p || 1e12) - (b.it.p || 1e12),
+    new: (a, b) => ageHours(a.it.fs) - ageHours(b.it.fs) }[sort] || ((a, b) => (a.dist ?? 999) - (b.dist ?? 999));
   list.sort(cmp);
   const prices = list.map((x) => x.it.p).filter(Boolean);
   const tile = (lab, val, sub, ic) => `<div class="tile"><div class="lab"><span class="ic">${ICON[ic]}</span>${esc(lab)}</div><div class="val">${esc(val)}</div>${sub ? `<div class="sub">${esc(sub)}</div>` : ""}</div>`;
   const rk = (x) => String(x).replace(".", ",");
-  box.innerHTML = `<div class="hero" style="padding-top:4px"><h1><em>${esc(A.name)}</em> ve çevresi</h1>
-      <p>${esc(A.name)} merkezinin ${esc(rk(r))} km çevresindeki ilanlar. Metroya uzaklık bu sekmede ölçüt değil; konumu belirsiz ilanlar mahalle adından eklenir.</p></div>
+  const opts = byWalk ? [10, 12, 15, 17, 20, 25, 30] : [1, 1.5, 2, 2.5, 3];
+  const what = byWalk ? `${A.centers.map((c) => c.name).join(" veya ")} durağına en fazla ${lim} dakika yürüme mesafesindeki ilanlar`
+                      : `${A.name} merkezinin ${rk(lim)} km çevresindeki ilanlar`;
+  box.innerHTML = `${areas.length > 1 ? `<div class="seg" role="group" aria-label="Bölge" style="margin-bottom:12px">${areas.map((x) => `<button type="button" data-area="${esc(x.key)}" aria-pressed="${x.key === A.key}">${esc(x.name)}</button>`).join("")}</div>` : ""}
+    <div class="hero" style="padding-top:4px"><h1><em>${esc(A.name)}</em>${byWalk ? "" : " ve çevresi"}</h1>
+      <p>${esc(what)}. Ana listedeki metro kuralından bağımsızdır; konumu belirsiz ilanlar mahalle adından eklenir.${byWalk ? " Yürüme süresi sistemin tahminidir (kuş uçuşu mesafe +%25, dakikada 80 m)." : ""}</p></div>
     <div class="toolbar" style="padding-top:14px">
-      <button class="chip" type="button" id="areaok" aria-pressed="${onlyOk}">Yalnız uygun (metro hariç)</button>
-      <select class="sel" id="arear" aria-label="Yarıçap">${[1, 1.5, 2, 2.5, 3].map((k) => `<option value="${k}" ${k === r ? "selected" : ""}>${esc(rk(k))} km</option>`).join("")}</select>
-      <select class="sel" id="areasort" aria-label="Sıralama">${AREA_SORTS.map(([k, l]) => `<option value="${k}" ${k === sort ? "selected" : ""}>${esc(l)}</option>`).join("")}</select>
+      <button class="chip" type="button" id="areaok" aria-pressed="${onlyOk}">Yalnız uygun (mesafe hariç)</button>
+      ${unk ? `<button class="chip" type="button" id="areaunk" aria-pressed="${showUnk}" title="Konumu ilanda olmayan, mahalle adından eşleşen ilanlar">Konumu belirsizler (${unk})</button>` : ""}
+      <select class="sel" id="arear" aria-label="${byWalk ? "Yürüme süresi" : "Yarıçap"}">${opts.map((k) => `<option value="${k}" ${k === lim ? "selected" : ""}>${byWalk ? `en fazla ${k} dk yürüme` : esc(rk(k)) + " km"}</option>`).join("")}</select>
+      <select class="sel" id="areasort" aria-label="Sıralama">${AREA_SORTS.map(([k, l]) => `<option value="${k}" ${k === sort ? "selected" : ""}>${esc(byWalk && k === "dist" ? "Durağa yakın" : l)}</option>`).join("")}</select>
     </div>
     <div class="kpis area">
-      ${tile("İlan", NF.format(list.length), `${rows.filter((x) => x.dist != null).length} tanesinin konumu belli`, "home")}
-      ${tile("Uygun (metro hariç)", NF.format(rows.filter((x) => x.ok).length), "bütçe, eşya, oda kriterlerine göre", "spark")}
+      ${tile("İlan", NF.format(list.length), `${list.filter((x) => x.dist != null).length} tanesinin konumu belli`, "home")}
+      ${tile("Uygun (mesafe hariç)", NF.format(rows.filter((x) => x.ok).length), "bütçe, eşya, oda kriterlerine göre", "spark")}
       ${tile("En ucuz", prices.length ? TL(Math.min(...prices)) : "—", prices.length ? `medyan ${TL(median(prices))}` : "", "tag")}
     </div>
-    ${list.length ? `<div class="cards">${list.map((x) => card(x.it, { area: A.name, dist: x.dist })).join("")}</div>`
-      : `<p class="empty">${rows.length ? "Kriterlerine uyan ilan yok. \"Yalnız uygun\" seçeneğini kapatıp tümüne bakabilirsin." : "Bu çevrede şu an ilan yok. Yeni mahalleler taramaya eklendi; ilk taramalardan sonra burada görünür."}</p>`}`;
+    ${list.length ? `<div class="cards">${list.map((x) => card(x.it, { area: A.name, dist: x.dist, near: x.near, walk: byWalk })).join("")}</div>`
+      : `<p class="empty">${rows.length ? "Kriterlerine uyan ilan yok. \"Yalnız uygun\" seçeneğini kapatıp tümüne bakabilirsin." : `Bu mesafede şu an ilan yok.${byWalk ? " Süreyi artırıp tekrar bakabilirsin." : ""}`}</p>`}`;
+  for (const btn of box.querySelectorAll("[data-area]")) btn.onclick = () => { store.set("m2k_area", btn.dataset.area); renderArea(); };
   $("#areaok").onclick = () => { store.set("m2k_area_ok", onlyOk ? "0" : "1"); renderArea(); };
-  $("#arear").onchange = (e) => { store.set("m2k_area_r", e.target.value); renderArea(); };
+  if ($("#areaunk")) $("#areaunk").onclick = () => { store.set("m2k_area_unk_" + A.key, showUnk ? "0" : "1"); renderArea(); };
+  $("#arear").onchange = (e) => { store.set("m2k_area_lim_" + A.key, e.target.value); renderArea(); };
   $("#areasort").onchange = (e) => { store.set("m2k_area_sort", e.target.value); renderArea(); };
 }
 // Fiyatı düşenler sekmesi: kriter filtrelerinden bağımsız, gizlenenler hariç
@@ -1599,7 +1619,8 @@ function skeleton() {
 function applyData(data) {
   D = data; PHOTOS = null;
   const A = (D.areas || [])[0];
-  for (const b of document.querySelectorAll(".areatab, .areatab-m")) { b.hidden = !A; if (A) (b.querySelector(".lbl") || b).textContent = A.name; } PRESENT = new Set(D.items.map((i) => i.id));
+  const nA = (D.areas || []).length;
+  for (const b of document.querySelectorAll(".areatab, .areatab-m")) { b.hidden = !A; if (A) (b.querySelector(".lbl") || b).textContent = nA > 1 ? "Bölgeler" : A.name; } PRESENT = new Set(D.items.map((i) => i.id));
   if (!connected()) { for (const f of (D.settings && D.settings.favorites) || []) favs.add(f); store.set("m2k_favs", [...favs]); }
   SET = pickSettings(D.settings || {});
   document.title = D.title || "M2 Kiralık"; $("#title").textContent = D.title || "M2 Kiralık";

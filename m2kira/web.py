@@ -71,6 +71,31 @@ def gallery_of(r: dict[str, Any]) -> list[str]:
     return [u for u in imgs if isinstance(u, str) and u.startswith("https://")][:24]
 
 
+def _areas(cfg: Config) -> list[dict[str, Any]]:
+    """Bölge sekmeleri: merkez + yarıçap (km) ya da duraklar + yürüme dakikası; durak koordinatları config'ten."""
+    out = []
+    for a in cfg.get("areas", default=[]) or []:
+        if not isinstance(a, dict) or not a.get("name"):
+            continue
+        a = dict(a)
+        if a.get("stations"):
+            cs = []
+            for name in a["stations"]:
+                st = cfg.stations.get(name)
+                if st:
+                    cs.append({"name": st.name, "lat": st.lat, "lon": st.lon})
+            if not cs:
+                continue
+            a["centers"] = cs
+        elif a.get("lat") and a.get("lon"):
+            a["centers"] = [{"name": a["name"], "lat": a["lat"], "lon": a["lon"]}]
+        else:
+            continue
+        a.setdefault("key", a["name"])
+        out.append(a)
+    return out
+
+
 def _pc_status(cfg: Config) -> Optional[dict[str, Any]]:
     """PC'nin feed dalına yazdığı durum (GitHub iş akışı data/feed/pc_status.json olarak indirir)."""
     p = cfg.data_dir / "feed" / "pc_status.json"
@@ -172,7 +197,7 @@ def build_payload(cfg: Config, db: DB, budget: Optional[int] = None) -> dict[str
         "status": source_status(db),
         "feed_generated": {s: db.get_setting(f"feed_processed:{s}") for s in ("hepsiemlak", "sahibinden")},
         "pc": _pc_status(cfg),
-        "areas": [a for a in (cfg.get("areas", default=[]) or []) if isinstance(a, dict) and a.get("lat") and a.get("lon")],
+        "areas": _areas(cfg),
         "neighborhoods": [{"name": n.name, "key": n.key, "station": n.station, "enabled": n.enabled}
                           for n in cfg.neighborhoods],
         "repo": {"name": str(fc.get("repo", "YSFTNC/m2kira")), "branch": str(fc.get("branch", "feed")),

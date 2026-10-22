@@ -95,3 +95,13 @@ def test_payload_photos_skip_emlakjet(cfg, tmp_path):
     assert items["emlakjet"]["img"] is None and items["emlakjet"]["ni"] is None
     assert items["sahibinden"]["img"] == "https://i0.shbdn.com/photos/1/x5_a.jpg"
     assert items["hepsiemlak"]["img"] is None           # yalnız https
+
+
+
+def test_areas_resolve_station_centers(cfg):
+    from m2kira.web import _areas
+    areas = {a["key"]: a for a in _areas(cfg)}
+    assert areas["balgat"]["centers"][0]["name"] == "Balgat" and areas["balgat"]["radius_km"] == 2.0
+    u = areas["umitkoy-tarim"]
+    assert u["walk_min"] == 17 and [c["name"] for c in u["centers"]] == ["Ümitköy", "Tarım Bakanlığı-Danıştay"]
+    assert all(c["lat"] and c["lon"] for c in u["centers"])
